@@ -1,115 +1,186 @@
-import Image from "next/image";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Product } from "@/components/products/ProductCard";
+import Home from "../components/home/Home";
+import { Tags, Leaf } from "lucide-react";
+import BlogSection from "@/components/blog/BlogSection";
+import Newsletter from "@/components/newsletter/Newsletter";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
+type Category = {
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+};
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+const categories: Category[] = [
+  { label: "Agricultural", icon: Leaf },
+  { label: "Construction", icon: Tags },
+  { label: "Farm machinery", icon: Tags },
+  { label: "Feed", icon: Tags },
+  { label: "Fish & Aquatic", icon: Tags },
+  { label: "Fruit", icon: Tags },
+  { label: "Fresh Vegetables", icon: Tags },
+  { label: "Garden Tools", icon: Tags },
+  { label: "Grain", icon: Tags },
+  { label: "Livestock", icon: Tags },
+  { label: "Mushrooms", icon: Tags },
+  { label: "Nuts & Kernel", icon: Tags },
+  { label: "Organic", icon: Tags },
+  { label: "Poultry", icon: Tags },
+  { label: "Processed food", icon: Tags },
+  { label: "Spices", icon: Tags },
+  { label: "Seeds & Bulbs", icon: Tags },
+  { label: "Tuber", icon: Tags },
+  { label: "Meat & Animal", icon: Tags },
+];
 
-export default function Home() {
+const products: Product[] = [
+  {
+    id: 1,
+    name: "Golden Palm Oil",
+    tag: "Hot",
+    price: "₦1250",
+    unit: "1L",
+    vendor: "By Olori",
+    image:
+      "https://images.unsplash.com/photo-1526318472351-c75fcf070305?q=80&w=1200&auto=format&fit=crop",
+  },
+  {
+    id: 2,
+    name: "Spices Mix",
+    tag: "New",
+    price: "₦1250",
+    unit: "250g",
+    vendor: "By MarketPro",
+    image:
+      "https://escrow.greenmarket.com.ng/storage/products/gUDMNW4kNs74NyhENU5w34H9GUbXzJMewSFLp9hr.png",
+  },
+  {
+    id: 3,
+    name: "Smoked Fish",
+    tag: "Fresh",
+    price: "₦1250",
+    unit: "1kg",
+    vendor: "By SeaFresh",
+    image:
+      "https://escrow.greenmarket.com.ng/storage/products/zYz6ZbrGybMBevmQITwKKhjoxlsuJJNpsCWBtEdi.jpg",
+  },
+  {
+    id: 4,
+    name: "Fresh Chicken",
+    price: "₦1250",
+    unit: "2kg",
+    vendor: "By FarmVille",
+    image:
+      "https://images.unsplash.com/photo-1578932750294-f5075e85f44a?q=80&w=1200&auto=format&fit=crop",
+  },
+  {
+    id: 5,
+    name: "Pigeon Local Variant",
+    tag: "Sale",
+    price: "₦1250",
+    unit: "2x",
+    vendor: "By Aviary",
+    image:
+      "https://escrow.greenmarket.com.ng/storage/products/zYz6ZbrGybMBevmQITwKKhjoxlsuJJNpsCWBtEdi.jpg",
+  },
+  {
+    id: 6,
+    name: "Fresh Spinach",
+    tag: "Leaf",
+    price: "₦1250",
+    unit: "4 bunches",
+    vendor: "By Neofolia",
+    image:
+      "https://images.unsplash.com/photo-1540420773420-3366772f4999?q=80&w=1200&auto=format&fit=crop",
+  },
+  {
+    id: 7,
+    name: "Fresh Tomato",
+    price: "₦1250",
+    unit: "1kg",
+    vendor: "By RedFarm",
+    image:
+      "https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=1200&auto=format&fit=crop",
+  },
+  {
+    id: 8,
+    name: "Cucumber",
+    price: "₦2500",
+    unit: "2kg",
+    vendor: "By GreenFarm",
+    image:
+      "https://images.unsplash.com/photo-1563565375-f3fdfdbefa83?q=80&w=1200&auto=format&fit=crop",
+  },
+  {
+    id: 9,
+    name: "Iceberg Lettuce",
+    price: "₦1250",
+    unit: "1 head",
+    vendor: "By Leafy",
+    image:
+      "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?q=80&w=1200&auto=format&fit=crop",
+  },
+  {
+    id: 10,
+    name: "Fresh Pineapple",
+    price: "₦1250",
+    unit: "2 pcs",
+    vendor: "By Tropica",
+    image:
+      "https://images.unsplash.com/photo-1502741338009-cac2772e18bc?q=80&w=1200&auto=format&fit=crop",
+  },
+];
+
+const blogPosts = [
+  {
+    id: "1",
+    category: "LIVESTOCKS",
+    image: "/assets/blog1.png",
+    title: "Livestock Tips & Best Practices",
+    excerpt:
+      "Blimlävikt treskade i nibel den mobilissbruk dären jyn nöning osk hetreosk i rel ultran. Fåläss",
+    author: "Basäm",
+    date: "3 Nov 2025",
+  },
+  {
+    id: "2",
+    category: "UNCATEGORIZED",
+    image: "/assets/blog2.png",
+    title: "Agro-Business & Entrepreneurship",
+    excerpt:
+      "Blimlävikt treskade i nibel den mobilissbruk dären jyn nöning osk hetreosk i rel ultran. Fåläss",
+    author: "sinan",
+    date: "3 Nov 2025",
+  },
+  {
+    id: "3",
+    category: "FISHERY",
+    image: "/assets/blog3.png",
+    title: "Success Stories & Fishermen Spotlight",
+    excerpt:
+      "Blimlävikt treskade i nibel den mobilissbruk dären jyn nöning osk hetreosk i rel ultran. Fåläss",
+    author: "Basäm",
+    date: "3 Nov 2025",
+  },
+  {
+    id: "4",
+    category: "FRUITS",
+    image: "/assets/blog4.png",
+    title: "Market Trends & Prices",
+    excerpt:
+      "Blimlävikt treskade i nibel den mobilissbruk dären jyn nöning osk hetreosk i rel ultran. Fåläss",
+    author: "sinan",
+    date: "3 Nov 2025",
+  },
+];
+
+export default function IndexPage() {
   return (
-    <div
-      className={`${geistSans.className} ${geistMono.className} font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20`}
-    >
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/pages/index.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+    <main className="w-full">
+      <div className="container mt-10 max-w-7xl mx-auto">
+        <Home products={products} categories={categories} />
+      </div>
+
+      <BlogSection posts={blogPosts} />
+      <Newsletter />
+    </main>
   );
 }
