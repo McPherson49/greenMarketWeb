@@ -225,7 +225,7 @@ const Profile = () => {
           {/* Sidebar - Mobile Overlay */}
           {sidebarOpen && (
             <div
-              className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+              className="fixed inset-0 bg-black bg-opacity-50 z-20  lg:hidden"
               onClick={() => setSidebarOpen(false)}
             />
           )}
@@ -233,7 +233,7 @@ const Profile = () => {
           {/* Sidebar */}
           <div
             className={`
-            fixed lg:relative inset-y-0 left-0 z-50 w-72 bg-white rounded-lg shadow-sm p-6
+            fixed lg:relative inset-y-0 left-0 z-0 w-72 bg-white rounded-lg shadow-sm p-6
             transform transition-transform duration-300 ease-in-out
             ${sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
             lg:block

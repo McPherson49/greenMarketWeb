@@ -7,6 +7,7 @@ import { useKeenSlider } from "keen-slider/react";
 import "keen-slider/keen-slider.min.css";
 import { KeenSliderPlugin } from "keen-slider";
 import { GooglePlayButton, AppStoreButton } from "react-mobile-app-button";
+import { useState, useEffect } from "react";
 
 function AutoplayPlugin(delay = 4000): KeenSliderPlugin {
   return (slider) => {
@@ -44,6 +45,19 @@ export default function Hero() {
     [AutoplayPlugin(4000)]
   );
 
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
   const slides = [
     {
       badgeText: "Escrow Secured",
@@ -60,18 +74,19 @@ export default function Hero() {
       buttonPosition: "left",
     },
     {
-      // NO badge, NO icon, NO description - centered layout
+     
       title: "The No. 1 Free Online Market for Farmers & Buyers in Nigeria",
       description2:
         "Buy and sell fresh agricultural products with ease. GreenMarket connects farmers with serious buyers for a simple, hassle-free trading experience.",
       imageUrl: "/assets/vegetable.png",
       imageAlt: "Escrow illustration",
       bg: "assets/bg-img.png",
+      bgMobile: "assets/mobile.png", 
       buttonText: "Learn More",
       buttonLink: "/shop",
       buttonPosition: "left",
-      centered: true, // Flag to center the content
-      darkOverlay: true, // Add dark overlay for better text visibility
+      centered: true, 
+      darkOverlay: true, 
     },
     {
       badgeText: "New Feature Alert",
@@ -115,23 +130,39 @@ export default function Hero() {
           return (
             <div
               key={index}
-              className="keen-slider__slide relative bg-cover bg-center bg-no-repeat"
-              style={{ backgroundImage: `url(${slide.bg})` }}
+              className="keen-slider__slide relative bg-center bg-no-repeat bg-cover"
+              style={{ 
+                backgroundImage: `url(${isMobile && slide.bgMobile ? slide.bgMobile : slide.bg})`
+              }}
             >
               {/* Overlay */}
-              <div className={`absolute inset-0 ${slide.darkOverlay ? 'bg-black/40' : 'bg-white/20'}`}></div>
+              <div
+                className={`absolute inset-0 ${
+                  slide.darkOverlay ? "bg-black/40" : "bg-white/20"
+                }`}
+              ></div>
 
               {/* Conditional Layout: Centered or Left-Right */}
               {slide.centered ? (
-                // CENTERED LAYOUT (for slide 2)
+             
                 <div className="relative z-10 flex flex-col items-center justify-center text-center p-6 md:py-16 lg:px-20 min-h-[400px]">
                   <div className="max-w-3xl">
-                    <h1 className={`text-3xl md:text-5xl font-bold ${slide.darkOverlay ? 'text-white' : 'text-[#253D4E]'}`}>
+                    <h1
+                      className={`text-3xl md:text-5xl font-bold ${
+                        slide.darkOverlay ? "text-white" : "text-[#253D4E]"
+                      }`}
+                    >
                       {slide.title}
                     </h1>
 
                     {slide.description2 && (
-                      <p className={`mt-4 text-sm md:text-base ${slide.darkOverlay ? 'text-white/90' : 'text-[#253D4E]/80'}`}>
+                      <p
+                        className={`mt-4 text-sm md:text-base ${
+                          slide.darkOverlay
+                            ? "text-white/90"
+                            : "text-[#253D4E]/80"
+                        }`}
+                      >
                         {slide.description2}
                       </p>
                     )}
@@ -142,26 +173,12 @@ export default function Hero() {
                           href={slide.buttonLink}
                           className="inline-flex items-center gap-2 rounded-md bg-emerald-600 px-6 py-3 text-sm md:text-base text-white hover:bg-emerald-700 transition"
                         >
-                          {slide.buttonText}{" "}
-                          <ChevronRight className="size-4" />
+                          {slide.buttonText} <ChevronRight className="size-4" />
                         </Link>
                       </div>
                     )}
 
-                    {/* Mobile-only image */}
-                    {slide.imageUrl && (
-                      <div className="flex justify-center mt-8 md:hidden">
-                        <div className="relative w-[240px] h-[200px]">
-                          <Image
-                            src={slide.imageUrl}
-                            alt={slide.imageAlt}
-                            fill
-                            className="object-contain rounded-lg"
-                            priority={index === 0}
-                          />
-                        </div>
-                      </div>
-                    )}
+                    {/* Mobile-only image - hidden for centered slide */}
                   </div>
                 </div>
               ) : (
@@ -198,8 +215,7 @@ export default function Hero() {
                           href={slide.buttonLink}
                           className="inline-flex items-center gap-2 rounded-md bg-emerald-600 px-4 py-2 text-sm md:text-base text-white hover:bg-emerald-700 transition"
                         >
-                          {slide.buttonText}{" "}
-                          <ChevronRight className="size-4" />
+                          {slide.buttonText} <ChevronRight className="size-4" />
                         </Link>
                       </div>
                     )}
@@ -235,16 +251,14 @@ export default function Hero() {
                       </div>
 
                       {/* Community button (Right) */}
-                      {slide.buttonPosition === "right" &&
-                        slide.buttonLink && (
-                          <Link
-                            href={slide.buttonLink}
-                            className="inline-flex items-center gap-2 mt-6 rounded-md bg-emerald-600 px-4 py-2 text-sm md:text-base text-white hover:bg-emerald-700 transition"
-                          >
-                            {slide.buttonText}{" "}
-                            <ChevronRight className="size-4" />
-                          </Link>
-                        )}
+                      {slide.buttonPosition === "right" && slide.buttonLink && (
+                        <Link
+                          href={slide.buttonLink}
+                          className="inline-flex items-center gap-2 mt-6 rounded-md bg-emerald-600 px-4 py-2 text-sm md:text-base text-white hover:bg-emerald-700 transition"
+                        >
+                          {slide.buttonText} <ChevronRight className="size-4" />
+                        </Link>
+                      )}
                     </div>
                   )}
                 </div>

@@ -76,7 +76,7 @@ function SearchBar({ className = "" }: { className?: string }) {
         </button>
         {/* Location Dropdown */}
         {locationOpen && (
-          <div className="absolute top-full left-0 mt-2 w-48 bg-white border border-neutral-200 rounded-md shadow-lg z-50">
+          <div className="absolute top-full left-0 mt-2 w-48 bg-white border border-neutral-200 rounded-md shadow-lg z-[9999]">
             {locations.map((loc) => (
               <button
                 key={loc.value}
@@ -111,7 +111,7 @@ export default function Header({
 
   return (
     <>
-      <header className="sticky top-0 z-40 bg-white backdrop-blur supports-[backdrop-filter]:bg-white/60 border-b border-neutral-200">
+      <header className="sticky top-0 z-[9999] bg-white backdrop-blur supports-[backdrop-filter]:bg-white/60 border-b border-neutral-200">
         {/* Top bar */}
         <div className="container max-w-7xl mx-auto flex items-center gap-3 py-3">
           {/* Logo on the left */}
