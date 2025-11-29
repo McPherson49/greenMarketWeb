@@ -52,7 +52,7 @@ export default function ProductCard({ product }: { product: Product }) {
         {/* Price + View Button */}
         <div className="flex justify-between items-center gap-2">
           <div className="text-sm font-semibold text-[#E4130C]">
-            {product.price}
+            &#8358;{product.price}
           </div>
 
           {/* VIEW BUTTON AS LINK */}
