@@ -1,10 +1,138 @@
+"use client";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import Image from "next/image";
-import { useState } from "react";
 import { Star, ChevronUp, ChevronDown } from "lucide-react";
 import { BsChatLeftText } from "react-icons/bs";
 import { FaMoneyBillTransfer } from "react-icons/fa6";
 import Link from "next/link";
+import { getProductDetails } from "@/services/products";
+import { getCategories } from "@/services/category";
+
+type Category = {
+  id: number;
+  name: string; 
+  slug: string;
+  icon: string | null;
+  color?: string;
+  products_count: number; 
+};
+
+const ProductDetailsSkeleton = () => {
+  return (
+    <div className="container mx-auto max-w-7xl lg:px-0 px-4 py-10 animate-pulse">
+      {/* Top Section Skeleton */}
+      <div className="grid lg:grid-cols-[1fr_1.5fr_0.8fr] gap-8 mb-12">
+        {/* Left - Image Gallery Skeleton */}
+        <div>
+          <div className="relative aspect-square rounded-xl overflow-hidden bg-gray-200">
+            <div className="w-full h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 animate-pulse"></div>
+          </div>
+          <div className="flex gap-3 mt-4">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="w-20 h-20 rounded-md bg-gray-200 animate-pulse"></div>
+            ))}
+          </div>
+        </div>
+
+        {/* Middle - Product Info Skeleton */}
+        <div className="flex flex-col justify-start space-y-4">
+          <div className="w-24 h-6 bg-gray-200 rounded-full animate-pulse"></div>
+          <div className="w-3/4 h-8 bg-gray-200 rounded animate-pulse"></div>
+          <div className="w-32 h-6 bg-gray-200 rounded animate-pulse"></div>
+          <div className="w-24 h-8 bg-gray-200 rounded animate-pulse"></div>
+          
+          {/* Description Skeleton */}
+          <div className="space-y-2">
+            <div className="w-full h-4 bg-gray-200 rounded animate-pulse"></div>
+            <div className="w-4/5 h-4 bg-gray-200 rounded animate-pulse"></div>
+            <div className="w-3/4 h-4 bg-gray-200 rounded animate-pulse"></div>
+          </div>
+
+          {/* Quantity + Buttons Skeleton */}
+          <div className="flex flex-wrap items-center gap-3 pt-4">
+            <div className="w-24 h-10 bg-gray-200 rounded-md animate-pulse"></div>
+            <div className="w-32 h-10 bg-gray-200 rounded-md animate-pulse"></div>
+            <div className="w-36 h-10 bg-gray-200 rounded-md animate-pulse"></div>
+          </div>
+
+          {/* Store Info Card Skeleton */}
+          <div className="mt-6 bg-gray-50 border border-gray-200 rounded-lg p-4">
+            <div className="w-32 h-5 bg-gray-200 rounded animate-pulse mb-3"></div>
+            <div className="space-y-2">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <div key={i} className="w-3/4 h-4 bg-gray-200 rounded animate-pulse"></div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Right - Categories Skeleton */}
+        <div className="bg-white shadow-sm border border-neutral-200 rounded-xl p-4 h-fit">
+          <div className="w-32 h-6 bg-gray-200 rounded animate-pulse mb-3"></div>
+          <div className="space-y-2">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <div key={i} className="flex items-center justify-between bg-gray-50 px-3 py-2 rounded-md">
+                <div className="w-24 h-4 bg-gray-200 rounded animate-pulse"></div>
+                <div className="w-8 h-4 bg-gray-200 rounded-full animate-pulse"></div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Tabs Section Skeleton */}
+      <div className="mt-10 border border-neutral-200 rounded-lg bg-white">
+        <div className="flex border-b">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="px-5 py-3">
+              <div className="w-20 h-4 bg-gray-200 rounded animate-pulse"></div>
+            </div>
+          ))}
+        </div>
+        <div className="p-6">
+          <div className="space-y-2">
+            <div className="w-48 h-5 bg-gray-200 rounded animate-pulse"></div>
+            <div className="space-y-1 ml-6">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <div key={i} className="w-3/4 h-4 bg-gray-200 rounded animate-pulse"></div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Related Products Skeleton */}
+      <div className="mt-12">
+        <div className="w-48 h-6 bg-gray-200 rounded animate-pulse mb-4"></div>
+        <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-5">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="border border-neutral-200 rounded-xl overflow-hidden">
+              <div className="w-full h-48 bg-gray-200 animate-pulse"></div>
+              <div className="p-3 space-y-2">
+                <div className="w-3/4 h-4 bg-gray-200 rounded animate-pulse"></div>
+                <div className="w-16 h-4 bg-gray-200 rounded animate-pulse"></div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Pulse loader for smaller loading states
+const PulseLoader = ({ size = "md" }: { size?: "sm" | "md" | "lg" }) => {
+  const sizes = {
+    sm: "w-4 h-4",
+    md: "w-8 h-8",
+    lg: "w-12 h-12"
+  };
+
+  return (
+    <div className={`${sizes[size]} border-4 border-green-200 border-t-green-600 rounded-full animate-spin`}></div>
+  );
+};
 
 const allProducts = [
   {
@@ -53,30 +181,40 @@ export default function ProductDetails() {
   const { id } = router.query;
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState("description");
+  const [category, setCategory] = useState<Category[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [productDetails, setProductDetails] = useState<any | null>(null);
 
   const product = allProducts.find((p) => p.id === Number(id)) || allProducts[0];
 
-  const categories = [
-    { name: "Agrochemical", count: 5 },
-    { name: "Feed", count: 6 },
-    { name: "Farm machinery", count: 7 },
-    { name: "Fish & Aquatic", count: 12 },
-    { name: "Fresh Fruit", count: 16 },
-  ];
+  useEffect(() => {
+  if (!router.isReady) return;
 
-  const gallery = [
-    product.image,
-    "https://images.unsplash.com/photo-1604908176835-436e0a1ef0c5?q=80&w=600",
-    "https://images.unsplash.com/photo-1580913428739-24653e3f9aa3?q=80&w=600",
-    "https://images.unsplash.com/photo-1602524818963-5e9b2c6ab8d5?q=80&w=600",
-  ];
+  async function fetchData() {
+    setLoading(true);
+    try {
+      // Fetch Categories
+      const categories = await getCategories();
+      setCategory(categories || []);
 
-  if (!router.isReady) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <p className="text-gray-500">Loading...</p>
-      </div>
-    );
+      // Fetch Product Details
+      if (id) {
+        const product = await getProductDetails(id as string);
+        setProductDetails(product);
+      }
+    } catch (error) {
+      console.error("Error loading data:", error);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  fetchData();
+  }, [router.isReady, id]);
+
+
+  if (loading || !productDetails) {
+    return <ProductDetailsSkeleton />;
   }
 
   return (
@@ -85,54 +223,52 @@ export default function ProductDetails() {
       <div className="grid lg:grid-cols-[1fr_1.5fr_0.8fr] gap-8 mb-12">
         {/* LEFT - Product Image */}
         <div>
+          {productDetails?.images?.[0] && (
           <div className="relative aspect-square rounded-xl overflow-hidden border">
             <Image
-              src={product.image}
-              alt={product.name}
+              src={productDetails.images[0]}
+              alt={productDetails.name}
               fill
-              className="object-cover"
+              className="object-cover hover:scale-105 transition-transform"
             />
           </div>
+          )}
 
           {/* Gallery thumbnails */}
           <div className="flex gap-3 mt-4">
-            {gallery.map((img, i) => (
-              <div
-                key={i}
-                className="relative w-20 h-20 rounded-md overflow-hidden cursor-pointer border hover:border-green-500 transition"
-              >
-                <Image
-                  src={img}
-                  alt={`thumb-${i}`}
-                  fill
-                  className="object-cover hover:scale-105 transition-transform"
-                />
-              </div>
-            ))}
+            {productDetails?.images?.map((img: string, i: number) => (
+  <div key={i} className="relative w-20 h-20 rounded-md overflow-hidden cursor-pointer border hover:border-green-500 transition">
+    <Image
+      src={img}
+      alt={`thumb-${i}`}
+      fill
+      className="object-cover hover:scale-105 transition-transform"
+    />
+  </div>
+))}
           </div>
         </div>
 
         {/* MIDDLE - Product Info */}
         <div className="flex flex-col justify-start space-y-4">
           <span className="text-sm text-pink-500 font-medium bg-pink-100 px-3 py-1 rounded-full w-fit">
-            {product.tag || "Sale Off"}
+            {productDetails.sub}
           </span>
 
-          <h1 className="text-3xl font-semibold">{product.name}</h1>
+          <h1 className="text-3xl font-semibold">{productDetails.title}</h1>
 
           <div className="flex items-center gap-2 text-amber-500">
             <Star className="w-4 h-4 fill-current" />
-            <span className="font-medium">4.8</span>
-            <span className="text-gray-400 text-sm">(32 reviews)</span>
+            <span className="font-medium">{productDetails.business?.rating}</span>
+            <span className="text-gray-400 text-sm">({productDetails.reviews.length})</span>
           </div>
 
-          <p className="text-3xl text-green-600 font-bold">{product.price}</p>
+          <p className="text-3xl text-green-600 font-bold">₦{productDetails.price || "0"}</p>
 
-          <p className="text-gray-600 leading-relaxed">
-            Lorem ipsum dolor sit amet consectetur adipisicing elit. Aliquam rem
-            officia, corrupti reiciendis minima nisi modi, quasi, odio minus
-            dolore impedit fuga eum eligendi.
-          </p>
+          <p 
+            className="text-gray-600 leading-relaxed"
+            dangerouslySetInnerHTML={{ __html: productDetails.description || "" }}
+          />
 
           {/* Quantity + Buttons */}
           <div className="flex flex-wrap items-center gap-3 pt-4">
@@ -186,52 +322,58 @@ export default function ProductDetails() {
             <h3 className="font-semibold text-base mb-3 text-gray-800">Store Info</h3>
             <div className="space-y-2 text-sm text-gray-700">
               <div>
-                <span className="font-medium">Store Name:</span> Linux Genesis
+                <span className="font-medium">Store Name:</span> {productDetails.business?.name }
               </div>
               <div>
-                <span className="font-medium">Location:</span> After Law School Bwa
+                <span className="font-medium">Location:</span> {productDetails.address }
               </div>
               <div>
-                <span className="font-medium">Contact:</span> 070*****90
+                <span className="font-medium">Contact Phone : </span> {productDetails.phone }
+              </div>
+              <div>
+                <span className="font-medium">Contact Email:</span> {productDetails.user.email }
               </div>
               <div>
                 <span className="font-medium">Tags:</span> 
                 <span className="ml-1">
-                  <span className="inline-block bg-green-100 text-green-700 px-2 py-0.5 rounded-full text-xs mr-1">
-                    Rabbit
-                  </span>
-                  <span className="inline-block bg-green-100 text-green-700 px-2 py-0.5 rounded-full text-xs">
-                    Livestock
-                  </span>
+                   {productDetails?.tags?.map((tag: string, i: number) => (
+          <span 
+            key={i}
+            className="inline-block bg-green-100 text-green-700 px-2 py-0.5 rounded-full text-xs mr-1"
+          >
+            {tag}
+          </span>
+        ))}
+
                 </span>
               </div>
-              <div>
-                <span className="font-medium">Stock:</span> 
-                <span className="text-green-600 font-semibold ml-1">8 Items In Stock</span>
-              </div>
+          
             </div>
           </div>
         </div>
 
         {/* RIGHT - Category Section (Compact) */}
         <div className="bg-white shadow-sm border border-neutral-200 rounded-xl p-4 h-fit">
-          <h2 className="text-base font-semibold mb-3 border-b border-[#39B54A] w-1/2 pb-2">
-            Categories
-          </h2>
-          <div className="space-y-2 text-sm">
-            {categories.map((cat) => (
-              <div
-                key={cat.name}
-                className="flex items-center justify-between bg-gray-50 px-3 py-2 rounded-md hover:bg-gray-100 transition cursor-pointer"
-              >
-                <span className="text-gray-700">{cat.name}</span>
-                <span className="bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded-full">
-                  {cat.count}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
+  <h2 className="text-base font-semibold mb-3 border-b border-[#39B54A] w-1/2 pb-2">
+    Categories
+  </h2>
+
+  {/* Show only 6 items' height by default */}
+  <div className="space-y-2 text-sm max-h-[360px] overflow-y-auto scrollbar-hide">
+    {category.map((cat) => (
+      <div
+        key={cat.id}
+        className="flex items-center justify-between bg-gray-50 px-3 py-2 rounded-md hover:bg-gray-100 transition cursor-pointer"
+      >
+        <span className="text-gray-700">{cat.name}</span>
+        <span className="bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded-full">
+          {cat.products_count}
+        </span>
+      </div>
+    ))}
+  </div>
+</div>
+
       </div>
 
       {/* TABS SECTION */}
@@ -255,11 +397,6 @@ export default function ProductDetails() {
         <div className="p-6 text-sm text-gray-700">
           {activeTab === "description" && (
             <>
-              <p className="mb-4">
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed
-                ultricies malesuada leo, nec suscipit ligula maximus sed. In
-                vitae elit ut lorem malesuada placerat.
-              </p>
               <div>
                 <h3 className="font-semibold mb-2 text-red-600">
                   WARNING AND SAFETY TIPS:

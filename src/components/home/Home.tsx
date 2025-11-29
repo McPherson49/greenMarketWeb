@@ -6,7 +6,7 @@ import Image from "next/image";
 
 type Category = {
   label: string;
-  icon: string;     // ← this should be string, not a React component
+  icon: string;    
   color?: string;
   slug: string;
   id: number;

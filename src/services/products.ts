@@ -31,3 +31,25 @@ export const getProductDetails = async (id: string): Promise<any | null> => {
     return null;
   }
 };
+
+// GET SIMILAR PRODUCTS
+export const getSimilarProducts = async (id: number): Promise<ProductData | null> => {
+  try {
+    const response = await ApiFetcher.get<GetProductsResponse>(`/products`, {
+      params: {
+        id: id,
+      },
+    });
+
+    if (response?.data?.data) {
+      return response.data.data;
+    }
+
+    toast.error("Failed to load similar Products");
+    return null;
+  } catch (error) {
+    console.error("Error fetching similar Products:", error);
+    toast.error("Error fetching similar Products");
+    return null;
+  }
+}

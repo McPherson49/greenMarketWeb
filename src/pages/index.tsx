@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import Home from "../components/home/Home";
 import BlogSection from "@/components/blog/BlogSection";
 import Newsletter from "@/components/newsletter/Newsletter";
 import { getCategories } from "@/services/category";
-import { getProducts } from "@/services/products"; // import your API function
+import { getProducts } from "@/services/products"; 
 import { Product } from "@/components/products/ProductCard";
 
 type Category = {
@@ -50,7 +50,10 @@ export default function IndexPage() {
         if (!res) return;
 
         // Map API response to your Product type
-        const formattedProducts: Product[] = res.data.data.map((p: any) => ({
+        const productsData = res.data || [];
+        const productsArray = Array.isArray(productsData) ? productsData : [];
+
+        const formattedProducts: Product[] = productsArray.map((p: any) => ({
           id: p.id,
           name: p.title,
           price: p.price_range?.min ?? "0",
