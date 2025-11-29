@@ -1,7 +1,6 @@
 import ProductCard, { Product } from "@/components/products/ProductCard";
 import React from "react";
 import Hero from "./Hero";
-import Link from "next/link";
 import Image from "next/image";
 
 type Category = {
@@ -51,7 +50,6 @@ export default function Home({ products, categories, loading }: HomeProps) {
       <div>
         <div className="mb-3 flex items-center justify-between">
           <h2 className="text-lg my-5 font-semibold">Popular Products</h2>
-          <Link href="#" className="text-sm text-emerald-700">See all</Link>
         </div>
 
         {loading ? (
