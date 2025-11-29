@@ -1,6 +1,10 @@
+"use client";
+
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
+import ApiFetcher from '@/utils/apis';
+import { toast } from 'react-toastify';
 
 export default function AuthPage() {
   const router = useRouter();
@@ -14,13 +18,22 @@ export default function AuthPage() {
     phone: '',
     acceptTerms: true
   });
+  const [isLoading, setIsLoading] = useState(false);
+  const [isLoginLoading, setIsLoginLoading] = useState(false);
+  const [isOtpLoading, setIsOtpLoading] = useState(false);
 
-  // Set active tab based on current route
+  // Set active tab based on current route and check for saved email
   useEffect(() => {
     if (router.pathname === '/register') {
       setActiveTab('register');
     } else {
       setActiveTab('login');
+    }
+
+    // Check if there's a saved email in localStorage
+    const savedEmail = localStorage.getItem('loginEmail');
+    if (savedEmail) {
+      setLoginData({ email: savedEmail });
     }
   }, [router.pathname]);
 
@@ -36,41 +49,234 @@ export default function AuthPage() {
     });
   };
 
-  const handleLogin = (e: React.MouseEvent<HTMLButtonElement>) => {
+  const handleLogin = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
-    console.log('Login with:', loginData);
-    setShowOtpModal(true);
+    
+    if (!loginData.email) {
+      toast.error('Please enter your email address');
+      return;
+    }
+
+    setIsLoginLoading(true);
+
+    try {
+      console.log('Sending login email to:', loginData.email);
+      
+      // Save email to localStorage
+      localStorage.setItem('loginEmail', loginData.email);
+
+      // Make API call to send email OTP
+      const formData = new FormData();
+      formData.append('email', loginData.email);
+      formData.append('view', 'email');
+
+      const response = await ApiFetcher.post('/auth/login', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      // If email sent successfully, show OTP modal
+      if (response.data) {
+        toast.success('OTP sent to your email!');
+        setShowOtpModal(true);
+      }
+    } catch (error: any) {
+      console.error('Login error:', error);
+      
+      // Handle specific error messages from API
+      if (error.response?.data?.message) {
+        toast.error(error.response.data.message);
+      } else if (error.message) {
+        toast.error(error.message);
+      } else {
+        toast.error('Failed to send OTP. Please try again.');
+      }
+      
+      // Remove saved email on error
+      localStorage.removeItem('loginEmail');
+    } finally {
+      setIsLoginLoading(false);
+    }
   };
 
-  const handleOtpSubmit = (e: React.MouseEvent<HTMLButtonElement>) => {
+  const handleOtpSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
-    console.log('OTP submitted:', otp);
-    setShowOtpModal(false);
+    
+    if (!otp) {
+      toast.error('Please enter the OTP');
+      return;
+    }
+
+    setIsOtpLoading(true);
+
+    try {
+      console.log('Submitting OTP:', otp);
+      
+      const savedEmail = localStorage.getItem('loginEmail');
+      if (!savedEmail) {
+        toast.error('Session expired. Please try logging in again.');
+        setShowOtpModal(false);
+        return;
+      }
+
+      // Make API call to verify OTP
+      const formData = new FormData();
+      formData.append('email', savedEmail);
+      formData.append('view', 'otp');
+      formData.append('otp', otp);
+
+      const response = await ApiFetcher.post('/auth/login', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      // If OTP verification is successful
+      if (response.data) {
+        toast.success('Login successful!');
+        
+        // Remove saved email from localStorage
+        localStorage.removeItem('loginEmail');
+        
+        // Reset OTP and close modal
+        setOtp('');
+        setShowOtpModal(false);
+        
+        // TODO: Handle successful login (store token, redirect, etc.)
+        console.log('Login response:', response.data);
+        
+        // Redirect to home page after successful login
+        router.push('/');
+      }
+    } catch (error: any) {
+      console.error('OTP verification error:', error);
+      
+      // Handle specific error messages from API
+      if (error.response?.data?.message) {
+        toast.error(error.response.data.message);
+      } else if (error.message) {
+        toast.error(error.message);
+      } else {
+        toast.error('OTP verification failed. Please try again.');
+      }
+    } finally {
+      setIsOtpLoading(false);
+    }
   };
 
-  const handleResendOtp = () => {
-    console.log('Resending OTP...');
+  const handleResendOtp = async () => {
+    const savedEmail = localStorage.getItem('loginEmail');
+    if (!savedEmail) {
+      toast.error('No email found. Please try logging in again.');
+      return;
+    }
+
+    try {
+      console.log('Resending OTP to:', savedEmail);
+      
+      // Make API call to resend OTP
+      const formData = new FormData();
+      formData.append('email', savedEmail);
+      formData.append('view', 'email');
+
+      const response = await ApiFetcher.post('/auth/login', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      if (response.data) {
+        toast.success('OTP resent to your email!');
+      }
+    } catch (error: any) {
+      console.error('Resend OTP error:', error);
+      
+      if (error.response?.data?.message) {
+        toast.error(error.response.data.message);
+      } else {
+        toast.error('Failed to resend OTP. Please try again.');
+      }
+    }
   };
 
-  const handleRegister = (e: React.MouseEvent<HTMLButtonElement>) => {
+  const handleRegister = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
-    console.log('Register with:', registerData);
-    // Handle registration logic here
+    
+    // Validation
+    if (!registerData.name || !registerData.email || !registerData.phone) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
+
+    if (!registerData.acceptTerms) {
+      toast.error('Please accept the terms and conditions');
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      console.log('Register with:', registerData);
+      
+      // Make API call to register endpoint
+      const response = await ApiFetcher.post('/auth/register', {
+        email: registerData.email,
+        phone: registerData.phone,
+        name: registerData.name
+      });
+
+      // If registration is successful
+      if (response.data) {
+        toast.success('Registration successful! Welcome to our platform.');
+        
+        // Reset form
+        setRegisterData({
+          name: '',
+          email: '',
+          phone: '',
+          acceptTerms: true
+        });
+
+        // Redirect to home page after successful registration
+        router.push('/');
+      }
+    } catch (error: any) {
+      console.error('Registration error:', error);
+      
+      // Handle specific error messages from API
+      if (error.response?.data?.message) {
+        toast.error(error.response.data.message);
+      } else if (error.message) {
+        toast.error(error.message);
+      } else {
+        toast.error('Registration failed. Please try again.');
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const switchToLogin = () => {
+    setActiveTab('login');
     router.push('/login');
   };
 
   const switchToRegister = () => {
+    setActiveTab('register');
     router.push('/register');
   };
 
+  const closeOtpModal = () => {
+    setShowOtpModal(false);
+    setOtp('');
+  };
+
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-12">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-8">
+    <div className="min-h-screen flex items-center justify-center px-4 ">
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-8 ">
         {/* Tabs */}
-        <div className="flex justify-center mb-8 border-b border-gray-200">
+        <div className="flex justify-center mb-3 border-b border-gray-200">
           <button
             onClick={switchToLogin}
             className={`px-8 py-3 text-lg font-semibold transition-colors ${
@@ -116,9 +322,20 @@ export default function AuthPage() {
 
             <button
               onClick={handleLogin}
-              className="w-full bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition-colors shadow-md hover:shadow-lg"
+              disabled={isLoginLoading}
+              className="w-full bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition-colors shadow-md hover:shadow-lg disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center"
             >
-              Login
+              {isLoginLoading ? (
+                <>
+                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Sending OTP...
+                </>
+              ) : (
+                'Login'
+              )}
             </button>
 
             <div className="text-center">
@@ -212,10 +429,20 @@ export default function AuthPage() {
 
             <button
               onClick={handleRegister}
-              disabled={!registerData.acceptTerms}
-              className="w-full bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition-colors shadow-md hover:shadow-lg disabled:bg-gray-400 disabled:cursor-not-allowed"
+              disabled={!registerData.acceptTerms || isLoading}
+              className="w-full bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition-colors shadow-md hover:shadow-lg disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center"
             >
-              Register
+              {isLoading ? (
+                <>
+                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Registering...
+                </>
+              ) : (
+                'Register'
+              )}
             </button>
 
             <div className="text-center">
@@ -233,60 +460,76 @@ export default function AuthPage() {
         )}
       </div>
 
-      {/* OTP Modal - ONLY NEW ADDITION */}
+      {/* OTP Modal */}
       {showOtpModal && (
-        <div className="fixed inset-0 bg-opacity-50 flex items-center justify-center px-4 z-50 bg-white backdrop-blur supports-[backdrop-filter]:bg-white/60 border-b border-neutral-200">
+        <div className="fixed inset-0 bg-gray-400 bg-opacity-50 flex items-center justify-center px-4 z-50 backdrop-blur-sm">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8 animate-fadeIn">
             <h2 className="text-2xl font-bold text-gray-900 mb-2 text-center">
-              Log In Your Account
+              Enter OTP
             </h2>
+            <p className="text-center text-gray-600 mb-6">
+              We sent a verification code to your email
+            </p>
 
             <div className="space-y-6 mt-6">
               <div>
-                <label className="block text-sm font-medium text-gray-500 mb-2">
-                  OTP
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  OTP Code <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   value={otp}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => setOtp(e.target.value)}
-                  placeholder="Enter OTP"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all"
+                  placeholder="Enter 6-digit OTP"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all text-center text-lg font-mono"
                   maxLength={6}
+                  pattern="[0-9]*"
+                  inputMode="numeric"
                 />
               </div>
 
               <div className="flex justify-between items-center text-sm">
                 <button
-                  onClick={() => setShowOtpModal(false)}
-                  className="text-gray-700 cursor-pointer hover:text-gray-900 font-medium"
+                  onClick={closeOtpModal}
+                  className="text-gray-600 hover:text-gray-900 font-medium transition-colors"
                 >
-                  Go back to login
+                  Back to login
                 </button>
                 <button
                   onClick={handleResendOtp}
-                  className="text-green-600 cursor-pointer hover:text-green-700 font-semibold"
+                  className="text-green-600 hover:text-green-700 font-semibold transition-colors"
                 >
-                  Resend Otp
+                  Resend OTP
                 </button>
               </div>
 
               <button
                 onClick={handleOtpSubmit}
-                className="w-full cursor-pointer bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition-colors shadow-md hover:shadow-lg"
+                disabled={isOtpLoading || !otp}
+                className="w-full bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition-colors shadow-md hover:shadow-lg disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center"
               >
-                Log In
+                {isOtpLoading ? (
+                  <>
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Verifying...
+                  </>
+                ) : (
+                  'Verify OTP'
+                )}
               </button>
 
               <div className="text-center pt-4 border-t border-gray-200">
-                <p className="text-sm cursor-pointer text-gray-600">
+                <p className="text-sm text-gray-600">
                   Don't have an account?{' '}
                   <button
                     onClick={() => {
-                      setShowOtpModal(false);
+                      closeOtpModal();
                       switchToRegister();
                     }}
-                    className="text-green-600 cursor-pointer font-semibold hover:text-green-700"
+                    className="text-green-600 font-semibold hover:text-green-700 transition-colors"
                   >
                     Sign Up
                   </button>

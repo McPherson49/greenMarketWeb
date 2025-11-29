@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -12,6 +12,7 @@ import {
   X,
   Plus,
   ChevronDown,
+  LogOut,
 } from "lucide-react";
 import Image from "next/image";
 import { FaAd, FaHeadset } from "react-icons/fa";
@@ -107,7 +108,33 @@ export default function Header({
   onOpenCategories: () => void;
 }) {
   const [navOpen, setNavOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const pathname = usePathname();
+
+  // Check authentication status on component mount and route changes
+  useEffect(() => {
+    checkAuthStatus();
+  }, [pathname]);
+
+  const checkAuthStatus = () => {
+    // Check if user is logged in (you can modify this based on your auth logic)
+    const token = localStorage.getItem('authToken');
+    const user = localStorage.getItem('user');
+    setIsLoggedIn(!!token || !!user);
+  };
+
+  const handleLogout = () => {
+    // Clear auth data from localStorage
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('user');
+    localStorage.removeItem('loginEmail');
+    
+    // Update state
+    setIsLoggedIn(false);
+    
+    // Redirect to home page
+    window.location.href = '/';
+  };
 
   return (
     <>
@@ -128,18 +155,39 @@ export default function Header({
             >
               <FaAd className="size-4 " /> Post AD
             </Link>
-            <Link
-              href="/login"
-              className="hidden md:inline-flex items-center gap-2 rounded-md border-[#39B54A] text-[#39B54A] border px-3 py-2 text-sm"
-            >
-              <CircleUser className="size-4" /> Login
-            </Link>
-            <Link
-              href="/register"
-              className="hidden md:inline-flex items-center gap-2 bg-[#39B54A] text-white rounded-md border border-neutral-200 px-3 py-2 text-sm"
-            >
-              <TiUserAdd className="size-6 text-white " /> Register
-            </Link>
+            
+            {/* Conditionally render Login/Register or User Profile */}
+            {!isLoggedIn ? (
+              <>
+                <Link
+                  href="/login"
+                  className="inline-flex items-center gap-2 rounded-md border-[#39B54A] text-[#39B54A] border px-3 py-2 text-sm"
+                >
+                  <CircleUser className="size-4" /> Login
+                </Link>
+                <Link
+                  href="/register"
+                  className="inline-flex items-center gap-2 bg-[#39B54A] text-white rounded-md border border-neutral-200 px-3 py-2 text-sm"
+                >
+                  <TiUserAdd className="size-6 text-white " /> Register
+                </Link>
+              </>
+            ) : (
+              <div className="flex items-center gap-2">
+                <Link
+                  href="/profile"
+                  className="inline-flex items-center gap-2 rounded-md border-[#39B54A] text-[#39B54A] border px-3 py-2 text-sm"
+                >
+                  <CircleUser className="size-4" /> Profile
+                </Link>
+                <button
+                  onClick={handleLogout}
+                  className="inline-flex items-center gap-2 rounded-md border border-red-500 text-red-500 px-3 py-2 text-sm hover:bg-red-50 transition-colors"
+                >
+                  <LogOut className="size-4" /> Logout
+                </button>
+              </div>
+            )}
           </div>
           {/* Mobile Hamburger on the right */}
           <button
@@ -235,6 +283,47 @@ export default function Header({
                 <ChevronRight className="size-4 text-neutral-400" />
               </Link>
             ))}
+            
+            {/* Mobile Auth Links */}
+            <div className="p-4 border-t border-neutral-200">
+              {!isLoggedIn ? (
+                <div className="flex flex-col gap-2">
+                  <Link
+                    href="/login"
+                    className="flex items-center gap-2 justify-center rounded-md border-[#39B54A] text-[#39B54A] border px-3 py-2 text-sm"
+                    onClick={() => setNavOpen(false)}
+                  >
+                    <CircleUser className="size-4" /> Login
+                  </Link>
+                  <Link
+                    href="/register"
+                    className="flex items-center gap-2 justify-center bg-[#39B54A] text-white rounded-md border border-neutral-200 px-3 py-2 text-sm"
+                    onClick={() => setNavOpen(false)}
+                  >
+                    <TiUserAdd className="size-6 text-white" /> Register
+                  </Link>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-2">
+                  <Link
+                    href="/profile"
+                    className="flex items-center gap-2 justify-center rounded-md border-[#39B54A] text-[#39B54A] border px-3 py-2 text-sm"
+                    onClick={() => setNavOpen(false)}
+                  >
+                    <CircleUser className="size-4" /> Profile
+                  </Link>
+                  <button
+                    onClick={() => {
+                      handleLogout();
+                      setNavOpen(false);
+                    }}
+                    className="flex items-center gap-2 justify-center rounded-md border border-red-500 text-red-500 px-3 py-2 text-sm hover:bg-red-50 transition-colors"
+                  >
+                    <LogOut className="size-4" /> Logout
+                  </button>
+                </div>
+              )}
+            </div>
           </nav>
         </aside>
       </div>
