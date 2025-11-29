@@ -60,8 +60,6 @@ export default function AuthPage() {
     setIsLoginLoading(true);
 
     try {
-      console.log('Sending login email to:', loginData.email);
-      
       // Save email to localStorage
       localStorage.setItem('loginEmail', loginData.email);
 
@@ -111,7 +109,6 @@ export default function AuthPage() {
     setIsOtpLoading(true);
 
     try {
-      console.log('Submitting OTP:', otp);
       
       const savedEmail = localStorage.getItem('loginEmail');
       if (!savedEmail) {
@@ -135,6 +132,7 @@ export default function AuthPage() {
       // If OTP verification is successful
       if (response.data) {
         toast.success('Login successful!');
+        localStorage.setItem('user', JSON.stringify(response.data.user));
         
         // Remove saved email from localStorage
         localStorage.removeItem('loginEmail');
@@ -142,9 +140,6 @@ export default function AuthPage() {
         // Reset OTP and close modal
         setOtp('');
         setShowOtpModal(false);
-        
-        // TODO: Handle successful login (store token, redirect, etc.)
-        console.log('Login response:', response.data);
         
         // Redirect to home page after successful login
         router.push('/');
@@ -173,7 +168,6 @@ export default function AuthPage() {
     }
 
     try {
-      console.log('Resending OTP to:', savedEmail);
       
       // Make API call to resend OTP
       const formData = new FormData();
@@ -217,7 +211,6 @@ export default function AuthPage() {
     setIsLoading(true);
 
     try {
-      console.log('Register with:', registerData);
       
       // Make API call to register endpoint
       const response = await ApiFetcher.post('/auth/register', {
