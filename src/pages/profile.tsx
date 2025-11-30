@@ -1,6 +1,14 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { User, Package, ShoppingCart, MessageSquare, Home, Menu, X } from "lucide-react";
 import { FaChevronRight } from "react-icons/fa6";
+import { getDashboardStats, DashboardStats } from "@/services/dashboard";
+import { 
+  getProfile, 
+  UserProfile 
+} from "@/services/profile";
+import { getMyProducts } from "@/services/products";
+import { ProductData } from "@/types/product";
+import Link from "next/link";
 
 // Types
 interface VendorProfile {
@@ -21,14 +29,6 @@ interface Order {
   date: string;
 }
 
-interface Product {
-  id: string;
-  name: string;
-  price: number;
-  stock: number;
-  category: string;
-}
-
 interface Message {
   id: string;
   from: string;
@@ -38,7 +38,7 @@ interface Message {
   unread: boolean;
 }
 
-// Dummy Data
+// Dummy Data (fallback in case API fails)
 const dummyProfile: VendorProfile = {
   firstName: "John",
   lastName: "Doe",
@@ -73,60 +73,6 @@ const dummyOrders: Order[] = [
     status: "pending",
     date: "2025-11-12",
   },
-  {
-    id: "ORD-004",
-    customerName: "David Brown",
-    product: "USB-C Cable",
-    amount: 15.99,
-    status: "completed",
-    date: "2025-11-09",
-  },
-  {
-    id: "ORD-005",
-    customerName: "Emma Davis",
-    product: "Keyboard",
-    amount: 129.99,
-    status: "cancelled",
-    date: "2025-11-08",
-  },
-];
-
-const dummyProducts: Product[] = [
-  {
-    id: "PRD-001",
-    name: "Wireless Headphones",
-    price: 89.99,
-    stock: 45,
-    category: "Audio",
-  },
-  {
-    id: "PRD-002",
-    name: "Smart Watch",
-    price: 199.99,
-    stock: 23,
-    category: "Wearables",
-  },
-  {
-    id: "PRD-003",
-    name: "Laptop Stand",
-    price: 45.5,
-    stock: 67,
-    category: "Accessories",
-  },
-  {
-    id: "PRD-004",
-    name: "USB-C Cable",
-    price: 15.99,
-    stock: 120,
-    category: "Cables",
-  },
-  {
-    id: "PRD-005",
-    name: "Keyboard",
-    price: 129.99,
-    stock: 34,
-    category: "Peripherals",
-  },
 ];
 
 const dummyMessages: Message[] = [
@@ -146,30 +92,91 @@ const dummyMessages: Message[] = [
     date: "2025-11-11",
     unread: true,
   },
-  {
-    id: "MSG-003",
-    from: "Bob Smith",
-    subject: "Product inquiry",
-    preview: "Do you have this item in blue color?...",
-    date: "2025-11-10",
-    unread: false,
-  },
-  {
-    id: "MSG-004",
-    from: "Carol White",
-    subject: "Shipping update",
-    preview: "When will my order be shipped?...",
-    date: "2025-11-09",
-    unread: false,
-  },
 ];
 
 type TabType = "dashboard" | "orders" | "products" | "messages" | "profile";
 
 const Profile = () => {
-  const [activeTab, setActiveTab] = useState<TabType>("profile");
+  const [activeTab, setActiveTab] = useState<TabType>("dashboard");
   const [profile, setProfile] = useState<VendorProfile>(dummyProfile);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [myProducts, setMyProducts] = useState<ProductData | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [dashboardData, setDashboardData] = useState<DashboardStats | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [profileLoading, setProfileLoading] = useState(false);
+  const [productsLoading, setProductsLoading] = useState(false);
+
+  // Fetch dashboard data when component mounts or when activeTab changes to dashboard
+  useEffect(() => {
+    if (activeTab === "dashboard") {
+      fetchDashboardData();
+    }
+  }, [activeTab]);
+
+  // Fetch user profile data
+  useEffect(() => {
+    fetchUserProfile();
+  }, []);
+
+  // Fetch my products when products tab is active
+  useEffect(() => {
+    if (activeTab === "products") {
+      fetchMyProducts();
+    }
+  }, [activeTab]);
+
+  const fetchDashboardData = async () => {
+    setLoading(true);
+    try {
+      const data = await getDashboardStats();
+      setDashboardData(data);
+    } catch (error) {
+      console.error("Failed to fetch dashboard data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchUserProfile = async () => {
+    setProfileLoading(true);
+    try {
+      const data = await getProfile();
+      setUserProfile(data);
+      
+      // Update the vendor profile with actual user data
+      if (data) {
+        const nameParts = data.name.split(' ');
+        const firstName = nameParts[0] || '';
+        const lastName = nameParts.slice(1).join(' ') || '';
+        
+        setProfile(prev => ({
+          ...prev,
+          firstName,
+          lastName,
+          email: data.email,
+          phoneNumber: data.phone,
+          shopName: data.business?.name || prev.shopName,
+        }));
+      }
+    } catch (error) {
+      console.error("Failed to fetch user profile:", error);
+    } finally {
+      setProfileLoading(false);
+    }
+  };
+
+  const fetchMyProducts = async () => {
+    setProductsLoading(true);
+    try {
+      const data = await getMyProducts();
+      setMyProducts(data);
+    } catch (error) {
+      console.error("Failed to fetch products:", error);
+    } finally {
+      setProductsLoading(false);
+    }
+  };
 
   const handleProfileSubmit = () => {
     alert("Profile updated successfully!");
@@ -192,7 +199,48 @@ const Profile = () => {
 
   const handleTabChange = (tab: TabType) => {
     setActiveTab(tab);
-    setSidebarOpen(false); // Close sidebar on mobile after selecting
+    setSidebarOpen(false);
+  };
+
+  // Format wallet amount with proper currency formatting
+  const formatWalletAmount = (amount: string) => {
+    const numAmount = parseFloat(amount);
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD'
+    }).format(numAmount);
+  };
+
+  // Format price for display
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD'
+    }).format(price);
+  };
+
+  // Get user display name
+  const getUserDisplayName = () => {
+    if (userProfile) {
+      return userProfile.name;
+    }
+    return profile.email;
+  };
+
+  // Get user email for display
+  const getUserDisplayEmail = () => {
+    if (userProfile) {
+      return userProfile.email;
+    }
+    return profile.email;
+  };
+
+  // Get product count from profile
+  const getActualProductCount = () => {
+    if (userProfile) {
+      return userProfile.product_count;
+    }
+    return dashboardData?.products || 0;
   };
 
   return (
@@ -225,7 +273,7 @@ const Profile = () => {
           {/* Sidebar - Mobile Overlay */}
           {sidebarOpen && (
             <div
-              className="fixed inset-0 bg-black bg-opacity-50 z-20  lg:hidden"
+              className="fixed inset-0 bg-black bg-opacity-50 z-20 lg:hidden"
               onClick={() => setSidebarOpen(false)}
             />
           )}
@@ -233,32 +281,49 @@ const Profile = () => {
           {/* Sidebar */}
           <div
             className={`
-            fixed lg:relative inset-y-0 left-0 z-0 w-72 bg-white rounded-lg shadow-sm p-6
+            fixed lg:relative inset-y-0 left-0 z-30 w-72 bg-white rounded-lg shadow-sm p-6
             transform transition-transform duration-300 ease-in-out
             ${sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
             lg:block
           `}
           >
             <div className="flex items-center gap-3 mb-6 pb-6 border-b border-neutral-200">
-              <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0">
-                <User className="w-6 h-6 text-gray-600" />
+              <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden">
+                {userProfile?.avatar ? (
+                  <img 
+                    src={userProfile.avatar} 
+                    alt="Profile" 
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <User className="w-6 h-6 text-gray-600" />
+                )}
               </div>
               <div className="min-w-0 flex-1">
                 <p className="text-sm text-gray-500">Welcome back!</p>
-                <p className="font-medium truncate">{profile.email}</p>
+                <p className="font-medium truncate">
+                  {profileLoading ? (
+                    <div className="w-20 h-4 bg-gray-200 rounded animate-pulse"></div>
+                  ) : (
+                    getUserDisplayName()
+                  )}
+                </p>
               </div>
             </div>
 
             <nav className="space-y-1">
               <button
                 onClick={() => handleTabChange("dashboard")}
-                className={`w-full text-left px-4 py-2.5 rounded-lg transition-colors ${
+                className={`w-full text-left px-4 py-2.5 rounded-lg transition-colors flex items-center justify-between ${
                   activeTab === "dashboard"
                     ? "bg-gray-100 font-medium"
                     : "hover:bg-gray-50"
                 }`}
               >
-                Dashboard
+                <span>Dashboard</span>
+                {loading && (
+                  <div className="w-4 h-4 border-2 border-[#39B54A] border-t-transparent rounded-full animate-spin"></div>
+                )}
               </button>
               <button
                 onClick={() => handleTabChange("orders")}
@@ -272,13 +337,16 @@ const Profile = () => {
               </button>
               <button
                 onClick={() => handleTabChange("products")}
-                className={`w-full text-left px-4 py-2.5 rounded-lg transition-colors ${
+                className={`w-full text-left px-4 py-2.5 rounded-lg transition-colors flex items-center justify-between ${
                   activeTab === "products"
                     ? "bg-gray-100 font-medium"
                     : "hover:bg-gray-50"
                 }`}
               >
-                Products
+                <span>Products</span>
+                {productsLoading && (
+                  <div className="w-4 h-4 border-2 border-[#39B54A] border-t-transparent rounded-full animate-spin"></div>
+                )}
               </button>
               <button
                 onClick={() => handleTabChange("messages")}
@@ -290,7 +358,7 @@ const Profile = () => {
               >
                 <span>Messages</span>
                 <span className="bg-red-500 text-white text-xs rounded-full px-2 py-0.5">
-                  2
+                  {dummyMessages.filter((m) => m.unread).length}
                 </span>
               </button>
               <button
@@ -313,79 +381,176 @@ const Profile = () => {
           <div className="flex-1 bg-white rounded-lg shadow-sm p-4 sm:p-6 lg:p-8">
             {activeTab === "dashboard" && (
               <div>
-                <h2 className="text-xl sm:text-2xl font-bold mb-6">Dashboard</h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-8">
-                  <div className="bg-blue-50 p-4 sm:p-6 rounded-lg">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm text-gray-600 mb-1">
-                          Total Orders
-                        </p>
-                        <p className="text-2xl sm:text-3xl font-bold">
-                          {dummyOrders.length}
-                        </p>
-                      </div>
-                      <ShoppingCart className="w-8 h-8 sm:w-10 sm:h-10 text-[#39B54A]" />
-                    </div>
-                  </div>
-                  <div className="bg-green-50 p-4 sm:p-6 rounded-lg">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm text-gray-600 mb-1">
-                          Total Products
-                        </p>
-                        <p className="text-2xl sm:text-3xl font-bold">
-                          {dummyProducts.length}
-                        </p>
-                      </div>
-                      <Package className="w-8 h-8 sm:w-10 sm:h-10 text-green-600" />
-                    </div>
-                  </div>
-                  <div className="bg-purple-50 p-4 sm:p-6 rounded-lg sm:col-span-2 lg:col-span-1">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm text-gray-600 mb-1">
-                          Unread Messages
-                        </p>
-                        <p className="text-2xl sm:text-3xl font-bold">
-                          {dummyMessages.filter((m) => m.unread).length}
-                        </p>
-                      </div>
-                      <MessageSquare className="w-8 h-8 sm:w-10 sm:h-10 text-[#39B54A]" />
-                    </div>
-                  </div>
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-xl sm:text-2xl font-bold">Dashboard</h2>
+                  <button 
+                    onClick={fetchDashboardData}
+                    disabled={loading}
+                    className="flex items-center gap-2 px-4 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors disabled:opacity-50"
+                  >
+                    Refresh
+                    {loading && (
+                      <div className="w-4 h-4 border-2 border-[#39B54A] border-t-transparent rounded-full animate-spin"></div>
+                    )}
+                  </button>
                 </div>
-                <div>
-                  <h3 className="text-lg font-semibold mb-4">Recent Orders</h3>
-                  <div className="space-y-3">
-                    {dummyOrders.slice(0, 3).map((order) => (
-                      <div
-                        key={order.id}
-                        className="border border-neutral-200 rounded-lg p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
-                      >
-                        <div className="flex-1">
-                          <p className="font-medium">{order.product}</p>
-                          <p className="text-sm text-gray-600">
-                            {order.customerName}
+                
+                {loading ? (
+                  <div className="flex justify-center items-center py-12">
+                    <div className="w-8 h-8 border-4 border-[#39B54A] border-t-transparent rounded-full animate-spin"></div>
+                  </div>
+                ) : (
+                  <>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-8">
+                      {/* Wallet Card */}
+                      <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-4 sm:p-6 rounded-lg border border-green-100">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm text-gray-600 mb-1">
+                              Wallet Balance
+                            </p>
+                            <p className="text-2xl sm:text-3xl font-bold text-green-700">
+                              {dashboardData ? formatWalletAmount(dashboardData.wallet) : "$0.00"}
+                            </p>
+                          </div>
+                          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-100 rounded-full flex items-center justify-center">
+                            <span className="text-green-600 font-bold text-sm">$</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Products Card */}
+                      <div className="bg-blue-50 p-4 sm:p-6 rounded-lg">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm text-gray-600 mb-1">
+                              Total Products
+                            </p>
+                            <p className="text-2xl sm:text-3xl font-bold">
+                              {getActualProductCount()}
+                            </p>
+                          </div>
+                          <Package className="w-8 h-8 sm:w-10 sm:h-10 text-[#39B54A]" />
+                        </div>
+                      </div>
+
+                      {/* Escrow Card */}
+                      <div className="bg-purple-50 p-4 sm:p-6 rounded-lg">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm text-gray-600 mb-1">
+                              Escrow Orders
+                            </p>
+                            <p className="text-2xl sm:text-3xl font-bold">
+                              {dashboardData?.escrow ?? 0}
+                            </p>
+                          </div>
+                          <ShoppingCart className="w-8 h-8 sm:w-10 sm:h-10 text-purple-600" />
+                        </div>
+                      </div>
+
+                      {/* Tickets Card */}
+                      <div className="bg-orange-50 p-4 sm:p-6 rounded-lg">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm text-gray-600 mb-1">
+                              Support Tickets
+                            </p>
+                            <p className="text-2xl sm:text-3xl font-bold">
+                              {dashboardData?.tickets ?? 0}
+                            </p>
+                          </div>
+                          <MessageSquare className="w-8 h-8 sm:w-10 sm:h-10 text-orange-600" />
+                        </div>
+                      </div>
+
+                      {/* Liked Products Card */}
+                      <div className="bg-pink-50 p-4 sm:p-6 rounded-lg">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm text-gray-600 mb-1">
+                              Liked Products
+                            </p>
+                            <p className="text-2xl sm:text-3xl font-bold">
+                              {dashboardData?.liked ?? 0}
+                            </p>
+                          </div>
+                          <div className="w-8 h-8 sm:w-10 sm:h-10 bg-pink-100 rounded-full flex items-center justify-center">
+                            <span className="text-pink-600 text-sm">❤</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Wishlist Card */}
+                      <div className="bg-indigo-50 p-4 sm:p-6 rounded-lg">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm text-gray-600 mb-1">
+                              Wishlist Items
+                            </p>
+                            <p className="text-2xl sm:text-3xl font-bold">
+                              {dashboardData?.wish_list ?? 0}
+                            </p>
+                          </div>
+                          <div className="w-8 h-8 sm:w-10 sm:h-10 bg-indigo-100 rounded-full flex items-center justify-center">
+                            <span className="text-indigo-600 text-sm">⭐</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* User Info Section */}
+                    <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
+                      <h3 className="text-lg font-semibold mb-4">Account Information</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <p className="text-sm text-gray-600">Name</p>
+                          <p className="font-medium">
+                            {profileLoading ? (
+                              <div className="w-32 h-4 bg-gray-200 rounded animate-pulse"></div>
+                            ) : (
+                              getUserDisplayName()
+                            )}
                           </p>
                         </div>
-                        <div className="flex items-center justify-between sm:flex-col sm:items-end gap-2">
-                          <p className="font-semibold">${order.amount}</p>
-                          <span
-                            className={`text-xs px-2 py-1 rounded-full ${getStatusColor(
-                              order.status
-                            )}`}
-                          >
-                            {order.status}
-                          </span>
+                        <div>
+                          <p className="text-sm text-gray-600">Email</p>
+                          <p className="font-medium">
+                            {profileLoading ? (
+                              <div className="w-40 h-4 bg-gray-200 rounded animate-pulse"></div>
+                            ) : (
+                              getUserDisplayEmail()
+                            )}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-600">Phone</p>
+                          <p className="font-medium">
+                            {profileLoading ? (
+                              <div className="w-24 h-4 bg-gray-200 rounded animate-pulse"></div>
+                            ) : (
+                              userProfile?.phone || "Not provided"
+                            )}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-600">Account Type</p>
+                          <p className="font-medium capitalize">
+                            {profileLoading ? (
+                              <div className="w-20 h-4 bg-gray-200 rounded animate-pulse"></div>
+                            ) : (
+                              userProfile?.type || "user"
+                            )}
+                          </p>
                         </div>
                       </div>
-                    ))}
-                  </div>
-                </div>
+                    </div>
+                  </>
+                )}
               </div>
             )}
 
+            {/* Orders Tab */}
             {activeTab === "orders" && (
               <div>
                 <h2 className="text-xl sm:text-2xl font-bold mb-6">Orders</h2>
@@ -443,44 +608,118 @@ const Profile = () => {
               </div>
             )}
 
+            {/* Products Tab - Updated with Real API Data */}
             {activeTab === "products" && (
               <div>
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
-                  <h2 className="text-xl sm:text-2xl font-bold">Products</h2>
-                  <button className="bg-[#39B54A] text-white px-4 py-2 rounded-lg hover:bg-[#188727] text-sm sm:text-base">
-                    Add Product
-                  </button>
+                  <h2 className="text-xl sm:text-2xl font-bold">My Products</h2>
+                  <Link href="/post-ad">
+                    <button className="bg-[#39B54A] text-white px-4 py-2 rounded-lg hover:bg-[#188727] text-sm sm:text-base">
+                      Add Product
+                    </button>
+                  </Link>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
-                  {dummyProducts.map((product) => (
-                    <div
-                      key={product.id}
-                      className="border border-neutral-200 rounded-lg p-4 sm:p-5"
-                    >
-                      <div className="bg-gray-100 h-32 sm:h-40 rounded-lg mb-4 flex items-center justify-center">
-                        <Package className="w-10 h-10 sm:w-12 sm:h-12 text-gray-400" />
+
+                {productsLoading ? (
+                  <div className="flex justify-center items-center py-12">
+                    <div className="w-8 h-8 border-4 border-[#39B54A] border-t-transparent rounded-full animate-spin"></div>
+                  </div>
+                ) : myProducts && myProducts.data.length > 0 ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
+                    {myProducts.data.map((product) => (
+                      <div
+                        key={product.id}
+                        className="border border-neutral-200 rounded-lg p-4 sm:p-5 hover:shadow-md transition-shadow"
+                      >
+                        <div className="bg-gray-100 h-32 sm:h-40 rounded-lg mb-4 flex items-center justify-center overflow-hidden">
+                          {product.thumbnail ? (
+                            <img 
+                              src={product.thumbnail} 
+                              alt={product.title}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : product.images && product.images.length > 0 ? (
+                            <img 
+                              src={product.images[0]} 
+                              alt={product.title}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <Package className="w-10 h-10 sm:w-12 sm:h-12 text-gray-400" />
+                          )}
+                        </div>
+                        
+                        <h3 className="font-semibold mb-2 text-sm sm:text-base line-clamp-2">
+                          {product.title}
+                        </h3>
+                        
+                        <p className="text-xs sm:text-sm text-gray-600 mb-2">
+                          Category: {product.keyword || "Uncategorized"}
+                        </p>
+                        
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-base sm:text-lg font-bold text-[#39B54A]">
+                            {formatPrice(product.price)}
+                          </span>
+                          <span className={`text-xs px-2 py-1 rounded-full ${
+                            product.status === 'published' 
+                              ? 'bg-green-100 text-green-800'
+                              : product.status === 'draft'
+                              ? 'bg-yellow-100 text-yellow-800'
+                              : 'bg-gray-100 text-gray-800'
+                          }`}>
+                            {product.status}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center justify-between text-xs sm:text-sm text-gray-600 mb-4">
+                          <span>Views: {product.views}</span>
+                          <span>{new Date(product.created_at).toLocaleDateString()}</span>
+                        </div>
+
+                        <button className="w-full border border-neutral-200 px-4 py-2 rounded-lg hover:bg-gray-50 text-sm">
+                          Edit Product
+                        </button>
                       </div>
-                      <h3 className="font-semibold mb-2 text-sm sm:text-base">{product.name}</h3>
-                      <p className="text-xs sm:text-sm text-gray-600 mb-2">
-                        Category: {product.category}
-                      </p>
-                      <div className="flex items-center justify-between">
-                        <span className="text-base sm:text-lg font-bold text-[#39B54A]">
-                          ${product.price}
-                        </span>
-                        <span className="text-xs sm:text-sm text-gray-600">
-                          Stock: {product.stock}
-                        </span>
-                      </div>
-                      <button className="w-full mt-4 border border-neutral-200 px-4 py-2 rounded-lg hover:bg-gray-50 text-sm">
-                        Edit
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-12">
+                    <Package className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">No products found</h3>
+                    <p className="text-gray-600 mb-6">You haven't created any products yet.</p>
+                    <Link href="/add-product">
+                      <button className="bg-[#39B54A] text-white px-6 py-2 rounded-lg hover:bg-[#188727]">
+                        Create Your First Product
                       </button>
-                    </div>
-                  ))}
-                </div>
+                    </Link>
+                  </div>
+                )}
+
+                {/* Pagination */}
+                {myProducts && myProducts.last_page > 1 && (
+                  <div className="flex justify-center items-center gap-2 mt-8">
+                    <button
+                      disabled={myProducts.current_page === 1}
+                      className="px-3 py-2 border border-neutral-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Previous
+                    </button>
+                    <span className="text-sm text-gray-600">
+                      Page {myProducts.current_page} of {myProducts.last_page}
+                    </span>
+                    <button
+                      disabled={myProducts.current_page === myProducts.last_page}
+                      className="px-3 py-2 border border-neutral-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Next
+                    </button>
+                  </div>
+                )}
               </div>
             )}
 
+            {/* Messages Tab */}
             {activeTab === "messages" && (
               <div>
                 <h2 className="text-xl sm:text-2xl font-bold mb-6">Messages</h2>
@@ -515,6 +754,7 @@ const Profile = () => {
               </div>
             )}
 
+            {/* Profile Tab */}
             {activeTab === "profile" && (
               <div>
                 <h2 className="text-xl sm:text-2xl font-bold mb-6">
@@ -561,21 +801,6 @@ const Profile = () => {
                       }
                       className="w-full px-3 sm:px-4 py-2 border border-neutral-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
                     />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium mb-2">
-                      Shop URL <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="url"
-                      value={profile.shopUrl}
-                      onChange={(e) =>
-                        setProfile({ ...profile, shopUrl: e.target.value })
-                      }
-                      className="w-full px-3 sm:px-4 py-2 border border-neutral-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent mb-1 text-sm sm:text-base"
-                    />
-                    <p className="text-xs text-gray-500 break-all">{profile.shopUrl}</p>
                   </div>
 
                   <div>

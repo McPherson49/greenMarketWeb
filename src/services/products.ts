@@ -2,8 +2,6 @@ import ApiFetcher from "@/utils/apis";
 import { toast } from "react-toastify";
 import { GetProductsRequest, GetProductsResponse, ProductData } from "@/types/product";
 
-
-
 // GET ALL PRODUCTS
 export const getProducts = async (): Promise<GetProductsResponse | null> => {
   try {
@@ -18,6 +16,29 @@ export const getProducts = async (): Promise<GetProductsResponse | null> => {
   } catch (error) {
     console.error("Error fetching Products:", error);
     toast.error("Error fetching Products");
+    return null;
+  }
+};
+
+// GET MY PRODUCTS
+export const getMyProducts = async (
+  page: number = 1, 
+  per_page: number = 10
+): Promise<ProductData | null> => {
+  try {
+    const response = await ApiFetcher.get<ProductData>(
+      `/my-products?page=${page}&per_page=${per_page}`
+    );
+
+    if (response?.data) {
+      return response.data; 
+    }
+
+    toast.error("Failed to load your products");
+    return null;
+  } catch (error) {
+    console.error("Error fetching your products:", error);
+    toast.error("Error fetching your products");
     return null;
   }
 };
