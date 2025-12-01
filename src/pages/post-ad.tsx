@@ -103,6 +103,31 @@ export default function NewProductForm() {
     fetchPlans();
   }, [showPromoteModal, plans.length]);
 
+  // Handle plan selection
+  const handlePlanSelect = (plan: Plan) => {
+    const isFreemium = Array.isArray(plan.pricing);
+    
+    if (isFreemium) {
+      // For freemium plans, just select the plan
+      setSelectedPlan(plan.id);
+      setSelectedDuration(null);
+    } else {
+      // For paid plans, select the plan and the first available duration
+      const pricingKeys = Object.keys(plan.pricing);
+      if (pricingKeys.length > 0) {
+        setSelectedPlan(plan.id);
+        setSelectedDuration(pricingKeys[0]); // Select first duration by default
+      }
+    }
+  };
+
+  // Handle duration selection
+  const handleDurationSelect = (planId: number, duration: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setSelectedPlan(planId);
+    setSelectedDuration(duration);
+  };
+
   // Validate form and disable button
   const isFormValid = () => {
     const requiredFields = ['title', 'category', 'price', 'description'];
@@ -672,12 +697,7 @@ export default function NewProductForm() {
                   return (
                     <div
                       key={plan.id}
-                      onClick={() => {
-                        if (isFreemium) {
-                          setSelectedPlan(plan.id);
-                          setSelectedDuration(null);
-                        }
-                      }}
+                      onClick={() => handlePlanSelect(plan)}
                       className={`relative rounded-xl p-4 cursor-pointer transition-all ${
                         selectedPlan === plan.id
                           ? isFreemium 
@@ -719,11 +739,7 @@ export default function NewProductForm() {
                               <button
                                 key={duration}
                                 type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setSelectedPlan(plan.id);
-                                  setSelectedDuration(duration);
-                                }}
+                                onClick={(e) => handleDurationSelect(plan.id, duration, e)}
                                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                                   isSelected
                                     ? 'bg-[#39B54A] text-white'
