@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import ApiFetcher from '@/utils/apis';
 import { toast } from 'react-toastify';
+import { loginAuth } from "@/utils/auth"; 
 
 export default function AuthPage() {
   const router = useRouter();
@@ -132,7 +133,9 @@ export default function AuthPage() {
       // If OTP verification is successful
       if (response.data) {
         toast.success('Login successful!');
-        localStorage.setItem('user', JSON.stringify(response.data.user));
+        localStorage.setItem('user', JSON.stringify(response.data.data.user));
+        localStorage.setItem('token', response.data.data.token);
+        loginAuth(response.data.data.token);
         
         // Remove saved email from localStorage
         localStorage.removeItem('loginEmail');
