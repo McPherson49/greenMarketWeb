@@ -36,7 +36,6 @@ type Category = {
 };
 
 function CategoryDrawer({
-
   open,
   onClose,
 }: {
@@ -100,35 +99,35 @@ function CategoryDrawer({
               Loading categories...
             </div>
           )}
-          
+
           {/* Scrollable nav */}
           {/* LIST */}
-        {!loading && (
-          <nav className="flex-1 divide-y divide-neutral-200 overflow-y-auto pb-10">
-            {categories.map((c) => (
-              <Link
-                key={c.id}
-                href={`/shop?category=${c.slug}`}
-                className="flex items-center justify-between px-4 py-3 hover:bg-emerald-50"
-                onClick={handleCategoryClick}
-              >
-                <span className="flex items-center gap-2">
-                  <span className="inline-flex size-7 items-center justify-center rounded-md bg-emerald-100 shrink-0">
-                    <Image
-                      src={c.icon ?? "/assets/default.png"}
-                      alt={c.name}
-                      width={50}
-                      height={50}
-                      className="object-contain"
-                    />
+          {!loading && (
+            <nav className="flex-1 divide-y divide-neutral-200 overflow-y-auto pb-10">
+              {categories.map((c) => (
+                <Link
+                  key={c.id}
+                  href={`/shop?category=${c.slug}`}
+                  className="flex items-center justify-between px-4 py-3 hover:bg-emerald-50"
+                  onClick={handleCategoryClick}
+                >
+                  <span className="flex items-center gap-2">
+                    <span className="inline-flex size-7 items-center justify-center rounded-md bg-emerald-100 shrink-0">
+                      <Image
+                        src={c.icon ?? "/assets/default.png"}
+                        alt={c.name}
+                        width={50}
+                        height={50}
+                        className="object-contain"
+                      />
+                    </span>
+                    <span className="text-sm">{c.name}</span>
                   </span>
-                  <span className="text-sm">{c.name}</span>
-                </span>
-                <ChevronRight className="size-4 text-neutral-400 shrink-0" />
-              </Link>
-            ))}
-          </nav>
-        )}
+                  <ChevronRight className="size-4 text-neutral-400 shrink-0" />
+                </Link>
+              ))}
+            </nav>
+          )}
         </div>
       </aside>
     </div>

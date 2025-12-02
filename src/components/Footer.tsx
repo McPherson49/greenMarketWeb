@@ -24,7 +24,7 @@ const Footer = () => {
   };
 
   return (
-    <footer className="bg-emerald-50 mt-40 text-black py-10 border-t border-neutral-50">
+    <footer className="bg-emerald-50 text-black py-10 border-t border-neutral-50">
       <div className="container max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-5 gap-4 px-4">
         {/* Company Info */}
         <div>
