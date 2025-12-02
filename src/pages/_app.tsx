@@ -128,8 +128,8 @@ export default function App({ Component, pageProps }: AppProps) {
     <>
       <Header onOpenCategories={() => setCatOpen(true)} />
       <CategoryDrawer open={catOpen} onClose={() => setCatOpen(false)} />
-      <Component {...pageProps} />
-      <Footer />
+     <Component {...pageProps} />
+       {/* <Footer /> */}
     </>
   );
 }

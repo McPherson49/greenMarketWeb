@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+body{
+  overflow-x: hidden;
+}
 
 @keyframes float {
   0%, 100% { 
