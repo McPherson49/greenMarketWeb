@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { getCategories } from "@/services/category";
 import { getPlans } from "@/services/plan";
+import locationService from "@/services/country"; 
+import ApiFetcher from '@/utils/apis';
 
 type Category = {
   id: number;
@@ -31,14 +33,19 @@ type Plan = {
   updated_at: string;
 };
 
+type State = {
+  name: string;
+  state_code: string;
+};
+
 export default function NewProductForm() {
   const [formData, setFormData] = useState({
     title: '',
     category: '',
     price: '',
     description: '',
-    state: 'Lagos State',
-    city: 'Agege',
+    state: '',
+    city: '',
     busStop: '',
     tags: [] as string[],
   });
@@ -53,6 +60,14 @@ export default function NewProductForm() {
   const [plansLoading, setPlansLoading] = useState(false);
   const [images, setImages] = useState<ImageFile[]>([]);
   const [imageError, setImageError] = useState('');
+  
+  // State for location data
+  const [states, setStates] = useState<State[]>([]);
+  const [cities, setCities] = useState<string[]>([]);
+  const [loadingStates, setLoadingStates] = useState(false);
+  const [loadingCities, setLoadingCities] = useState(false);
+  const [country] = useState('Nigeria'); // Static country
+  
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Fetch categories from API
@@ -72,6 +87,90 @@ export default function NewProductForm() {
 
     fetchCategories();
   }, []);
+
+  // Fetch Nigerian states on component mount
+  useEffect(() => {
+    async function fetchNigerianStates() {
+      setLoadingStates(true);
+      try {
+        const statesData = await locationService.getStates(country);
+        setStates(statesData);
+        
+        // Auto-select Lagos State if available
+        const lagosState = statesData.find(state => 
+          state.name.toLowerCase().includes('lagos')
+        );
+        if (lagosState) {
+          setFormData(prev => ({
+            ...prev,
+            state: lagosState.name
+          }));
+        }
+      } catch (error) {
+        console.error("Error loading Nigerian states:", error);
+        // Set fallback states in case of API failure
+        setStates([
+          { name: 'Lagos State', state_code: 'LA' },
+          { name: 'Ogun State', state_code: 'OG' },
+          { name: 'Abuja', state_code: 'FC' }
+        ]);
+      } finally {
+        setLoadingStates(false);
+      }
+    }
+
+    fetchNigerianStates();
+  }, [country]);
+
+  // Fetch cities when state changes
+  useEffect(() => {
+    async function fetchCitiesForState() {
+      if (!formData.state) return;
+      
+      setLoadingCities(true);
+      try {
+        const citiesData = await locationService.getCities(country, formData.state);
+        setCities(citiesData);
+        
+        // Auto-select first city if available
+        if (citiesData.length > 0 && !formData.city) {
+          setFormData(prev => ({
+            ...prev,
+            city: citiesData[0]
+          }));
+        }
+      } catch (error) {
+        console.error(`Error loading cities for ${formData.state}:`, error);
+        // Set fallback cities based on state
+        const fallbackCities = getFallbackCities(formData.state);
+        setCities(fallbackCities);
+        
+        if (fallbackCities.length > 0 && !formData.city) {
+          setFormData(prev => ({
+            ...prev,
+            city: fallbackCities[0]
+          }));
+        }
+      } finally {
+        setLoadingCities(false);
+      }
+    }
+
+    fetchCitiesForState();
+  }, [formData.state, country]);
+
+  // Helper function for fallback cities
+  const getFallbackCities = (stateName: string): string[] => {
+    const stateMap: Record<string, string[]> = {
+      'Lagos State': ['Agege', 'Ikeja', 'Victoria Island', 'Lagos Island', 'Apapa'],
+      'Ogun State': ['Abeokuta', 'Sagamu', 'Ijebu-Ode', 'Ilaro'],
+      'Abuja': ['Garki', 'Wuse', 'Maitama', 'Asokoro'],
+      'Lagos': ['Agege', 'Ikeja', 'Victoria Island', 'Lagos Island', 'Apapa'],
+      'Federal Capital Territory': ['Garki', 'Wuse', 'Maitama', 'Asokoro']
+    };
+    
+    return stateMap[stateName] || ['Select a city'];
+  };
 
   // Fetch plans when modal opens
   useEffect(() => {
@@ -103,6 +202,27 @@ export default function NewProductForm() {
     fetchPlans();
   }, [showPromoteModal, plans.length]);
 
+  // Handle state change
+  const handleStateChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedState = e.target.value;
+    setFormData({ 
+      ...formData, 
+      state: selectedState,
+      city: '' // Reset city when state changes
+    });
+    setErrors({ ...errors, state: '' });
+  };
+
+  // Handle city change
+  const handleCityChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedCity = e.target.value;
+    setFormData({ 
+      ...formData, 
+      city: selectedCity 
+    });
+    setErrors({ ...errors, city: '' });
+  };
+
   // Handle plan selection
   const handlePlanSelect = (plan: Plan) => {
     const isFreemium = Array.isArray(plan.pricing);
@@ -130,7 +250,7 @@ export default function NewProductForm() {
 
   // Validate form and disable button
   const isFormValid = () => {
-    const requiredFields = ['title', 'category', 'price', 'description'];
+    const requiredFields = ['title', 'category', 'price', 'description', 'state', 'city'];
     return requiredFields.every(field => formData[field as keyof typeof formData]) && 
            formData.tags.length > 0;
   };
@@ -143,6 +263,8 @@ export default function NewProductForm() {
     if (!formData.category) newErrors.category = 'Please select a category';
     if (!formData.price) newErrors.price = 'Enter a price';
     if (!formData.description) newErrors.description = 'Enter a description for this product';
+    if (!formData.state) newErrors.state = 'Please select a state';
+    if (!formData.city) newErrors.city = 'Please select a city';
     if (formData.tags.length === 0) newErrors.tags = 'Must attach at least one tag';
     if (images.length === 0) {
       newErrors.images = 'Please upload at least one image';
@@ -175,6 +297,7 @@ export default function NewProductForm() {
     
     const submitData = {
       ...formData,
+      country: country, // Add Nigeria as country
       plan_id: selectedPlan,
       plan_duration: selectedDuration,
       plan_price: planPrice,
@@ -196,6 +319,7 @@ export default function NewProductForm() {
     apiFormData.append('category', formData.category);
     apiFormData.append('price', formData.price);
     apiFormData.append('description', formData.description);
+    apiFormData.append('country', country);
     apiFormData.append('state', formData.state);
     apiFormData.append('city', formData.city);
     apiFormData.append('busStop', formData.busStop);
@@ -611,29 +735,62 @@ export default function NewProductForm() {
                 <h2 className="text-sm font-bold text-gray-900 mb-4">NEAREST LOCATION</h2>
                 <div className="space-y-4">
                   <div>
+                    <label className="text-xs text-gray-400 mb-2 block">Country</label>
+                    <div className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-700">
+                      {country}
+                    </div>
+                  </div>
+                  
+                  <div>
                     <label className="text-xs text-gray-400 mb-2 block">State</label>
                     <select
                       value={formData.state}
-                      onChange={(e) => setFormData({ ...formData, state: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#39B54A] appearance-none bg-white"
+                      onChange={handleStateChange}
+                      disabled={loadingStates}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#39B54A] appearance-none bg-white disabled:bg-gray-100"
                     >
-                      <option>Lagos State</option>
-                      <option>Ogun State</option>
-                      <option>Abuja</option>
+                      <option value="">Select a state</option>
+                      {loadingStates ? (
+                        <option>Loading states...</option>
+                      ) : (
+                        states.map((state) => (
+                          <option key={state.state_code} value={state.name}>
+                            {state.name}
+                          </option>
+                        ))
+                      )}
                     </select>
+                    {errors.state && (
+                      <p className="text-xs text-red-500 mt-1">{errors.state}</p>
+                    )}
                   </div>
+                  
                   <div>
                     <label className="text-xs text-gray-400 mb-2 block">City</label>
                     <select
                       value={formData.city}
-                      onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#39B54A] appearance-none bg-white"
+                      onChange={handleCityChange}
+                      disabled={!formData.state || loadingCities}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#39B54A] appearance-none bg-white disabled:bg-gray-100"
                     >
-                      <option>Agege</option>
-                      <option>Ikeja</option>
-                      <option>Victoria Island</option>
+                      <option value="">Select a city</option>
+                      {loadingCities ? (
+                        <option>Loading cities...</option>
+                      ) : formData.state ? (
+                        cities.map((city, index) => (
+                          <option key={`${city}-${index}`} value={city}>
+                            {city}
+                          </option>
+                        ))
+                      ) : (
+                        <option>Select a state first</option>
+                      )}
                     </select>
+                    {errors.city && (
+                      <p className="text-xs text-red-500 mt-1">{errors.city}</p>
+                    )}
                   </div>
+                  
                   <div>
                     <label className="text-xs text-gray-400 mb-2 block">Nearest Bus Stop</label>
                     <input
