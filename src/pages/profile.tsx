@@ -1,11 +1,17 @@
 import React, { useState, useEffect } from "react";
-import { User, Package, ShoppingCart, MessageSquare, Home, Menu, X } from "lucide-react";
+import {
+  User,
+  Package,
+  ShoppingCart,
+  MessageSquare,
+  Home,
+  Menu,
+  X,
+} from "lucide-react";
 import { FaChevronRight } from "react-icons/fa6";
+import EscrowRequests from "@/components/EscrowOrders";
 import { getDashboardStats, DashboardStats } from "@/services/dashboard";
-import { 
-  getProfile, 
-  UserProfile 
-} from "@/services/profile";
+import { getProfile, UserProfile } from "@/services/profile";
 import { getMyProducts } from "@/services/products";
 import { ProductData } from "@/types/product";
 import Link from "next/link";
@@ -94,7 +100,13 @@ const dummyMessages: Message[] = [
   },
 ];
 
-type TabType = "dashboard" | "orders" | "products" | "messages" | "profile";
+type TabType =
+  | "dashboard"
+  | "orders"
+  | "products"
+  | "messages"
+  | "profile"
+  | "escrow";
 
 const Profile = () => {
   const [activeTab, setActiveTab] = useState<TabType>("dashboard");
@@ -102,7 +114,9 @@ const Profile = () => {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [myProducts, setMyProducts] = useState<ProductData | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [dashboardData, setDashboardData] = useState<DashboardStats | null>(null);
+  const [dashboardData, setDashboardData] = useState<DashboardStats | null>(
+    null
+  );
   const [loading, setLoading] = useState(false);
   const [profileLoading, setProfileLoading] = useState(false);
   const [productsLoading, setProductsLoading] = useState(false);
@@ -143,14 +157,14 @@ const Profile = () => {
     try {
       const data = await getProfile();
       setUserProfile(data);
-      
+
       // Update the vendor profile with actual user data
       if (data) {
-        const nameParts = data.name.split(' ');
-        const firstName = nameParts[0] || '';
-        const lastName = nameParts.slice(1).join(' ') || '';
-        
-        setProfile(prev => ({
+        const nameParts = data.name.split(" ");
+        const firstName = nameParts[0] || "";
+        const lastName = nameParts.slice(1).join(" ") || "";
+
+        setProfile((prev) => ({
           ...prev,
           firstName,
           lastName,
@@ -205,17 +219,17 @@ const Profile = () => {
   // Format wallet amount with proper currency formatting
   const formatWalletAmount = (amount: string) => {
     const numAmount = parseFloat(amount);
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD'
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
     }).format(numAmount);
   };
 
   // Format price for display
   const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD'
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
     }).format(price);
   };
 
@@ -262,7 +276,11 @@ const Profile = () => {
               onClick={() => setSidebarOpen(!sidebarOpen)}
               className="lg:hidden p-2 rounded-lg hover:bg-gray-100"
             >
-              {sidebarOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              {sidebarOpen ? (
+                <X className="w-6 h-6" />
+              ) : (
+                <Menu className="w-6 h-6" />
+              )}
             </button>
           </div>
         </div>
@@ -283,16 +301,20 @@ const Profile = () => {
             className={`
             fixed lg:relative inset-y-0 left-0 z-30 w-72 bg-white rounded-lg shadow-sm p-6
             transform transition-transform duration-300 ease-in-out
-            ${sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
+            ${
+              sidebarOpen
+                ? "translate-x-0"
+                : "-translate-x-full lg:translate-x-0"
+            }
             lg:block
           `}
           >
             <div className="flex items-center gap-3 mb-6 pb-6 border-b border-neutral-200">
               <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden">
                 {userProfile?.avatar ? (
-                  <img 
-                    src={userProfile.avatar} 
-                    alt="Profile" 
+                  <img
+                    src={userProfile.avatar}
+                    alt="Profile"
                     className="w-full h-full object-cover"
                   />
                 ) : (
@@ -349,6 +371,16 @@ const Profile = () => {
                 )}
               </button>
               <button
+                onClick={() => handleTabChange("escrow")}
+                className={`w-full text-left px-4 py-2.5 rounded-lg transition-colors ${
+                  activeTab === "escrow"
+                    ? "bg-gray-100 font-medium"
+                    : "hover:bg-gray-50"
+                }`}
+              >
+                Escrow Requests
+              </button>
+              <button
                 onClick={() => handleTabChange("messages")}
                 className={`w-full text-left px-4 py-2.5 rounded-lg transition-colors flex items-center justify-between ${
                   activeTab === "messages"
@@ -383,7 +415,7 @@ const Profile = () => {
               <div>
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-xl sm:text-2xl font-bold">Dashboard</h2>
-                  <button 
+                  <button
                     onClick={fetchDashboardData}
                     disabled={loading}
                     className="flex items-center gap-2 px-4 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors disabled:opacity-50"
@@ -394,7 +426,7 @@ const Profile = () => {
                     )}
                   </button>
                 </div>
-                
+
                 {loading ? (
                   <div className="flex justify-center items-center py-12">
                     <div className="w-8 h-8 border-4 border-[#39B54A] border-t-transparent rounded-full animate-spin"></div>
@@ -410,11 +442,15 @@ const Profile = () => {
                               Wallet Balance
                             </p>
                             <p className="text-2xl sm:text-3xl font-bold text-green-700">
-                              {dashboardData ? formatWalletAmount(dashboardData.wallet) : "$0.00"}
+                              {dashboardData
+                                ? formatWalletAmount(dashboardData.wallet)
+                                : "$0.00"}
                             </p>
                           </div>
                           <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-100 rounded-full flex items-center justify-center">
-                            <span className="text-green-600 font-bold text-sm">$</span>
+                            <span className="text-green-600 font-bold text-sm">
+                              $
+                            </span>
                           </div>
                         </div>
                       </div>
@@ -501,7 +537,9 @@ const Profile = () => {
 
                     {/* User Info Section */}
                     <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
-                      <h3 className="text-lg font-semibold mb-4">Account Information</h3>
+                      <h3 className="text-lg font-semibold mb-4">
+                        Account Information
+                      </h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                           <p className="text-sm text-gray-600">Name</p>
@@ -586,9 +624,15 @@ const Profile = () => {
                             className="border-b border-neutral-200 hover:bg-gray-50"
                           >
                             <td className="p-3 sm:p-4 text-sm">{order.id}</td>
-                            <td className="p-3 sm:p-4 text-sm">{order.customerName}</td>
-                            <td className="p-3 sm:p-4 text-sm hidden md:table-cell">{order.product}</td>
-                            <td className="p-3 sm:p-4 text-sm">${order.amount}</td>
+                            <td className="p-3 sm:p-4 text-sm">
+                              {order.customerName}
+                            </td>
+                            <td className="p-3 sm:p-4 text-sm hidden md:table-cell">
+                              {order.product}
+                            </td>
+                            <td className="p-3 sm:p-4 text-sm">
+                              ${order.amount}
+                            </td>
                             <td className="p-3 sm:p-4">
                               <span
                                 className={`text-xs px-2 sm:px-3 py-1 rounded-full whitespace-nowrap ${getStatusColor(
@@ -598,7 +642,9 @@ const Profile = () => {
                                 {order.status}
                               </span>
                             </td>
-                            <td className="p-3 sm:p-4 text-gray-600 text-sm hidden lg:table-cell">{order.date}</td>
+                            <td className="p-3 sm:p-4 text-gray-600 text-sm hidden lg:table-cell">
+                              {order.date}
+                            </td>
                           </tr>
                         ))}
                       </tbody>
@@ -633,14 +679,14 @@ const Profile = () => {
                       >
                         <div className="bg-gray-100 h-32 sm:h-40 rounded-lg mb-4 flex items-center justify-center overflow-hidden">
                           {product.thumbnail ? (
-                            <img 
-                              src={product.thumbnail} 
+                            <img
+                              src={product.thumbnail}
                               alt={product.title}
                               className="w-full h-full object-cover"
                             />
                           ) : product.images && product.images.length > 0 ? (
-                            <img 
-                              src={product.images[0]} 
+                            <img
+                              src={product.images[0]}
                               alt={product.title}
                               className="w-full h-full object-cover"
                             />
@@ -648,33 +694,37 @@ const Profile = () => {
                             <Package className="w-10 h-10 sm:w-12 sm:h-12 text-gray-400" />
                           )}
                         </div>
-                        
+
                         <h3 className="font-semibold mb-2 text-sm sm:text-base line-clamp-2">
                           {product.title}
                         </h3>
-                        
+
                         <p className="text-xs sm:text-sm text-gray-600 mb-2">
                           Category: {product.keyword || "Uncategorized"}
                         </p>
-                        
+
                         <div className="flex items-center justify-between mb-2">
                           <span className="text-base sm:text-lg font-bold text-[#39B54A]">
                             {formatPrice(product.price)}
                           </span>
-                          <span className={`text-xs px-2 py-1 rounded-full ${
-                            product.status === 'published' 
-                              ? 'bg-green-100 text-green-800'
-                              : product.status === 'draft'
-                              ? 'bg-yellow-100 text-yellow-800'
-                              : 'bg-gray-100 text-gray-800'
-                          }`}>
+                          <span
+                            className={`text-xs px-2 py-1 rounded-full ${
+                              product.status === "published"
+                                ? "bg-green-100 text-green-800"
+                                : product.status === "draft"
+                                ? "bg-yellow-100 text-yellow-800"
+                                : "bg-gray-100 text-gray-800"
+                            }`}
+                          >
                             {product.status}
                           </span>
                         </div>
 
                         <div className="flex items-center justify-between text-xs sm:text-sm text-gray-600 mb-4">
                           <span>Views: {product.views}</span>
-                          <span>{new Date(product.created_at).toLocaleDateString()}</span>
+                          <span>
+                            {new Date(product.created_at).toLocaleDateString()}
+                          </span>
                         </div>
 
                         <button className="w-full border border-neutral-200 px-4 py-2 rounded-lg hover:bg-gray-50 text-sm">
@@ -686,8 +736,12 @@ const Profile = () => {
                 ) : (
                   <div className="text-center py-12">
                     <Package className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">No products found</h3>
-                    <p className="text-gray-600 mb-6">You haven't created any products yet.</p>
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">
+                      No products found
+                    </h3>
+                    <p className="text-gray-600 mb-6">
+                      You haven't created any products yet.
+                    </p>
                     <Link href="/add-product">
                       <button className="bg-[#39B54A] text-white px-6 py-2 rounded-lg hover:bg-[#188727]">
                         Create Your First Product
@@ -709,7 +763,9 @@ const Profile = () => {
                       Page {myProducts.current_page} of {myProducts.last_page}
                     </span>
                     <button
-                      disabled={myProducts.current_page === myProducts.last_page}
+                      disabled={
+                        myProducts.current_page === myProducts.last_page
+                      }
                       className="px-3 py-2 border border-neutral-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       Next
@@ -733,7 +789,9 @@ const Profile = () => {
                     >
                       <div className="flex flex-col sm:flex-row sm:items-start justify-between mb-2 gap-2">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <h3 className="font-semibold text-sm sm:text-base">{message.from}</h3>
+                          <h3 className="font-semibold text-sm sm:text-base">
+                            {message.from}
+                          </h3>
                           {message.unread && (
                             <span className="bg-blue-600 text-white text-xs px-2 py-0.5 rounded-full">
                               New
@@ -747,7 +805,9 @@ const Profile = () => {
                       <p className="font-medium text-sm mb-1">
                         {message.subject}
                       </p>
-                      <p className="text-xs sm:text-sm text-gray-600">{message.preview}</p>
+                      <p className="text-xs sm:text-sm text-gray-600">
+                        {message.preview}
+                      </p>
                     </div>
                   ))}
                 </div>
@@ -826,6 +886,9 @@ const Profile = () => {
                 </div>
               </div>
             )}
+
+            {/* Escrow Requests Tab */}
+            {activeTab === "escrow" && <EscrowRequests />}
           </div>
         </div>
       </div>
