@@ -5,6 +5,7 @@ import { getCategories } from "@/services/category";
 import { getPlans } from "@/services/plan";
 import locationService from "@/services/country"; 
 import ApiFetcher from '@/utils/apis';
+import { toast } from 'react-toastify';
 
 type Category = {
   id: number;
@@ -77,8 +78,11 @@ export default function NewProductForm() {
         const categories = await getCategories();
         if (categories) {
           setCategories(categories);
+        } else {
+          toast.error("Unable to load categories. Please try again.");
         }
       } catch (error) {
+        toast.error("Failed to load categories. Please refresh the page.");
         console.error("Error loading categories:", error);
       } finally {
         setLoading(false);
@@ -94,26 +98,25 @@ export default function NewProductForm() {
       setLoadingStates(true);
       try {
         const statesData = await locationService.getStates(country);
-        setStates(statesData);
-        
-        // Auto-select Lagos State if available
-        const lagosState = statesData.find(state => 
-          state.name.toLowerCase().includes('lagos')
-        );
-        if (lagosState) {
-          setFormData(prev => ({
-            ...prev,
-            state: lagosState.name
-          }));
+        if (statesData && statesData.length > 0) {
+          setStates(statesData);
+          
+          // Auto-select Lagos State if available
+          const lagosState = statesData.find(state => 
+            state.name.toLowerCase().includes('lagos')
+          );
+          if (lagosState) {
+            setFormData(prev => ({
+              ...prev,
+              state: lagosState.name
+            }));
+          }
+        } else {
+          toast.error("Unable to load states. Please try again.");
         }
       } catch (error) {
+        toast.error("Failed to load states. Please refresh the page.");
         console.error("Error loading Nigerian states:", error);
-        // Set fallback states in case of API failure
-        setStates([
-          { name: 'Lagos State', state_code: 'LA' },
-          { name: 'Ogun State', state_code: 'OG' },
-          { name: 'Abuja', state_code: 'FC' }
-        ]);
       } finally {
         setLoadingStates(false);
       }
@@ -130,27 +133,24 @@ export default function NewProductForm() {
       setLoadingCities(true);
       try {
         const citiesData = await locationService.getCities(country, formData.state);
-        setCities(citiesData);
-        
-        // Auto-select first city if available
-        if (citiesData.length > 0 && !formData.city) {
-          setFormData(prev => ({
-            ...prev,
-            city: citiesData[0]
-          }));
+        if (citiesData && citiesData.length > 0) {
+          setCities(citiesData);
+          
+          // Auto-select first city if available
+          if (citiesData.length > 0 && !formData.city) {
+            setFormData(prev => ({
+              ...prev,
+              city: citiesData[0]
+            }));
+          }
+        } else {
+          toast.error(`No cities found for ${formData.state}. Please select another state.`);
+          setCities([]);
         }
       } catch (error) {
+        toast.error(`Failed to load cities for ${formData.state}. Please try again.`);
         console.error(`Error loading cities for ${formData.state}:`, error);
-        // Set fallback cities based on state
-        const fallbackCities = getFallbackCities(formData.state);
-        setCities(fallbackCities);
-        
-        if (fallbackCities.length > 0 && !formData.city) {
-          setFormData(prev => ({
-            ...prev,
-            city: fallbackCities[0]
-          }));
-        }
+        setCities([]);
       } finally {
         setLoadingCities(false);
       }
@@ -159,19 +159,6 @@ export default function NewProductForm() {
     fetchCitiesForState();
   }, [formData.state, country]);
 
-  // Helper function for fallback cities
-  const getFallbackCities = (stateName: string): string[] => {
-    const stateMap: Record<string, string[]> = {
-      'Lagos State': ['Agege', 'Ikeja', 'Victoria Island', 'Lagos Island', 'Apapa'],
-      'Ogun State': ['Abeokuta', 'Sagamu', 'Ijebu-Ode', 'Ilaro'],
-      'Abuja': ['Garki', 'Wuse', 'Maitama', 'Asokoro'],
-      'Lagos': ['Agege', 'Ikeja', 'Victoria Island', 'Lagos Island', 'Apapa'],
-      'Federal Capital Territory': ['Garki', 'Wuse', 'Maitama', 'Asokoro']
-    };
-    
-    return stateMap[stateName] || ['Select a city'];
-  };
-
   // Fetch plans when modal opens
   useEffect(() => {
     async function fetchPlans() {
@@ -179,7 +166,7 @@ export default function NewProductForm() {
         setPlansLoading(true);
         try {
           const fetchedPlans = await getPlans();
-          if (fetchedPlans) {
+          if (fetchedPlans && fetchedPlans.length > 0) {
             setPlans(fetchedPlans);
             
             // Auto-select freemium plan if exists
@@ -190,8 +177,11 @@ export default function NewProductForm() {
               setSelectedPlan(freemiumPlan.id);
               setSelectedDuration(null);
             }
+          } else {
+            toast.error("No plans available at the moment.");
           }
         } catch (error) {
+          toast.error("Failed to load plans. Please try again.");
           console.error("Error loading plans:", error);
         } finally {
           setPlansLoading(false);
@@ -237,6 +227,8 @@ export default function NewProductForm() {
       if (pricingKeys.length > 0) {
         setSelectedPlan(plan.id);
         setSelectedDuration(pricingKeys[0]); // Select first duration by default
+      } else {
+        toast.error("No pricing options available for this plan.");
       }
     }
   };
@@ -285,73 +277,75 @@ export default function NewProductForm() {
     setShowPromoteModal(true);
   };
 
-  const handlePostAd = () => {
-    // Prepare form data with images
-    const selectedPlanData = plans.find(plan => plan.id === selectedPlan);
-    
-    let planPrice = null;
-    if (selectedPlanData && selectedDuration && !Array.isArray(selectedPlanData.pricing)) {
-      // Type-safe access to pricing
-      planPrice = selectedPlanData.pricing[selectedDuration];
-    }
-    
-    const submitData = {
-      ...formData,
-      country: country, // Add Nigeria as country
-      plan_id: selectedPlan,
-      plan_duration: selectedDuration,
-      plan_price: planPrice,
-      // Format images for API: images[0], images[1], etc.
-      images: images.map((img, index) => ({
-        [`images[${index}]`]: img.file,
-      })),
-      // Format tags for API: tags[0], tags[1], etc.
-      tags: formData.tags.map((tag, index) => ({
-        [`tags[${index}]`]: tag,
-      }))
-    };
-    
-    // For actual API submission
-    const apiFormData = new FormData();
-    
-    // Add regular fields
-    apiFormData.append('title', formData.title);
-    apiFormData.append('category', formData.category);
-    apiFormData.append('price', formData.price);
-    apiFormData.append('description', formData.description);
-    apiFormData.append('country', country);
-    apiFormData.append('state', formData.state);
-    apiFormData.append('city', formData.city);
-    apiFormData.append('busStop', formData.busStop);
-    
-    // Add plan information
-    if (selectedPlan) {
-      apiFormData.append('plan_id', selectedPlan.toString());
-      if (selectedDuration) {
-        apiFormData.append('plan_duration', selectedDuration);
+  const handlePostAd = async () => {
+    try {
+      // Prepare form data with images
+      const selectedPlanData = plans.find(plan => plan.id === selectedPlan);
+      
+      let planPrice = null;
+      if (selectedPlanData && selectedDuration && !Array.isArray(selectedPlanData.pricing)) {
+        // Type-safe access to pricing
+        planPrice = selectedPlanData.pricing[selectedDuration];
       }
+      
+      const apiFormData = new FormData();
+      
+      // Add regular fields
+      apiFormData.append('title', formData.title);
+      apiFormData.append('category', formData.category);
+      apiFormData.append('price', formData.price);
+      apiFormData.append('description', formData.description);
+      apiFormData.append('country', country);
+      apiFormData.append('state', formData.state);
+      apiFormData.append('local', formData.city);
+      apiFormData.append('nearest', formData.busStop);
+      apiFormData.append('plan_price', planPrice ? planPrice.toString() : '0');
+      
+      // Add plan information
+      if (selectedPlan) {
+        apiFormData.append('plan_id', selectedPlan.toString());
+        if (selectedDuration) {
+          apiFormData.append('plan_duration', selectedDuration);
+        }
+      }
+      
+      // Add images as images[0], images[1], etc.
+      images.forEach((img, index) => {
+        apiFormData.append(`images[${index}]`, img.file);
+      });
+      
+      // Add tags as tags[0], tags[1], etc.
+      formData.tags.forEach((tag, index) => {
+        apiFormData.append(`tags[${index}]`, tag);
+      });
+      
+      setShowPromoteModal(false);
+      
+      // Handle form submission - you would send apiFormData to your API
+      // Example: await fetch('/api/products', { method: 'POST', body: apiFormData });
+      
+      // For now, show success message
+      toast.success("Ad posted successfully!");
+      
+      // Reset form after successful submission
+      setFormData({
+        title: '',
+        category: '',
+        price: '',
+        description: '',
+        state: states.find(s => s.name.toLowerCase().includes('lagos'))?.name || '',
+        city: '',
+        busStop: '',
+        tags: [],
+      });
+      setImages([]);
+      setSelectedPlan(null);
+      setSelectedDuration(null);
+      
+    } catch (error) {
+      toast.error("Failed to post ad. Please try again.");
+      console.error("Error posting ad:", error);
     }
-    
-    // Add images as images[0], images[1], etc.
-    images.forEach((img, index) => {
-      apiFormData.append(`images[${index}]`, img.file);
-    });
-    
-    // Add tags as tags[0], tags[1], etc.
-    formData.tags.forEach((tag, index) => {
-      apiFormData.append(`tags[${index}]`, tag);
-    });
-    
-    console.log('Form submitted:', submitData);
-    console.log('FormData for API:', apiFormData);
-    console.log('Selected plan ID:', selectedPlan);
-    console.log('Duration:', selectedDuration);
-    console.log('Selected plan data:', selectedPlanData);
-    
-    setShowPromoteModal(false);
-    
-    // Handle form submission - you would send apiFormData to your API
-    // Example: await fetch('/api/products', { method: 'POST', body: apiFormData });
   };
 
   const addTag = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -369,6 +363,8 @@ export default function NewProductForm() {
       });
       setErrors({ ...errors, tags: '' });
       setTagInput('');
+    } else if (formData.tags.includes(tagInput.trim())) {
+      toast.warning("Tag already exists!");
     }
   };
 
@@ -389,6 +385,7 @@ export default function NewProductForm() {
     // Check total images count
     if (images.length + files.length > 5) {
       setImageError('Cannot upload more than 5 images');
+      toast.error("Maximum 5 images allowed");
       return;
     }
 
@@ -396,6 +393,7 @@ export default function NewProductForm() {
       // Check file size (2MB = 2 * 1024 * 1024 bytes)
       if (file.size > 2 * 1024 * 1024) {
         setImageError(`Image ${file.name} exceeds 2MB limit`);
+        toast.error(`Image ${file.name} exceeds 2MB limit`);
         hasError = true;
         return;
       }
@@ -403,6 +401,7 @@ export default function NewProductForm() {
       // Check file type
       if (!file.type.startsWith('image/')) {
         setImageError(`File ${file.name} is not an image`);
+        toast.error(`File ${file.name} is not a valid image`);
         hasError = true;
         return;
       }
@@ -423,6 +422,7 @@ export default function NewProductForm() {
       setImages(prev => [...prev, ...newImages]);
       setImageError('');
       setErrors({ ...errors, images: '' });
+      toast.success(`${newImages.length} image(s) uploaded successfully`);
     }
 
     // Reset file input
@@ -437,6 +437,7 @@ export default function NewProductForm() {
       URL.revokeObjectURL(imageToRemove.preview);
     }
     setImages(prev => prev.filter(img => img.id !== id));
+    toast.info("Image removed");
   };
 
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
@@ -538,12 +539,14 @@ export default function NewProductForm() {
                     <option value="">Select a category</option>
                     {loading ? (
                       <option>Loading categories...</option>
-                    ) : (
+                    ) : categories.length > 0 ? (
                       categories.map((category) => (
                         <option key={category.id} value={category.id.toString()}>
                           {category.name}
                         </option>
                       ))
+                    ) : (
+                      <option>No categories available</option>
                     )}
                   </select>
                   {errors.category && (
@@ -746,18 +749,20 @@ export default function NewProductForm() {
                     <select
                       value={formData.state}
                       onChange={handleStateChange}
-                      disabled={loadingStates}
+                      disabled={loadingStates || states.length === 0}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#39B54A] appearance-none bg-white disabled:bg-gray-100"
                     >
                       <option value="">Select a state</option>
                       {loadingStates ? (
                         <option>Loading states...</option>
-                      ) : (
+                      ) : states.length > 0 ? (
                         states.map((state) => (
                           <option key={state.state_code} value={state.name}>
                             {state.name}
                           </option>
                         ))
+                      ) : (
+                        <option>No states available</option>
                       )}
                     </select>
                     {errors.state && (
@@ -770,18 +775,20 @@ export default function NewProductForm() {
                     <select
                       value={formData.city}
                       onChange={handleCityChange}
-                      disabled={!formData.state || loadingCities}
+                      disabled={!formData.state || loadingCities || cities.length === 0}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#39B54A] appearance-none bg-white disabled:bg-gray-100"
                     >
                       <option value="">Select a city</option>
                       {loadingCities ? (
                         <option>Loading cities...</option>
-                      ) : formData.state ? (
+                      ) : formData.state && cities.length > 0 ? (
                         cities.map((city, index) => (
                           <option key={`${city}-${index}`} value={city}>
                             {city}
                           </option>
                         ))
+                      ) : formData.state ? (
+                        <option>No cities available for this state</option>
                       ) : (
                         <option>Select a state first</option>
                       )}
