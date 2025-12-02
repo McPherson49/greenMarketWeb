@@ -1,5 +1,4 @@
 "use client";
-
 import Image from "next/image";
 import Link from "next/link";
 import { ChevronRight, Leaf, Users, Smartphone } from "lucide-react";
@@ -60,6 +59,21 @@ export default function Hero() {
 
   const slides = [
     {
+      
+      title: "The No. 1 Free Online Market for Farmers & Buyers in Nigeria",
+      description2:
+      "Buy and sell fresh agricultural products with ease. GreenMarket connects farmers with serious buyers for a simple, hassle-free trading experience.",
+      imageUrl: "/assets/vegetable.png",
+      imageAlt: "Escrow illustration",
+      bg: "assets/bg-img.png",
+      bgMobile: "assets/mobile.png", 
+      buttonText: "Learn More",
+      buttonLink: "/shop",
+      buttonPosition: "left",
+      centered: true, 
+      darkOverlay: true, 
+    },
+    {
       badgeText: "Escrow Secured",
       title: "Safe and Secure Transactions with Escrow",
       description: "Ensure trust and safety in every deal.",
@@ -72,21 +86,6 @@ export default function Hero() {
       buttonText: "Learn More",
       buttonLink: "/howEscrowWorks",
       buttonPosition: "left",
-    },
-    {
-     
-      title: "The No. 1 Free Online Market for Farmers & Buyers in Nigeria",
-      description2:
-        "Buy and sell fresh agricultural products with ease. GreenMarket connects farmers with serious buyers for a simple, hassle-free trading experience.",
-      imageUrl: "/assets/vegetable.png",
-      imageAlt: "Escrow illustration",
-      bg: "assets/bg-img.png",
-      bgMobile: "assets/mobile.png", 
-      buttonText: "Learn More",
-      buttonLink: "/shop",
-      buttonPosition: "left",
-      centered: true, 
-      darkOverlay: true, 
     },
     {
       badgeText: "New Feature Alert",
@@ -138,7 +137,7 @@ export default function Hero() {
               {/* Overlay */}
               <div
                 className={`absolute inset-0 ${
-                  slide.darkOverlay ? "bg-black/40" : "bg-white/20"
+                  slide.darkOverlay ? "bg-[#FFF7E8]/50" : "bg-white/40"
                 }`}
               ></div>
 
@@ -149,7 +148,7 @@ export default function Hero() {
                   <div className="max-w-3xl">
                     <h1
                       className={`text-3xl md:text-5xl font-bold ${
-                        slide.darkOverlay ? "text-white" : "text-[#253D4E]"
+                        slide.darkOverlay ? "text-[#253D4E]" : "text-[#253D4E]"
                       }`}
                     >
                       {slide.title}
@@ -159,7 +158,7 @@ export default function Hero() {
                       <p
                         className={`mt-4 text-sm md:text-base ${
                           slide.darkOverlay
-                            ? "text-white/90"
+                            ? "text-[#253D4E]/80"
                             : "text-[#253D4E]/80"
                         }`}
                       >
