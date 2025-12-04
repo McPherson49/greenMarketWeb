@@ -269,10 +269,10 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 ">
+    <div className=" flex items-center justify-center py-10 px-4 ">
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-8 ">
         {/* Tabs */}
-        <div className="flex justify-center mb-3 border-b border-gray-200">
+        <div className="flex justify-center items-center mb-3 border-b border-gray-200">
           <button
             onClick={switchToLogin}
             className={`px-8 py-3 text-lg font-semibold transition-colors ${
@@ -458,7 +458,7 @@ export default function AuthPage() {
 
       {/* OTP Modal */}
       {showOtpModal && (
-        <div className="fixed inset-0 bg-gray-400 bg-opacity-50 flex items-center justify-center px-4 z-50 backdrop-blur-sm">
+        <div className="fixed inset-0 bg-white/5 bg-opacity-50 flex items-center justify-center px-4 z-50 backdrop-blur-3xl">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8 animate-fadeIn">
             <h2 className="text-2xl font-bold text-gray-900 mb-2 text-center">
               Enter OTP

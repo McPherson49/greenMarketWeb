@@ -21,7 +21,7 @@ import { TiUserAdd } from "react-icons/ti";
 const navRoutes = [
   { label: "Home", href: "/" },
   { label: "About", href: "/about" },
-  { label: "Profile", href: "/profile" },
+  // { label: "Profile", href: "/profile" },
   { label: "shop", href: "/shop" },
   { label: "How Escrow Works", href: "/howEscrowWorks" },
   { label: "Community", href: "/community" },

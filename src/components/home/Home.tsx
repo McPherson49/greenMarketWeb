@@ -28,7 +28,7 @@ const ProductCardSkeleton = () => (
 
 export default function Home({ products, categories, loading }: HomeProps) {
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 ">
       <Hero />
 
       {/* Mobile categories chips */}

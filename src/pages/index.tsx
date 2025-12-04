@@ -83,7 +83,7 @@ export default function IndexPage() {
   ];
 
   return (
-    <main className="w-full">
+    <main className="w-full mb-30">
       <div className="container mt-10 max-w-7xl mx-auto">
         <Home 
           products={products} 

@@ -7,7 +7,7 @@ import WhatWeProvide from "@/components/about/WhatWeProvide";
 
 export default function AboutPage() {
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen mb-30 bg-white">
       <AboutHero />
       <WhatWeProvide />
       <HowToSellBuy />
