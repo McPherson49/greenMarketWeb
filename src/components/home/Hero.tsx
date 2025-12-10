@@ -137,7 +137,7 @@ export default function Hero() {
               {/* Overlay */}
               <div
                 className={`absolute inset-0 ${
-                  slide.darkOverlay ? "bg-[#FFF7E8]/50" : "bg-white/40"
+                  slide.darkOverlay ? "bg-[#000000]/50" : "bg-white/40"
                 }`}
               ></div>
 
@@ -148,7 +148,7 @@ export default function Hero() {
                   <div className="max-w-3xl">
                     <h1
                       className={`text-3xl md:text-5xl font-bold ${
-                        slide.darkOverlay ? "text-[#253D4E]" : "text-[#253D4E]"
+                        slide.darkOverlay ? "text-white mt-20 lg:mt-0" : "text-[#253D4E]"
                       }`}
                     >
                       {slide.title}
@@ -158,7 +158,7 @@ export default function Hero() {
                       <p
                         className={`mt-4 text-sm md:text-base ${
                           slide.darkOverlay
-                            ? "text-[#253D4E]/80"
+                            ? "text-white"
                             : "text-[#253D4E]/80"
                         }`}
                       >
