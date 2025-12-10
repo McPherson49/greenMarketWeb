@@ -26,6 +26,7 @@ import { FaBars, FaXmark } from "react-icons/fa6";
 import { MdOutlineProductionQuantityLimits } from "react-icons/md";
 import { FaX } from "react-icons/fa6";
 import { getCategories, CategoryItem } from "@/services/category";
+import MobileBottomNav from "@/components/MobileBottomNav";
 
 type Category = {
   id: number;
@@ -360,6 +361,7 @@ export default function App({ Component, pageProps }: AppProps) {
           <Header onOpenCategories={() => setCatOpen(true)} />
           <CategoryDrawer open={catOpen} onClose={() => setCatOpen(false)} />
           <Component {...pageProps} />
+          <MobileBottomNav />
           <Footer />
         </>
       )}
