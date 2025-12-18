@@ -67,7 +67,7 @@ function CategoryDrawer({
   };
 
   return (
-    <div className="fixed inset-0 z-[99998]">
+    <div className="fixed inset-0 z-99998">
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
       <aside className="absolute inset-y-0 left-0 w-[85vw] max-w-md bg-white border-r border-neutral-200 shadow-xl flex flex-col">
         <div className="flex items-center justify-between p-4 border-b border-neutral-200 shrink-0">

@@ -6,8 +6,11 @@ import { getDashboardStats, DashboardStats } from "@/services/dashboard";
 import { getProfile, UserProfile } from "@/services/profile";
 import { getMyProducts } from "@/services/products";
 import { ProductData } from "@/types/product";
+import {getOrders } from "@/services/orders"
 import Link from "next/link";
 import { formatWalletAmount, formatPrice } from "@/utils/func";
+import { getOffers } from "@/services/escrow";
+import Pagination from "@/components/Pagination";
 
 // Types
 interface VendorProfile {
@@ -17,6 +20,17 @@ interface VendorProfile {
   shopUrl: string;
   phoneNumber: string;
   email: string;
+}
+
+interface OrderData {
+  current_page: number;
+  data: Order[];
+  from: number | null;
+  last_page: number;
+  path: string;
+  per_page: number;
+  to: number | null;
+  total: number;
 }
 
 interface Order {
@@ -47,33 +61,6 @@ const dummyProfile: VendorProfile = {
   email: "name@gmail.com",
 };
 
-const dummyOrders: Order[] = [
-  {
-    id: "ORD-001",
-    customerName: "Alice Johnson",
-    product: "Wireless Headphones",
-    amount: 89.99,
-    status: "completed",
-    date: "2025-11-10",
-  },
-  {
-    id: "ORD-002",
-    customerName: "Bob Smith",
-    product: "Smart Watch",
-    amount: 199.99,
-    status: "processing",
-    date: "2025-11-11",
-  },
-  {
-    id: "ORD-003",
-    customerName: "Carol White",
-    product: "Laptop Stand",
-    amount: 45.5,
-    status: "pending",
-    date: "2025-11-12",
-  },
-];
-
 const dummyMessages: Message[] = [
   {
     id: "MSG-001",
@@ -93,13 +80,7 @@ const dummyMessages: Message[] = [
   },
 ];
 
-type TabType =
-  | "dashboard"
-  | "orders"
-  | "products"
-  | "messages"
-  | "profile"
-  | "escrow";
+type TabType = | "dashboard" | "orders" | "products" | "messages" | "profile"| "escrow";
 
 const Profile = () => {
   const [activeTab, setActiveTab] = useState<TabType>("dashboard");
@@ -113,6 +94,37 @@ const Profile = () => {
   const [loading, setLoading] = useState(false);
   const [profileLoading, setProfileLoading] = useState(false);
   const [myOrders, setMyOrder] = useState(false);
+  const [orders, setOrders] = useState<OrderData | null>(null);
+const [ordersLoading, setOrdersLoading] = useState(false);
+const [currentOrdersPage, setCurrentOrdersPage] = useState(1);
+const [ordersPerPage, setOrdersPerPage] = useState(10);
+const [ordersFilters, setOrdersFilters] = useState({
+    page: 1,
+    per_page: 10,
+    status: "",
+    search: "",
+  });
+
+    const handlePageChange = (page: number) => {
+    setOrdersFilters(prev => ({ ...prev, page }));
+  };
+
+  const handlePerPageChange = (perPage: number) => {
+    setOrdersFilters(prev => ({ ...prev, per_page: perPage, page: 1 }));
+  };
+
+  const handleStatusFilter = (status: string) => {
+    setOrdersFilters(prev => ({ ...prev, status, page: 1 }));
+  };
+
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setOrdersFilters(prev => ({ ...prev, search: e.target.value, page: 1 }));
+  };
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    fetchOrdersData();
+  };
 
   // Fetch dashboard data when component mounts or when activeTab changes to dashboard
   useEffect(() => {
@@ -131,7 +143,11 @@ const Profile = () => {
     if (activeTab === "products") {
       fetchMyProducts();
     }
-  }, [activeTab]);
+
+   if (activeTab === "orders") {
+      fetchOrdersData();
+    }
+  }, [activeTab, ordersFilters]);
 
   const fetchDashboardData = async () => {
     setLoading(true);
@@ -145,13 +161,27 @@ const Profile = () => {
     }
   };
 
+const fetchOrdersData = async () => {
+    setOrdersLoading(true);
+    try {
+      const data = await getOrders(ordersFilters);
+      if (data) {
+        setOrders(data);
+      }
+    } catch (error) {
+      console.error("Failed to fetch orders:", error);
+    } finally {
+      setOrdersLoading(false);
+    }
+  };
+
+
   const fetchUserProfile = async () => {
     setProfileLoading(true);
     try {
       const data = await getProfile();
       setUserProfile(data);
 
-      // Update the vendor profile with actual user data
       if (data) {
         const nameParts = data.name.split(" ");
         const firstName = nameParts[0] || "";
@@ -171,6 +201,15 @@ const Profile = () => {
     } finally {
       setProfileLoading(false);
     }
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
   };
 
   const fetchMyProducts = async () => {
@@ -286,7 +325,7 @@ const Profile = () => {
           `}
           >
             <div className="flex items-center gap-3 mb-6 pb-6 border-b border-neutral-200">
-              <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden">
+              <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center shrink-0 overflow-hidden">
                 {userProfile?.avatar ? (
                   <img
                     src={userProfile.avatar}
@@ -411,7 +450,7 @@ const Profile = () => {
                   <>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-8">
                       {/* Wallet Card */}
-                      <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-4 sm:p-6 rounded-lg border border-green-100">
+                      <div className="bg-linear-to-r from-green-50 to-emerald-50 p-4 sm:p-6 rounded-lg border border-green-100">
                         <div className="flex items-center justify-between">
                           <div>
                             <p className="text-sm text-gray-600 mb-1">
@@ -564,69 +603,169 @@ const Profile = () => {
               </div>
             )}
 
-            {/* Orders Tab */}
+            {/* Orders Tab - UPDATED */}
             {activeTab === "orders" && (
               <div>
-                <h2 className="text-xl sm:text-2xl font-bold mb-6">Orders</h2>
-                <div className="overflow-x-auto -mx-4 sm:mx-0">
-                  <div className="inline-block min-w-full align-middle">
-                    <table className="min-w-full">
-                      <thead className="bg-gray-50 border-b border-neutral-200">
-                        <tr>
-                          <th className="text-left p-3 sm:p-4 font-medium text-gray-700 text-sm">
-                            Order ID
-                          </th>
-                          <th className="text-left p-3 sm:p-4 font-medium text-gray-700 text-sm">
-                            Customer
-                          </th>
-                          <th className="text-left p-3 sm:p-4 font-medium text-gray-700 text-sm hidden md:table-cell">
-                            Product
-                          </th>
-                          <th className="text-left p-3 sm:p-4 font-medium text-gray-700 text-sm">
-                            Amount
-                          </th>
-                          <th className="text-left p-3 sm:p-4 font-medium text-gray-700 text-sm">
-                            Status
-                          </th>
-                          <th className="text-left p-3 sm:p-4 font-medium text-gray-700 text-sm hidden lg:table-cell">
-                            Date
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {dummyOrders.map((order) => (
-                          <tr
-                            key={order.id}
-                            className="border-b border-neutral-200 hover:bg-gray-50"
-                          >
-                            <td className="p-3 sm:p-4 text-sm">{order.id}</td>
-                            <td className="p-3 sm:p-4 text-sm">
-                              {order.customerName}
-                            </td>
-                            <td className="p-3 sm:p-4 text-sm hidden md:table-cell">
-                              {order.product}
-                            </td>
-                            <td className="p-3 sm:p-4 text-sm">
-                              ${order.amount}
-                            </td>
-                            <td className="p-3 sm:p-4">
-                              <span
-                                className={`text-xs px-2 sm:px-3 py-1 rounded-full whitespace-nowrap ${getStatusColor(
-                                  order.status
-                                )}`}
-                              >
-                                {order.status}
-                              </span>
-                            </td>
-                            <td className="p-3 sm:p-4 text-gray-600 text-sm hidden lg:table-cell">
-                              {order.date}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
+                  <h2 className="text-xl sm:text-2xl font-bold">Orders</h2>
+                  
+                  {/* Search and Filters */}
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <form onSubmit={handleSearchSubmit} className="flex gap-2">
+                      <input
+                        type="text"
+                        placeholder="Search orders..."
+                        value={ordersFilters.search}
+                        onChange={handleSearch}
+                        className="px-3 py-2 border border-gray-300 rounded-lg text-sm w-full sm:w-64"
+                      />
+                      <button
+                        type="submit"
+                        className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm"
+                      >
+                        Search
+                      </button>
+                    </form>
+                    
+                    <select
+                      value={ordersFilters.status}
+                      onChange={(e) => handleStatusFilter(e.target.value)}
+                      className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                    >
+                      <option value="">All Status</option>
+                      <option value="pending">Pending</option>
+                      <option value="processing">Processing</option>
+                      <option value="completed">Completed</option>
+                      <option value="cancelled">Cancelled</option>
+                    </select>
                   </div>
                 </div>
+
+                {ordersLoading ? (
+                  <div className="flex justify-center items-center py-12">
+                    <div className="w-8 h-8 border-4 border-[#39B54A] border-t-transparent rounded-full animate-spin"></div>
+                  </div>
+                ) : (
+                  <>
+                    <div className="overflow-x-auto -mx-4 sm:mx-0">
+                      <div className="inline-block min-w-full align-middle">
+                        <table className="min-w-full">
+                          <thead className="bg-gray-50 border-b border-neutral-200">
+                            <tr>
+                              <th className="text-left p-3 sm:p-4 font-medium text-gray-700 text-sm">
+                                Order ID
+                              </th>
+                              <th className="text-left p-3 sm:p-4 font-medium text-gray-700 text-sm">
+                                Customer
+                              </th>
+                              <th className="text-left p-3 sm:p-4 font-medium text-gray-700 text-sm hidden md:table-cell">
+                                Product
+                              </th>
+                              <th className="text-left p-3 sm:p-4 font-medium text-gray-700 text-sm">
+                                Amount
+                              </th>
+                              <th className="text-left p-3 sm:p-4 font-medium text-gray-700 text-sm">
+                                Status
+                              </th>
+                              <th className="text-left p-3 sm:p-4 font-medium text-gray-700 text-sm hidden lg:table-cell">
+                                Date
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {orders && orders.data && orders.data.length > 0 ? (
+                              orders.data.map((order) => (
+                                <tr
+                                  key={order.id}
+                                  className="border-b border-neutral-200 hover:bg-gray-50"
+                                >
+                                  <td className="p-3 sm:p-4 text-sm">
+                                    {order.order_number || order.id}
+                                  </td>
+                                  <td className="p-3 sm:p-4 text-sm">
+                                    {order.customer_name || "Unknown Customer"}
+                                  </td>
+                                  <td className="p-3 sm:p-4 text-sm hidden md:table-cell">
+                                    {order.product_name || "Unknown Product"}
+                                  </td>
+                                  <td className="p-3 sm:p-4 text-sm">
+                                    ${formatPrice(order.amount)}
+                                  </td>
+                                  <td className="p-3 sm:p-4">
+                                    <span
+                                      className={`text-xs px-2 sm:px-3 py-1 rounded-full whitespace-nowrap ${getStatusColor(
+                                        order.status
+                                      )}`}
+                                    >
+                                      {order.status}
+                                    </span>
+                                  </td>
+                                  <td className="p-3 sm:p-4 text-gray-600 text-sm hidden lg:table-cell">
+                                    {formatDate(order.created_at)}
+                                  </td>
+                                </tr>
+                              ))
+                            ) : (
+                              <tr>
+                                <td colSpan={6} className="p-8 text-center text-gray-500">
+                                  <div className="flex flex-col items-center justify-center">
+                                    <ShoppingCart className="w-16 h-16 text-gray-400 mb-4" />
+                                    <p className="text-lg font-medium text-gray-900 mb-2">
+                                      No orders found
+                                    </p>
+                                    <p className="text-gray-600">
+                                      {ordersFilters.search || ordersFilters.status
+                                        ? "No orders match your filters"
+                                        : "You haven't received any orders yet."}
+                                    </p>
+                                    {(ordersFilters.search || ordersFilters.status) && (
+                                      <button
+                                        onClick={() => {
+                                          setOrdersFilters({
+                                            page: 1,
+                                            per_page: 10,
+                                            status: "",
+                                            search: "",
+                                          });
+                                        }}
+                                        className="mt-4 px-4 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg"
+                                      >
+                                        Clear filters
+                                      </button>
+                                    )}
+                                  </div>
+                                </td>
+                              </tr>
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+
+                    {/* Pagination */}
+                    {orders && orders.last_page > 1 && (
+                      <div className="mt-6">
+                        <Pagination
+                          currentPage={orders.current_page}
+                          totalPages={orders.last_page}
+                          totalItems={orders.total}
+                          perPage={orders.per_page}
+                          onPageChange={handlePageChange}
+                          onPerPageChange={handlePerPageChange}
+                          showPerPageOptions={true}
+                          className="mt-6"
+                        />
+                      </div>
+                    )}
+
+                    {/* Order Summary */}
+                    {orders && orders.data && orders.data.length > 0 && (
+                      <div className="mt-4 text-sm text-gray-600">
+                        Showing {orders.from || 1} to {orders.to || orders.data.length} of {orders.total} orders
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
             )}
 
