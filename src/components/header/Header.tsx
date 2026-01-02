@@ -1,23 +1,15 @@
 "use client";
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import {
-  Leaf,
-  Menu,
-  Search,
-  Phone,
-  CircleUser,
-  ChevronRight,
-  X,
-  Plus,
-  ChevronDown,
-  LogOut,
-} from "lucide-react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { Menu, Search, CircleUser, ChevronRight, X, ChevronDown, LogOut } from "lucide-react";
 import Image from "next/image";
 import { FaAd, FaHeadset } from "react-icons/fa";
 import { TiUserAdd } from "react-icons/ti";
 import { logoutAuth } from "@/utils/auth"
+import locationService from "@/services/country"; 
+import { toast } from "react-toastify";
+import { UIProduct } from "@/types/product";
 
 const navRoutes = [
   { label: "Home", href: "/" },
@@ -28,15 +20,6 @@ const navRoutes = [
   { label: "Blog", href: "/blog" },
   { label: "Contact", href: "/contact" },
 ] as const;
-
-const locations = [
-  { value: "Search By Location", label: "Search By Location" },
-  { value: "lagos", label: "Lagos" },
-  { value: "abuja", label: "Abuja" },
-  { value: "portharcourt", label: "Port Harcourt" },
-  { value: "kano", label: "Kano" },
-  { value: "ibadan", label: "Ibadan" },
-];
 
 function Brand() {
   return (
@@ -53,15 +36,72 @@ function Brand() {
   );
 }
 
-function SearchBar({ className = "" }: { className?: string }) {
-  const [locationOpen, setLocationOpen] = useState(false);
-  const [selectedLocation, setSelectedLocation] =
-    useState("Search By Location");
+interface SearchBarProps {
+  className?: string;
+  onSearch?: (searchTerm: string, location: string) => void;
+  initialSearch?: string;
+  initialLocation?: string;
+}
 
-  const handleSelectLocation = (location: string) => {
-    setSelectedLocation(location);
+function SearchBar({ 
+  className = "", 
+  onSearch,
+  initialSearch = "",
+  initialLocation = "Search By Location" 
+}: SearchBarProps) {
+  const [locationOpen, setLocationOpen] = useState(false);
+  const [selectedLocation, setSelectedLocation] = useState(initialLocation);
+  const [loading, setLoading] = useState(true);
+  const [states, setStates] = useState<Array<{ name: string; state_code: string }>>([]);
+  const [searchTerm, setSearchTerm] = useState(initialSearch);
+  const country = "Nigeria";
+
+  useEffect(() => {
+    setSelectedLocation(initialLocation);
+    setSearchTerm(initialSearch);
+  }, [initialLocation, initialSearch]);
+
+  const handleSelectLocation = (state: string) => {
+    setSelectedLocation(state);
     setLocationOpen(false);
+    if (onSearch) {
+      onSearch(searchTerm, state);
+    }
   };
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const term = e.target.value;
+    setSearchTerm(term);
+  };
+
+  const handleSearchSubmit = () => {
+    if (onSearch) {
+      onSearch(searchTerm, selectedLocation);
+    }
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleSearchSubmit();
+    }
+  };
+
+  useEffect(() => {
+    async function fetchNigerianStates() {
+      setLoading(true);
+      try {
+        const countryData = await locationService.getStates(country);
+        setStates(countryData);
+      } catch (error) {
+        toast.error("Failed to load states. Please refresh the page.");
+        console.error("Error loading Nigerian states:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchNigerianStates();
+  }, [country]);
 
   return (
     <div
@@ -77,14 +117,20 @@ function SearchBar({ className = "" }: { className?: string }) {
         </button>
         {/* Location Dropdown */}
         {locationOpen && (
-          <div className="absolute top-full left-0 mt-2 w-48 bg-white border border-neutral-200 rounded-md shadow-lg z-9999">
-            {locations.map((loc) => (
+          <div className="absolute top-full left-0 mt-2 w-48 bg-white border border-neutral-200 rounded-md shadow-lg z-9999 max-h-60 overflow-y-auto">
+            <button
+              onClick={() => handleSelectLocation("All Locations")}
+              className="w-full text-left px-4 py-2 text-sm hover:bg-emerald-50 transition border-b"
+            >
+              All Locations
+            </button>
+            {states.map((loc) => (
               <button
-                key={loc.value}
-                onClick={() => handleSelectLocation(loc.label)}
+                key={loc.name}
+                onClick={() => handleSelectLocation(loc.name)}
                 className="w-full text-left px-4 py-2 text-sm hover:bg-emerald-50 transition"
               >
-                {loc.label}
+                {loc.name}
               </button>
             ))}
           </div>
@@ -93,23 +139,47 @@ function SearchBar({ className = "" }: { className?: string }) {
       <div className="relative flex-1">
         <input
           aria-label="Search items"
-          placeholder="Search for items, vendors..."
+          placeholder="Search for Product"
           className="w-full border-l border-neutral-200 pl-2 pr-8 py-1.5 text-sm focus:outline-none"
+          value={searchTerm}
+          onChange={handleSearchChange}
+          onKeyPress={handleKeyPress}
         />
-        <Search className="absolute right-2 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+        <button 
+          onClick={handleSearchSubmit}
+          className="absolute right-2 top-1/2 -translate-y-1/2"
+        >
+          <Search className="size-4 text-muted-foreground hover:text-[#39B54A]" />
+        </button>
       </div>
     </div>
   );
 }
 
+interface HeaderProps {
+  onOpenCategories: () => void;
+  onSearch?: (searchTerm: string, location: string) => void;
+}
+
 export default function Header({
   onOpenCategories,
-}: {
-  onOpenCategories: () => void;
-}) {
+  onSearch
+}: HeaderProps) {
   const [navOpen, setNavOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedLocation, setSelectedLocation] = useState("All Locations");
   const pathname = usePathname();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // Initialize search params from URL
+  useEffect(() => {
+    const search = searchParams.get('search') || '';
+    const location = searchParams.get('location') || 'All Locations';
+    setSearchTerm(search);
+    setSelectedLocation(location);
+  }, [searchParams]);
 
   // Check authentication status on component mount and route changes
   useEffect(() => {
@@ -117,17 +187,47 @@ export default function Header({
   }, [pathname]);
 
   const checkAuthStatus = () => {
-    // Check if user is logged in (you can modify this based on your auth logic)
     const token = sessionStorage.getItem('jwt');
     setIsLoggedIn(!!token);
   };
 
   const handleLogout = () => {
-      logoutAuth()
-      
-      // Redirect to home page
-      window.location.href = '/';
-    };
+    logoutAuth()
+    window.location.href = '/';
+  };
+
+  // Handle search functionality
+  const handleSearch = (term: string, location: string) => {
+    setSearchTerm(term);
+    setSelectedLocation(location);
+
+    // Update URL with search params
+    const params = new URLSearchParams();
+    
+    if (term) {
+      params.set('search', term);
+    }
+    
+    if (location !== 'All Locations') {
+      params.set('location', location);
+    }
+
+    const queryString = params.toString();
+    
+    // If we're on a shop/search page, update the URL
+    if (pathname === '/shop' || pathname === '/') {
+      if (queryString) {
+        router.push(`${pathname}?${queryString}`);
+      } else {
+        router.push(pathname);
+      }
+    }
+
+    // Call the parent onSearch callback if provided
+    if (onSearch) {
+      onSearch(term, location);
+    }
+  };
 
   return (
     <>
@@ -138,7 +238,11 @@ export default function Header({
           <Brand />
           {/* Desktop Search */}
           <div className="flex-1 hidden md:block mx-4">
-            <SearchBar />
+            <SearchBar 
+              onSearch={handleSearch}
+              initialSearch={searchTerm}
+              initialLocation={selectedLocation}
+            />
           </div>
           {/* Desktop Actions */}
           <div className="ml-auto hidden md:flex items-center gap-2">
@@ -227,7 +331,11 @@ export default function Header({
         </div>
         {/* Mobile search */}
         <div className="container max-w-7xl mx-auto md:hidden pb-3">
-          <SearchBar />
+          <SearchBar 
+            onSearch={handleSearch}
+            initialSearch={searchTerm}
+            initialLocation={selectedLocation}
+          />
         </div>
       </header>
       {/* Mobile nav drawer - Portal to body level */}

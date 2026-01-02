@@ -37,7 +37,7 @@ export const getProducts = async (
 // GET MY PRODUCTS
 export const getMyProducts = async (
   page: number = 1, 
-  per_page: number = 12
+  per_page: number = 24
 ): Promise<ProductData | null> => {
   try {
     const response = await ApiFetcher.get<ProductData>(

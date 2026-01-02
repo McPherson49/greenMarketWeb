@@ -13,7 +13,8 @@ import { getOffers } from "@/services/escrow";
 import Pagination from "@/components/Pagination";
 import { logoutAuth } from "@/utils/auth"
 import { GetOrdersResponse } from "@/types/orders";
-
+import Image from "next/image";
+import ApiFetcher from "@/utils/apis";
 // Types
 interface VendorProfile {
   firstName: string;
@@ -315,10 +316,12 @@ const fetchOrdersData = async () => {
             <div className="flex items-center gap-3 mb-6 pb-6 border-b border-neutral-200">
               <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center shrink-0 overflow-hidden">
                 {userProfile?.avatar ? (
-                  <img
+                  <Image
                     src={userProfile.avatar}
                     alt="Profile"
                     className="w-full h-full object-cover"
+                    width={48}
+                    height={48}
                   />
                 ) : (
                   <User className="w-6 h-6 text-gray-600" />
@@ -985,7 +988,7 @@ const fetchOrdersData = async () => {
                   </button>
                 </div>
               </div>
-            )}
+            )}ç
 
             {/* Escrow Requests Tab */}
             {activeTab === "escrow" && <EscrowRequests />}

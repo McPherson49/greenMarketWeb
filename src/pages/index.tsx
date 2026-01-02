@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
+import { useSearchParams } from "next/navigation";
 import Home from "../components/home/Home";
 import BlogSection from "@/components/blog/BlogSection";
 import Newsletter from "@/components/newsletter/Newsletter";
@@ -16,17 +17,21 @@ type Category = {
   color?: string;
 };
 
-
-const PER_PAGE = 12;
+const PER_PAGE = 24;
 
 export default function IndexPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [products, setProducts] = useState<UIProduct[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(true);
   const [loadingProducts, setLoadingProducts] = useState(true);
-
   const [currentPage, setCurrentPage] = useState(1);
   const [lastPage, setLastPage] = useState(1);
+  
+  const searchParams = useSearchParams();
+  
+  // Get search parameters from URL
+  const searchTerm = searchParams.get('search') || '';
+  const location = searchParams.get('location') || '';
 
   // -----------------------------
   // FETCH CATEGORIES
@@ -57,51 +62,74 @@ export default function IndexPage() {
   }, []);
 
   // -----------------------------
-  // FETCH PRODUCTS (PAGINATED)
+  // FETCH PRODUCTS (WITH SEARCH)
   // -----------------------------
-  const fetchProducts = async (page: number) => {
-  try {
-    setLoadingProducts(true);
+  const fetchProducts = useCallback(async (page: number, search: string = '', loc: string = '') => {
+    try {
+      setLoadingProducts(true);
 
-    const res = await getProducts({
-      page,
-      per_page: PER_PAGE,
-    });
+      // Build params object
+      const params: any = {
+        page,
+        per_page: PER_PAGE,
+      };
 
-    // Check if res is null or undefined
-    if (!res) {
-      console.error("No products data received");
-      return;
+      // Add search parameter if exists
+      if (search) {
+        params.search = search;
+      }
+
+      // Add location parameter if exists and not "All Locations"
+      if (loc && loc !== 'All Locations') {
+        params.location = loc;
+      }
+
+      console.log('Fetching products with params:', params); // Debug log
+
+      const res = await getProducts(params);
+
+      // Check if res is null or undefined
+      if (!res) {
+        console.error("No products data received");
+        return;
+      }
+
+      // Check if res.data exists and is an array
+      const productsArray = Array.isArray(res.data) ? res.data : [];
+
+      // ✅ CRITICAL FIX: map API → UI product
+      const formattedProducts: UIProduct[] = productsArray.map((p: any) => ({
+        id: p.id,
+        name: p.title,
+        price: p.price,
+        image: p.thumbnail || p.images?.[0] || "/placeholder.png",
+        vendor: p.business?.name || p.user?.name || "Unknown",
+        rating: p.business?.rating ?? 0,
+      }));
+
+      console.log("Formatted products count:", formattedProducts.length); // Debug log
+
+      setProducts(formattedProducts);
+      setCurrentPage(res.current_page || 1);
+      setLastPage(res.last_page || 1);
+    } catch (error) {
+      console.error("Error loading products:", error);
+    } finally {
+      setLoadingProducts(false);
     }
+  }, []);
 
-    // Check if res.data exists and is an array
-    const productsArray = Array.isArray(res.data) ? res.data : [];
-
-    // ✅ CRITICAL FIX: map API → UI product
-    const formattedProducts: UIProduct[] = productsArray.map((p: any) => ({
-      id: p.id,
-      name: p.title,
-      price: p.price,
-      image: p.thumbnail || p.images?.[0] || "/placeholder.png",
-      vendor: p.business?.name || p.user?.name || "Unknown",
-      rating: p.business?.rating ?? 0,
-    }));
-
-    console.log("Formatted products:", formattedProducts); // Debug log
-
-    setProducts(formattedProducts);
-    setCurrentPage(res.current_page || 1);  // Use res.current_page instead of res.data.current_page
-    setLastPage(res.last_page || 1);        // Use res.last_page instead of res.data.last_page
-  } catch (error) {
-    console.error("Error loading products:", error);
-  } finally {
-    setLoadingProducts(false);
-  }
-};
-
-  // Initial load
+  // Initial load and reload when search params change
   useEffect(() => {
-    fetchProducts(1);
+    fetchProducts(1, searchTerm, location);
+  }, [fetchProducts, searchTerm, location]);
+
+  // -----------------------------
+  // HANDLE SEARCH FROM HEADER
+  // -----------------------------
+  const handleSearch = useCallback((searchTerm: string, location: string) => {
+    // This will trigger the useEffect above because searchParams will change
+    console.log('Search triggered:', { searchTerm, location });
   }, []);
 
   // -----------------------------
@@ -109,13 +137,13 @@ export default function IndexPage() {
   // -----------------------------
   const fetchNextPage = () => {
     if (currentPage < lastPage) {
-      fetchProducts(currentPage + 1);
+      fetchProducts(currentPage + 1, searchTerm, location);
     }
   };
 
   const fetchPrevPage = () => {
     if (currentPage > 1) {
-      fetchProducts(currentPage - 1);
+      fetchProducts(currentPage - 1, searchTerm, location);
     }
   };
 
@@ -137,6 +165,8 @@ export default function IndexPage() {
           lastPage={lastPage}
           onNextPage={fetchNextPage}
           onPrevPage={fetchPrevPage}
+          searchTerm={searchTerm}
+          location={location}
         />
       </div>
 
