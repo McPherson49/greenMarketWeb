@@ -1,7 +1,7 @@
 "use client";
 import Image from "next/image";
 import Link from "next/link";
-import { ChevronRight, Leaf, Users, Smartphone } from "lucide-react";
+import { ChevronRight, Leaf, Users, Smartphone, Gift } from "lucide-react";
 import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
@@ -32,7 +32,7 @@ export default function Hero() {
     autoplaySpeed: 4000,
     pauseOnHover: true,
     arrows: false,
-    adaptiveHeight: false,
+    adaptiveHeight: true, // Changed to true
   };
 
   const slides = [
@@ -41,7 +41,7 @@ export default function Hero() {
       description2:
         "Buy and sell fresh agricultural products with ease. GreenMarket connects farmers with serious buyers for a simple, hassle-free trading experience.",
       imageUrl: "/assets/vegetable.png",
-      imageAlt: "Escrow illustration",
+      imageAlt: "Vegetables illustration",
       bg: "assets/bg-img.png",
       bgMobile: "assets/mobile.png",
       buttonText: "Learn More",
@@ -78,6 +78,21 @@ export default function Hero() {
       buttonText: "Join the Community",
       buttonLink: "/community",
       buttonPosition: "right",
+    },
+    {
+      badgeText: "Rewards Program",
+      title: "Earn Points, Get Rewarded — Refer & Earn!",
+      description:
+        "Invite friends to join Greenmarket and earn reward points for every successful referral.",
+      description2:
+        "Use your points to boost your products for better visibility or withdraw them as cash. The more you refer, the more you earn!",
+      imageUrl: "/assets/hero.svg", 
+      imageAlt: "Referral rewards illustration",
+      bg: "/assets/escrowbg.png",
+      icon: Gift,
+      buttonText: "Learn More",
+      buttonLink: "/referral",
+      buttonPosition: "left",
     },
     {
       badgeText: "Now on Mobile",
@@ -137,7 +152,7 @@ export default function Hero() {
           return (
             <div key={index}>
               <div
-                className="relative bg-center bg-no-repeat bg-cover"
+                className="relative bg-center bg-no-repeat bg-cover min-h-[400px] md:min-h-[500px]"
                 style={{
                   backgroundImage: `url(${
                     isMobile && slide.bgMobile ? slide.bgMobile : slide.bg
@@ -153,13 +168,11 @@ export default function Hero() {
 
                 {/* Conditional Layout: Centered or Left-Right */}
                 {slide.centered ? (
-                  <div className="relative z-10 flex flex-col items-center justify-center text-center p-6 md:py-16 lg:px-20">
+                  <div className="relative z-10 flex flex-col items-center justify-center text-center p-6 py-12 md:py-16 lg:px-20 min-h-[400px] md:min-h-[500px]">
                     <div className="max-w-3xl">
                       <h1
                         className={`text-3xl md:text-5xl font-bold ${
-                          slide.darkOverlay
-                            ? "text-white mt-20 lg:mt-0"
-                            : "text-[#253D4E]"
+                          slide.darkOverlay ? "text-white" : "text-[#253D4E]"
                         }`}
                       >
                         {slide.title}
@@ -192,7 +205,7 @@ export default function Hero() {
                   </div>
                 ) : (
                   // STANDARD LEFT-RIGHT LAYOUT (for other slides)
-                  <div className="relative z-10 flex flex-col md:flex-row items-center justify-between p-6 md:py-10 lg:px-20">
+                  <div className="relative z-10 flex flex-col md:flex-row items-center justify-between p-6 py-12 md:py-10 lg:px-20 min-h-[400px] md:min-h-[500px]">
                     {/* LEFT SIDE */}
                     <div className="max-w-xl">
                       {slide.badgeText && Icon && (
@@ -217,7 +230,7 @@ export default function Hero() {
                         </p>
                       )}
 
-                      {/* Escrow button (Left) */}
+                      {/* Escrow/Referral button (Left) */}
                       {slide.buttonPosition === "left" && slide.buttonLink && (
                         <div className="mt-6">
                           <Link

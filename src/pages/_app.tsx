@@ -4,7 +4,7 @@ import { useRouter } from "next/router";
 import Header from "@/components/header/Header";
 import Footer from "@/components/Footer";
 import Image from "next/image";
-import { ChevronRight, Tags, Leaf } from "lucide-react";
+import { ChevronRight, Tags, Leaf, Rss, UsersRound } from "lucide-react";
 import "@/styles/globals.css";
 import Link from "next/link";
 import {
@@ -176,7 +176,13 @@ function AdminLayout({ children }: { children: React.ReactNode }) {
       section: "Others",
       items: [
         { icon: FaComments, label: "Chats", href: "/admin/chats", badge: 4 },
-        // { icon: FaEnvelope, label: "Email", href: "/admin/email", badge: null },
+        { icon: Rss, label: "Blogs", href: "/admin/blogs", badge: null },
+        {
+          icon: UsersRound,
+          label: "Community",
+          href: "/admin/community",
+          badge: null,
+        },
       ],
     },
     {
@@ -291,7 +297,6 @@ function AdminLayout({ children }: { children: React.ReactNode }) {
             ))}
           </nav>
 
-          {/* Footer */}
           <div className="px-6 py-4 border-t border-gray-200">
             <p className="text-xs text-center text-gray-500">
               All rights reserved © GreenMarketNG {new Date().getFullYear()}
@@ -350,7 +355,6 @@ export default function App({ Component, pageProps }: AppProps) {
   const router = useRouter();
   // const isAdminRoute = router.pathname.startsWith("/admin");
   const isAdminRoute = router.pathname?.startsWith("/admin") ?? false;
-
 
   return (
     <>

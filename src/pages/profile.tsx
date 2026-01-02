@@ -1,19 +1,30 @@
 import React, { useState, useEffect } from "react";
-import { User, Package, ShoppingCart, MessageSquare, Home, Menu, X,} from "lucide-react";
+import {
+  User,
+  Package,
+  ShoppingCart,
+  MessageSquare,
+  Home,
+  Menu,
+  X,
+  UserPlus,
+} from "lucide-react";
 import { FaChevronRight } from "react-icons/fa6";
 import EscrowRequests from "@/components/EscrowOrders";
 import { getDashboardStats, DashboardStats } from "@/services/dashboard";
 import { getProfile, UserProfile } from "@/services/profile";
 import { getMyProducts } from "@/services/products";
 import { ProductData } from "@/types/product";
-import {getOrders } from "@/services/orders"
+import { getOrders } from "@/services/orders";
 import Link from "next/link";
 import { formatWalletAmount, formatPrice } from "@/utils/func";
 import { getOffers } from "@/services/escrow";
 import Pagination from "@/components/Pagination";
-import { logoutAuth } from "@/utils/auth"
+import { logoutAuth } from "@/utils/auth";
 import { GetOrdersResponse } from "@/types/orders";
-
+import Image from "next/image";
+import ApiFetcher from "@/utils/apis";
+import ReferralTab from "@/components/ReferralTab";
 // Types
 interface VendorProfile {
   firstName: string;
@@ -62,7 +73,14 @@ const dummyMessages: Message[] = [
   },
 ];
 
-type TabType = | "dashboard" | "orders" | "products" | "messages" | "profile"| "escrow";
+type TabType =
+  | "dashboard"
+  | "orders"
+  | "products"
+  | "messages"
+  | "profile"
+  | "escrow"
+  | "referrals";
 
 const Profile = () => {
   const [activeTab, setActiveTab] = useState<TabType>("dashboard");
@@ -77,29 +95,29 @@ const Profile = () => {
   const [profileLoading, setProfileLoading] = useState(false);
   const [myOrders, setMyOrder] = useState(false);
   const [orders, setOrders] = useState<GetOrdersResponse | null>(null);
-const [currentOrdersPage, setCurrentOrdersPage] = useState(1);
-const [ordersPerPage, setOrdersPerPage] = useState(10);
-const [ordersFilters, setOrdersFilters] = useState({
+  const [currentOrdersPage, setCurrentOrdersPage] = useState(1);
+  const [ordersPerPage, setOrdersPerPage] = useState(10);
+  const [ordersFilters, setOrdersFilters] = useState({
     page: 1,
     per_page: 10,
     status: "",
     search: "",
   });
 
-    const handlePageChange = (page: number) => {
-    setOrdersFilters(prev => ({ ...prev, page }));
+  const handlePageChange = (page: number) => {
+    setOrdersFilters((prev) => ({ ...prev, page }));
   };
 
   const handlePerPageChange = (perPage: number) => {
-    setOrdersFilters(prev => ({ ...prev, per_page: perPage, page: 1 }));
+    setOrdersFilters((prev) => ({ ...prev, per_page: perPage, page: 1 }));
   };
 
   const handleStatusFilter = (status: string) => {
-    setOrdersFilters(prev => ({ ...prev, status, page: 1 }));
+    setOrdersFilters((prev) => ({ ...prev, status, page: 1 }));
   };
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setOrdersFilters(prev => ({ ...prev, search: e.target.value, page: 1 }));
+    setOrdersFilters((prev) => ({ ...prev, search: e.target.value, page: 1 }));
   };
 
   const handleSearchSubmit = (e: React.FormEvent) => {
@@ -125,7 +143,7 @@ const [ordersFilters, setOrdersFilters] = useState({
       fetchMyProducts();
     }
 
-   if (activeTab === "orders") {
+    if (activeTab === "orders") {
       fetchOrdersData();
     }
   }, [activeTab, ordersFilters]);
@@ -142,7 +160,7 @@ const [ordersFilters, setOrdersFilters] = useState({
     }
   };
 
-const fetchOrdersData = async () => {
+  const fetchOrdersData = async () => {
     setLoading(true);
     try {
       const res = await getOrders(ordersFilters);
@@ -155,7 +173,6 @@ const fetchOrdersData = async () => {
       setLoading(false);
     }
   };
-
 
   const fetchUserProfile = async () => {
     setProfileLoading(true);
@@ -186,10 +203,10 @@ const fetchOrdersData = async () => {
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
     });
   };
 
@@ -254,10 +271,10 @@ const fetchOrdersData = async () => {
   };
 
   const handleLogout = () => {
-    logoutAuth()
-    
+    logoutAuth();
+
     // Redirect to home page
-    window.location.href = '/';
+    window.location.href = "/";
   };
 
   return (
@@ -315,10 +332,12 @@ const fetchOrdersData = async () => {
             <div className="flex items-center gap-3 mb-6 pb-6 border-b border-neutral-200">
               <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center shrink-0 overflow-hidden">
                 {userProfile?.avatar ? (
-                  <img
+                  <Image
                     src={userProfile.avatar}
                     alt="Profile"
                     className="w-full h-full object-cover"
+                    width={48}
+                    height={48}
                   />
                 ) : (
                   <User className="w-6 h-6 text-gray-600" />
@@ -397,6 +416,17 @@ const fetchOrdersData = async () => {
                 </span>
               </button>
               <button
+                onClick={() => handleTabChange("referrals")}
+                className={`w-full text-left px-4 py-2.5 rounded-lg transition-colors flex items-center justify-between ${
+                  activeTab === "referrals"
+                    ? "bg-gray-100 font-medium"
+                    : "hover:bg-gray-50"
+                }`}
+              >
+                <span>Referrals</span>
+               
+              </button>
+              <button
                 onClick={() => handleTabChange("profile")}
                 className={`w-full text-left px-4 py-2.5 rounded-lg transition-colors ${
                   activeTab === "profile"
@@ -406,7 +436,10 @@ const fetchOrdersData = async () => {
               >
                 Profile
               </button>
-              <button onClick={handleLogout} className="w-full text-left px-4 py-2.5 rounded-lg hover:bg-gray-50 text-red-600 transition-colors">
+              <button
+                onClick={handleLogout}
+                className="w-full text-left px-4 py-2.5 rounded-lg hover:bg-gray-50 text-red-600 transition-colors"
+              >
                 Log out
               </button>
             </nav>
@@ -493,13 +526,13 @@ const fetchOrdersData = async () => {
                         <div className="flex items-center justify-between">
                           <div>
                             <p className="text-sm text-gray-600 mb-1">
-                              Support Tickets
+                              Referral Points
                             </p>
                             <p className="text-2xl sm:text-3xl font-bold">
                               {dashboardData?.tickets ?? 0}
                             </p>
                           </div>
-                          <MessageSquare className="w-8 h-8 sm:w-10 sm:h-10 text-orange-600" />
+                          <UserPlus className="w-8 h-8 sm:w-10 sm:h-10 text-orange-600" />
                         </div>
                       </div>
 
@@ -596,7 +629,7 @@ const fetchOrdersData = async () => {
               <div>
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
                   <h2 className="text-xl sm:text-2xl font-bold">Orders</h2>
-                  
+
                   {/* Search and Filters */}
                   <div className="flex flex-col sm:flex-row gap-3">
                     <form onSubmit={handleSearchSubmit} className="flex gap-2">
@@ -614,7 +647,7 @@ const fetchOrdersData = async () => {
                         Search
                       </button>
                     </form>
-                    
+
                     <select
                       value={ordersFilters.status}
                       onChange={(e) => handleStatusFilter(e.target.value)}
@@ -677,33 +710,44 @@ const fetchOrdersData = async () => {
                                     {order.product?.title}
                                   </td>
                                   <td className="p-3 sm:p-4 text-sm">
-                                    {formatPrice(Number(order.transactable?.amount ?? 0))}
+                                    {formatPrice(
+                                      Number(order.transactable?.amount ?? 0)
+                                    )}
                                   </td>
                                   <td className="p-3 sm:p-4">
                                     <span
-                                      className={`text-xs px-2 sm:px-3 py-1 rounded-full whitespace-nowrap ${getStatusColor(order.status ?? "pending")}`}>
+                                      className={`text-xs px-2 sm:px-3 py-1 rounded-full whitespace-nowrap ${getStatusColor(
+                                        order.status ?? "pending"
+                                      )}`}
+                                    >
                                       {order.status}
                                     </span>
                                   </td>
                                   <td className="p-3 sm:p-4 text-gray-600 text-sm hidden lg:table-cell">
-                                    {order.created_at && formatDate(order.created_at)}
+                                    {order.created_at &&
+                                      formatDate(order.created_at)}
                                   </td>
                                 </tr>
                               ))
                             ) : (
                               <tr>
-                                <td colSpan={6} className="p-8 text-center text-gray-500">
+                                <td
+                                  colSpan={6}
+                                  className="p-8 text-center text-gray-500"
+                                >
                                   <div className="flex flex-col items-center justify-center">
                                     <ShoppingCart className="w-16 h-16 text-gray-400 mb-4" />
                                     <p className="text-lg font-medium text-gray-900 mb-2">
                                       No orders found
                                     </p>
                                     <p className="text-gray-600">
-                                      {ordersFilters.search || ordersFilters.status
+                                      {ordersFilters.search ||
+                                      ordersFilters.status
                                         ? "No orders match your filters"
                                         : "You haven't received any orders yet."}
                                     </p>
-                                    {(ordersFilters.search || ordersFilters.status) && (
+                                    {(ordersFilters.search ||
+                                      ordersFilters.status) && (
                                       <button
                                         onClick={() => {
                                           setOrdersFilters({
@@ -746,7 +790,9 @@ const fetchOrdersData = async () => {
                     {/* Order Summary */}
                     {orders && orders.data && orders.data.length > 0 && (
                       <div className="mt-4 text-sm text-gray-600">
-                        Showing {orders.from || 1} to {orders.to || orders.data.length} of {orders.total} orders
+                        Showing {orders.from || 1} to{" "}
+                        {orders.to || orders.data.length} of {orders.total}{" "}
+                        orders
                       </div>
                     )}
                   </>
@@ -989,6 +1035,7 @@ const fetchOrdersData = async () => {
 
             {/* Escrow Requests Tab */}
             {activeTab === "escrow" && <EscrowRequests />}
+            {activeTab === "referrals" && <ReferralTab />}
           </div>
         </div>
       </div>

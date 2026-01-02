@@ -802,12 +802,22 @@ export default function NewProductForm() {
                   </label>
                   <input
                     type="number"
+                    min="0"
                     value={formData.price}
                     onChange={(e) => {
-                      setFormData({ ...formData, price: e.target.value });
-                      setErrors({ ...errors, price: "" });
+                      const value = e.target.value;
+                      // Only allow positive numbers or empty string
+                      if (value === "" || parseFloat(value) >= 0) {
+                        setFormData({ ...formData, price: value });
+                        setErrors({ ...errors, price: "" });
+                      }
                     }}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#39B54A]"
+                    onKeyDown={(e) => {
+                      if (e.key === "-" || e.key === "e" || e.key === "E") {
+                        e.preventDefault();
+                      }
+                    }}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#39B54A] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                   />
                   {errors.price && (
                     <p className="text-xs text-red-500 mt-1">{errors.price}</p>
@@ -1114,8 +1124,14 @@ export default function NewProductForm() {
 
       {/* Promote Modal */}
       {showPromoteModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center mt-0 justify-center px-4 z-9999 backdrop-blur supports-backdrop-filter:bg-white/60 border-b border-neutral-200">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[80vh] flex flex-col p-2 lg:p-8">
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center mt-0 justify-center px-4 z-9999 backdrop-blur supports-backdrop-filter:bg-white/60 border-b border-neutral-200"
+          onClick={() => setShowPromoteModal(false)}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[80vh] flex flex-col p-2 lg:p-8"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="">
               <h2 className="text-2xl font-bold text-gray-900 mb-2">
                 Promote your ad

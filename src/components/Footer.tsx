@@ -18,7 +18,8 @@ const Footer = () => {
   const slide = {
     buttonPosition: "center",
     appLinks: {
-      android: "https://play.google.com/store/apps/details?id=com.greenmarket",
+      android:
+        "https://play.google.com/store/apps/details?id=com.zagytech.greenmarket.green_market",
       ios: "https://apps.apple.com/app/id123456789",
     },
   };
@@ -59,23 +60,53 @@ const Footer = () => {
           <h3 className="font-bold mb-4">Company</h3>
           <ul className="space-y-2 font-light">
             <li>
-              <Link className="hover:text-[#39B54A] transform transition duration-700" href="/about">About Us</Link>
+              <Link
+                className="hover:text-[#39B54A] transform transition duration-700"
+                href="/about"
+              >
+                About Us
+              </Link>
             </li>
             <li>
-              <Link className="hover:text-[#39B54A] transform transition duration-700" href="/faq">FAQ</Link>
+              <Link
+                className="hover:text-[#39B54A] transform transition duration-700"
+                href="/faq"
+              >
+                FAQ
+              </Link>
             </li>
             <li>
-              <Link className="hover:text-[#39B54A] transform transition duration-700" href="/terms">Terms & Conditions</Link>
+              <Link
+                className="hover:text-[#39B54A] transform transition duration-700"
+                href="/terms"
+              >
+                Terms & Conditions
+              </Link>
             </li>
             <li>
-              <Link className="hover:text-[#39B54A] transform transition duration-700" href="/privacy">Privacy Policy</Link>
+              <Link
+                className="hover:text-[#39B54A] transform transition duration-700"
+                href="/privacy"
+              >
+                Privacy Policy
+              </Link>
             </li>
             <li>
-              <Link className="hover:text-[#39B54A] transform transition duration-700" href="/contact">Contact Us</Link>
+              <Link
+                className="hover:text-[#39B54A] transform transition duration-700"
+                href="/contact"
+              >
+                Contact Us
+              </Link>
             </li>
-           
+
             <li>
-              <Link className="hover:text-[#39B54A] transform transition duration-700" href="/careers">Careers</Link>
+              <Link
+                className="hover:text-[#39B54A] transform transition duration-700"
+                href="/careers"
+              >
+                Careers
+              </Link>
             </li>
           </ul>
         </div>
@@ -85,19 +116,44 @@ const Footer = () => {
           <h3 className="font-bold mb-4">Account</h3>
           <ul className="space-y-2 font-light">
             <li>
-              <Link className="hover:text-[#39B54A] transform transition duration-700" href="/signin">Sign In</Link>
+              <Link
+                className="hover:text-[#39B54A] transform transition duration-700"
+                href="/signin"
+              >
+                Sign In
+              </Link>
             </li>
             <li>
-              <Link className="hover:text-[#39B54A] transform transition duration-700" href="/wishlist">My Wishlist</Link>
+              <Link
+                className="hover:text-[#39B54A] transform transition duration-700"
+                href="/wishlist"
+              >
+                My Wishlist
+              </Link>
             </li>
             <li>
-              <Link className="hover:text-[#39B54A] transform transition duration-700" href="/products">Product</Link>
+              <Link
+                className="hover:text-[#39B54A] transform transition duration-700"
+                href="/products"
+              >
+                Product
+              </Link>
             </li>
             <li>
-              <Link className="hover:text-[#39B54A] transform transition duration-700" href="/orders">Order</Link>
+              <Link
+                className="hover:text-[#39B54A] transform transition duration-700"
+                href="/orders"
+              >
+                Order
+              </Link>
             </li>
             <li>
-              <Link className="hover:text-[#39B54A] transform transition duration-700" href="/profile">Profile</Link>
+              <Link
+                className="hover:text-[#39B54A] transform transition duration-700"
+                href="/profile"
+              >
+                Profile
+              </Link>
             </li>
           </ul>
         </div>
@@ -107,22 +163,52 @@ const Footer = () => {
           <h3 className="font-bold mb-4">Corporate</h3>
           <ul className="space-y-2 font-light">
             <li>
-              <Link className="hover:text-[#39B54A] transform transition duration-700" href="/about">How GreenMarket Works</Link>
+              <Link
+                className="hover:text-[#39B54A] transform transition duration-700"
+                href="/about"
+              >
+                How GreenMarket Works
+              </Link>
             </li>
             <li>
-              <Link className="hover:text-[#39B54A] transform transition duration-700" href="/howEscrowWorks">How Escrow Works</Link>
+              <Link
+                className="hover:text-[#39B54A] transform transition duration-700"
+                href="/howEscrowWorks"
+              >
+                How Escrow Works
+              </Link>
             </li>
             <li>
-              <Link className="hover:text-[#39B54A] transform transition duration-700" href="/coming-soon">Farm Business</Link>
+              <Link
+                className="hover:text-[#39B54A] transform transition duration-700"
+                href="/coming-soon"
+              >
+                Farm Business
+              </Link>
             </li>
             <li>
-              <Link className="hover:text-[#39B54A] transform transition duration-700" href="/coming-soon">Farm Careers</Link>
+              <Link
+                className="hover:text-[#39B54A] transform transition duration-700"
+                href="/coming-soon"
+              >
+                Farm Careers
+              </Link>
             </li>
             <li>
-              <Link className="hover:text-[#39B54A] transform transition duration-700" href="/coming-soon">Our Suppliers</Link>
+              <Link
+                className="hover:text-[#39B54A] transform transition duration-700"
+                href="/coming-soon"
+              >
+                Our Suppliers
+              </Link>
             </li>
             <li>
-              <Link className="hover:text-[#39B54A] transform transition duration-700" href="/coming-soon">Promotions</Link>
+              <Link
+                className="hover:text-[#39B54A] transform transition duration-700"
+                href="/coming-soon"
+              >
+                Promotions
+              </Link>
             </li>
           </ul>
         </div>
@@ -136,12 +222,12 @@ const Footer = () => {
               <GooglePlayButton
                 url={slide.appLinks.android}
                 theme="light"
-                className="!p-1 !border !border-neutral-400"
+                className="p-1! border! border-neutral-400!"
               />
               <AppStoreButton
                 url={slide.appLinks.ios}
                 theme="light"
-                className="!p-1 !border !border-neutral-400"
+                className="p-1! border! border-neutral-400!"
               />
             </div>
           )}
