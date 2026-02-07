@@ -24,7 +24,7 @@ const AIChatAssistant: React.FC = () => {
   const [quickQuestions, setQuickQuestions] = useState<string[]>([]);
   const [buttonPosition, setButtonPosition] = useState<"left" | "right">("right");
   const [buttonTop, setButtonTop] = useState(
-    typeof window !== "undefined" ? window.innerHeight - 120 : 600
+    typeof window !== "undefined" ? window.innerHeight - 200 : 600
   );
   const [isDragging, setIsDragging] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -279,7 +279,6 @@ const AIChatAssistant: React.FC = () => {
 
   return (
     <>
-      {/* Floating Chat Button - Draggable (Snaps to Left or Right) */}
       {!isOpen && (
         <button
           ref={buttonRef}
