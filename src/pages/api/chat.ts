@@ -375,7 +375,12 @@ Remember: You're representing GreenMarket - Nigeria's #1 FREE agricultural marke
 
     assistantMessage = assistantMessage
       .replace(/<think>[\s\S]*?<\/think>/gi, "")
-      .replace(/^[\s\S]*?(?=Great question!|Hello!|Hi!)/i, "")
+      .replace(/<thinking>[\s\S]*?<\/thinking>/gi, "")
+      .replace(
+        /^[\s\S]*?(?=I'm unable to|I'd be|I can|Sure|Hello|Hi|Great|Yes|No|To |Here|Let me|The |You can|GreenMarket)/i,
+        "",
+      )
+      .replace(/\n{3,}/g, "\n\n")
       .trim();
 
     if (!assistantMessage) {
