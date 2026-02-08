@@ -1,14 +1,14 @@
 "use client";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { Home, Store, Users } from "lucide-react";
+import { Home, Users, MessageCircle } from "lucide-react";
 import { FaAd } from "react-icons/fa";
 import { useState, useEffect } from "react";
 
 const bottomNavItems = [
   { label: "Home", href: "/", icon: Home },
   { label: "Post Ad", href: "/post-ad", icon: FaAd },
-  { label: "Shop", href: "/shop", icon: Store },
+  { label: "Chat", href: "", icon: MessageCircle },
   { label: "Community", href: "/community", icon: Users },
 ];
 
