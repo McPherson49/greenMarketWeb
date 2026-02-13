@@ -2,29 +2,102 @@ import React, { useState, useEffect } from 'react';
 import { FaEllipsisV } from 'react-icons/fa';
 import { ProductService } from '@/services/adminProducts';
 import { Product } from '@/types/adminProducts';
+import StatusModal from './StatusModal';
+import DeleteModal from './DeleteModal';
 
 export default function RecentProductsTable() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [statusModalOpen, setStatusModalOpen] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [statusLoading, setStatusLoading] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+
+  // Fetch recent products
+  const fetchRecentProducts = async () => {
+    try {
+      setLoading(true);
+      // Fetch only 5 most recent products, sorted by creation date
+      const response = await ProductService.getProducts({
+        per_page: 5,
+        sort_by: 'created_at',
+        sort_order: 'desc'
+      });
+      setProducts(response.data);
+    } catch (error) {
+      console.error('Failed to fetch recent products:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle status change
+  const handleStatusChange = async (status: 'rejected' | 'publish' | 'pending') => {
+    if (!selectedProduct) return;
+
+    try {
+      setStatusLoading(true);
+      await ProductService.updateProductStatus(selectedProduct.id, status);
+      
+      // Close modal and refresh products
+      setStatusModalOpen(false);
+      setSelectedProduct(null);
+      
+      // Fetch products again to update the list
+      await fetchRecentProducts();
+    } catch (error) {
+      console.error('Failed to update product status:', error);
+    } finally {
+      setStatusLoading(false);
+    }
+  };
+
+  // Handle delete (move to trash)
+  const handleDelete = async () => {
+    if (!selectedProduct) return;
+
+    try {
+      setDeleteLoading(true);
+      await ProductService.deleteProduct(selectedProduct.id);
+      
+      // Close delete modal and refresh products
+      setDeleteModalOpen(false);
+      setSelectedProduct(null);
+      
+      // Fetch products again to update the list
+      await fetchRecentProducts();
+    } catch (error) {
+      console.error('Failed to delete product:', error);
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
+
+  // Open status modal
+  const openStatusModal = (product: Product) => {
+    setSelectedProduct(product);
+    setStatusModalOpen(true);
+  };
+
+  // Open delete modal
+  const openDeleteModal = (product: Product) => {
+    setSelectedProduct(product);
+    setDeleteModalOpen(true);
+  };
+
+  // Close modals
+  const closeStatusModal = () => {
+    setStatusModalOpen(false);
+    setSelectedProduct(null);
+  };
+
+  const closeDeleteModal = () => {
+    setDeleteModalOpen(false);
+    setSelectedProduct(null);
+  };
 
   useEffect(() => {
-    const fetchRecentProducts = async () => {
-      try {
-        setLoading(true);
-        // Fetch only 5 most recent products, sorted by creation date
-        const response = await ProductService.getProducts({
-          per_page: 5,
-          sort_by: 'created_at',
-          sort_order: 'desc'
-        });
-        setProducts(response.data);
-      } catch (error) {
-        console.error('Failed to fetch recent products:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchRecentProducts();
   }, []);
 
@@ -86,7 +159,6 @@ export default function RecentProductsTable() {
           <tbody>
             {products.map((product) => (
               <tr key={product.id} className="border-b border-gray-100 hover:bg-gray-50">
-                
                 <td className="py-4 px-4">
                   <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center overflow-hidden">
                     {product.thumbnail ? (
@@ -114,9 +186,16 @@ export default function RecentProductsTable() {
                   <span className="text-sm font-semibold text-gray-800">{formatPrice(product.price)}</span>
                 </td>
                 <td className="py-4 px-4">
-                  <button className="text-gray-400 hover:text-gray-600">
-                    <FaEllipsisV className="w-5 h-5" />
-                  </button>
+                  <div className="relative">
+                    <button 
+                      onClick={() => openStatusModal(product)}
+                      className="text-gray-400 hover:text-gray-600 p-1"
+                    >
+                      <FaEllipsisV className="w-5 h-5" />
+                    </button>
+                    
+                    {/* Dropdown menu could be added here if needed */}
+                  </div>
                 </td>
               </tr>
             ))}
@@ -127,6 +206,26 @@ export default function RecentProductsTable() {
       <div className="mt-4 text-sm text-gray-500">
         Showing {products.length} most recent products
       </div>
+
+      {/* Status Modal */}
+      <StatusModal
+        isOpen={statusModalOpen}
+        onClose={closeStatusModal}
+        onStatusChange={handleStatusChange}
+        onDelete={() => openDeleteModal(selectedProduct!)}
+        currentStatus={selectedProduct?.status || ''}
+        productName={selectedProduct?.title || ''}
+        loading={statusLoading}
+      />
+
+      {/* Delete Modal */}
+      <DeleteModal
+        isOpen={deleteModalOpen}
+        onClose={closeDeleteModal}
+        onConfirm={handleDelete}
+        productName={selectedProduct?.title || ''}
+        loading={deleteLoading}
+      />
     </div>
   );
 }

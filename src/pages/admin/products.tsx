@@ -23,7 +23,7 @@ interface UIProduct {
   plan_id: number | null;
   price: number;
   use_escrow: number;
-  status: 'draft' | 'publish' | 'trash' | 'pending';
+  status: 'rejected' | 'publish' | 'pending' | 'draft' | 'trash';
   images: string[];
   price_range: any | null;
   meta: any | null;
@@ -195,9 +195,9 @@ export default function ProductManagement() {
   const startIndex = (currentPage - 1) * itemsPerPage;
   const paginatedProducts = filteredProducts.slice(startIndex, startIndex + itemsPerPage);
 
-  const handleStatusChange = async (productId: number, newStatus: Product['status']) => {
+  const handleStatusChange = async (productId: number, newStatus: 'rejected' | 'publish' | 'pending' | 'draft' | 'trash') => {
     try {
-      await ProductService.updateProductStatus(productId, newStatus);
+      await ProductService.updateProductStatus(productId, newStatus); 
       
       // Update local state
       setProducts(products.map(p => 

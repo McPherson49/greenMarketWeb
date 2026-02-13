@@ -326,7 +326,7 @@ export default function NewProductForm() {
       setErrors({});
 
       // Redirect to products page
-      router.push('/products');
+      router.push('/admin/products/');
     } catch (error: any) {
       // Handle error response
       if (error.response?.data?.message) {

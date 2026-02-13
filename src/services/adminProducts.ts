@@ -35,11 +35,11 @@ export const ProductService = {
   },
 
   /**
-   * Update product status
+   * Update product status (PATCH method)
    */
-  async updateProductStatus(id: number, status: string): Promise<Product> {
+  async updateProductStatus(id: number, status: 'rejected' | 'publish' | 'pending' | 'draft' | 'trash'): Promise<Product> {
     try {
-      const response = await ApiFetcher.put<Product>(`/products/${id}`, { status });
+      const response = await ApiFetcher.patch<Product>(`/products/${id}`, { status });
       toast.success('Product status updated successfully');
       return response.data;
     } catch (error: any) {
@@ -49,12 +49,13 @@ export const ProductService = {
   },
 
   /**
-   * Delete a product
+   * Delete product (move to trash)
    */
-  async deleteProduct(id: number): Promise<void> {
+  async deleteProduct(id: number): Promise<Product> {
     try {
-      await ApiFetcher.delete(`/products/${id}`);
-      toast.success('Product deleted successfully');
+      const response = await ApiFetcher.patch<Product>(`/products/${id}`, { status: 'trash' });
+      toast.success('Product moved to trash successfully');
+      return response.data;
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Failed to delete product');
       throw error;
