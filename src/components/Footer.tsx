@@ -126,7 +126,7 @@ const Footer = () => {
             <li>
               <Link
                 className="hover:text-[#39B54A] transform transition duration-700"
-                href="/wishlist"
+                href="/profile"
               >
                 My Wishlist
               </Link>
@@ -245,7 +245,7 @@ const Footer = () => {
         <div className="flex flex-col md:flex-row md:items-center gap-4 text-sm">
           <div className="flex  items-center gap-2">
             <FaPhoneAlt />
-            <span className="">+2349099989016</span>
+            <span className="">+2348022117935</span>
           </div>
           <div className="flex items-center gap-2">
             <CiMail className="text-lg" />

@@ -17,7 +17,7 @@ export type Product = {
 
 export default function ProductCard({ product }: { product: Product }) {
   return (
-    <div className="group rounded-xl border border-neutral-200 bg-white p-3 transition-shadow hover:shadow-sm">
+    <div className="group rounded-xl border border-neutral-200 bg-white p-3 transition-shadow hover:shadow-sm min-w-0">
       {/* Product Image */}
       <div className="relative aspect-4/3 overflow-hidden rounded-lg">
         <Image
@@ -38,20 +38,20 @@ export default function ProductCard({ product }: { product: Product }) {
       <div className="mt-3 flex flex-col gap-2">
         {/* Name + Rating */}
         <div className="flex items-start justify-between gap-2">
-          <p className="line-clamp-2 text-sm font-medium text-neutral-800">
+          <p className="line-clamp-2 text-sm font-medium text-neutral-800 min-w-0">
             {product.name}
           </p>
 
-          <span className="inline-flex items-center gap-1 text-xs text-amber-500">
+          <span className="inline-flex items-center gap-1 text-xs text-amber-500 flex-shrink-0">
             <Star className="size-3 fill-current" />
             {product.rating.toFixed(1)}
           </span>
         </div>
 
         {/* Vendor */}
-        <div className="text-md text-black-500">
+        <div className="text-md text-black-500 min-w-0">
           <span className="font-semibold">Seller: </span>
-          <span className="font-semibold">
+          <span className="font-semibold truncate">
             {product.vendor}
             {product.unit ? ` • ${product.unit}` : null}
           </span>
@@ -59,13 +59,13 @@ export default function ProductCard({ product }: { product: Product }) {
 
         {/* Price + View */}
         <div className="flex justify-between items-center gap-2">
-          <div className="text-sm font-semibold text-[#E4130C]">
+          <div className="text-sm font-semibold text-[#E4130C] flex-shrink-0">
             &#8358;{product.price.toLocaleString()}
           </div>
 
           <Link
             href={`/product/${product.id}`}
-            className="inline-flex items-center gap-2 rounded-md bg-[#39B54A] px-3 py-1.5 text-sm text-white hover:bg-emerald-700 transition-colors"
+            className="inline-flex items-center gap-2 rounded-md bg-[#39B54A] px-3 py-1.5 text-sm text-white hover:bg-emerald-700 transition-colors flex-shrink-0"
           >
             <GrView className="size-4" /> View
           </Link>

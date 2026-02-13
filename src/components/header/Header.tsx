@@ -2,12 +2,20 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Menu, Search, CircleUser, ChevronRight, X, ChevronDown, LogOut } from "lucide-react";
+import {
+  Menu,
+  Search,
+  CircleUser,
+  ChevronRight,
+  X,
+  ChevronDown,
+  LogOut,
+} from "lucide-react";
 import Image from "next/image";
 import { FaAd, FaHeadset } from "react-icons/fa";
 import { TiUserAdd } from "react-icons/ti";
-import { logoutAuth } from "@/utils/auth"
-import locationService from "@/services/country"; 
+import { logoutAuth } from "@/utils/auth";
+import locationService from "@/services/country";
 import { toast } from "react-toastify";
 import { UIProduct } from "@/types/product";
 
@@ -43,16 +51,18 @@ interface SearchBarProps {
   initialLocation?: string;
 }
 
-function SearchBar({ 
-  className = "", 
+function SearchBar({
+  className = "",
   onSearch,
   initialSearch = "",
-  initialLocation = "Search By Location" 
+  initialLocation = "Search By Location",
 }: SearchBarProps) {
   const [locationOpen, setLocationOpen] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState(initialLocation);
   const [loading, setLoading] = useState(true);
-  const [states, setStates] = useState<Array<{ name: string; state_code: string }>>([]);
+  const [states, setStates] = useState<
+    Array<{ name: string; state_code: string }>
+  >([]);
   const [searchTerm, setSearchTerm] = useState(initialSearch);
   const country = "Nigeria";
 
@@ -81,7 +91,7 @@ function SearchBar({
   };
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
+    if (e.key === "Enter") {
       handleSearchSubmit();
     }
   };
@@ -145,7 +155,7 @@ function SearchBar({
           onChange={handleSearchChange}
           onKeyPress={handleKeyPress}
         />
-        <button 
+        <button
           onClick={handleSearchSubmit}
           className="absolute right-2 top-1/2 -translate-y-1/2"
         >
@@ -161,10 +171,7 @@ interface HeaderProps {
   onSearch?: (searchTerm: string, location: string) => void;
 }
 
-export default function Header({
-  onOpenCategories,
-  onSearch
-}: HeaderProps) {
+export default function Header({ onOpenCategories, onSearch }: HeaderProps) {
   const [navOpen, setNavOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -175,8 +182,8 @@ export default function Header({
 
   // Initialize search params from URL
   useEffect(() => {
-    const search = searchParams.get('search') || '';
-    const location = searchParams.get('location') || 'All Locations';
+    const search = searchParams.get("search") || "";
+    const location = searchParams.get("location") || "All Locations";
     setSearchTerm(search);
     setSelectedLocation(location);
   }, [searchParams]);
@@ -187,13 +194,13 @@ export default function Header({
   }, [pathname]);
 
   const checkAuthStatus = () => {
-    const token = sessionStorage.getItem('jwt');
+    const token = sessionStorage.getItem("jwt");
     setIsLoggedIn(!!token);
   };
 
   const handleLogout = () => {
-    logoutAuth()
-    window.location.href = '/';
+    logoutAuth();
+    window.location.href = "/";
   };
 
   // Handle search functionality
@@ -203,19 +210,19 @@ export default function Header({
 
     // Update URL with search params
     const params = new URLSearchParams();
-    
+
     if (term) {
-      params.set('search', term);
+      params.set("search", term);
     }
-    
-    if (location !== 'All Locations') {
-      params.set('location', location);
+
+    if (location !== "All Locations") {
+      params.set("location", location);
     }
 
     const queryString = params.toString();
-    
+
     // If we're on a shop/search page, update the URL
-    if (pathname === '/shop' || pathname === '/') {
+    if (pathname === "/shop" || pathname === "/") {
       if (queryString) {
         router.push(`${pathname}?${queryString}`);
       } else {
@@ -238,7 +245,7 @@ export default function Header({
           <Brand />
           {/* Desktop Search */}
           <div className="flex-1 hidden md:block mx-4">
-            <SearchBar 
+            <SearchBar
               onSearch={handleSearch}
               initialSearch={searchTerm}
               initialLocation={selectedLocation}
@@ -252,7 +259,7 @@ export default function Header({
             >
               <FaAd className="size-4 " /> Post AD
             </Link>
-            
+
             {/* Conditionally render Login/Register or User Profile */}
             {!isLoggedIn ? (
               <>
@@ -323,7 +330,7 @@ export default function Header({
             </div>
             <div className="hidden md:flex items-center text-[#7E7E7E] gap-2">
               <FaHeadset className="size-6 text-[#39B54A] " />
-              +234 909 959 3016
+              +234 802 2117 935
               <br />
               24/7 Support Center
             </div>
@@ -331,7 +338,7 @@ export default function Header({
         </div>
         {/* Mobile search */}
         <div className="container max-w-7xl mx-auto md:hidden pb-3">
-          <SearchBar 
+          <SearchBar
             onSearch={handleSearch}
             initialSearch={searchTerm}
             initialLocation={selectedLocation}
@@ -384,7 +391,7 @@ export default function Header({
                 <ChevronRight className="size-4 text-neutral-400" />
               </Link>
             ))}
-            
+
             {/* Mobile Auth Links */}
             <div className="p-4 border-t border-neutral-200">
               {!isLoggedIn ? (

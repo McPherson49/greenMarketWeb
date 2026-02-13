@@ -363,9 +363,9 @@ const AIChatAssistant: React.FC = () => {
               <div className="bg-white p-2 rounded-full">
                 <Image
                   alt="Greenmarket Logo"
-                  src="/assets/logo.svg"
-                  width={40}
-                  height={40}
+                  src="/assets/GMAIA.png"
+                  width={100}
+                  height={100}
                 />
               </div>
               <div>
