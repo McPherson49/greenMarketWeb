@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Edit, User, Package, ShoppingCart, Home, Menu, X, UserPlus, ArrowRightLeft} from "lucide-react";
+import { Edit, User, Package, ShoppingCart, Home, Menu, X, UserPlus, ArrowRightLeft } from "lucide-react";
 import { FaChevronRight } from "react-icons/fa6";
 import EscrowRequests from "@/components/EscrowOrders";
 import { getDashboardStats, DashboardStats } from "@/services/dashboard";
@@ -17,6 +17,7 @@ import Image from "next/image";
 import ApiFetcher from "@/utils/apis";
 import ReferralTab from "@/components/ReferralTab";
 import ProfileImageUpdateModal from "@/components/ProfileImageUpdateModal";
+import ChatInterface from "@/components/ChatInterface";
 // Types
 interface VendorProfile {
   firstName: string;
@@ -25,15 +26,6 @@ interface VendorProfile {
   shopUrl: string;
   phoneNumber: string;
   email: string;
-}
-
-interface Message {
-  id: string;
-  from: string;
-  subject: string;
-  preview: string;
-  date: string;
-  unread: boolean;
 }
 
 // Dummy Data (fallback in case API fails)
@@ -46,30 +38,11 @@ const dummyProfile: VendorProfile = {
   email: "name@gmail.com",
 };
 
-const dummyMessages: Message[] = [
-  {
-    id: "MSG-001",
-    from: "Alice Johnson",
-    subject: "Question about order",
-    preview: "Hi, I wanted to ask about my recent order...",
-    date: "2025-11-12",
-    unread: true,
-  },
-  {
-    id: "MSG-002",
-    from: "Support Team",
-    subject: "Payment processed",
-    preview: "Your payment has been successfully processed...",
-    date: "2025-11-11",
-    unread: true,
-  },
-];
-
 type TabType =
   | "dashboard"
   | "orders"
   | "products"
-  | "messages"
+  | "chat"
   | "profile"
   | "escrow"
   | "referrals";
@@ -428,17 +401,14 @@ const Profile = () => {
                 Escrow Requests
               </button>
               <button
-                onClick={() => handleTabChange("messages")}
+                onClick={() => handleTabChange("chat")}
                 className={`w-full text-left px-4 py-2.5 rounded-lg transition-colors flex items-center justify-between ${
-                  activeTab === "messages"
+                  activeTab === "chat"
                     ? "bg-gray-100 font-medium"
                     : "hover:bg-gray-50"
                 }`}
               >
                 <span>Messages</span>
-                <span className="bg-red-500 text-white text-xs rounded-full px-2 py-0.5">
-                  {dummyMessages.filter((m) => m.unread).length}
-                </span>
               </button>
               <button
                 onClick={() => handleTabChange("referrals")}
@@ -947,44 +917,8 @@ const Profile = () => {
               </div>
             )}
 
-            {/* Messages Tab */}
-            {activeTab === "messages" && (
-              <div>
-                <h2 className="text-xl sm:text-2xl font-bold mb-6">Messages</h2>
-                <div className="space-y-3">
-                  {dummyMessages.map((message) => (
-                    <div
-                      key={message.id}
-                      className={`border border-neutral-200 rounded-lg p-4 cursor-pointer hover:bg-gray-50 ${
-                        message.unread ? "bg-blue-50" : ""
-                      }`}
-                    >
-                      <div className="flex flex-col sm:flex-row sm:items-start justify-between mb-2 gap-2">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <h3 className="font-semibold text-sm sm:text-base">
-                            {message.from}
-                          </h3>
-                          {message.unread && (
-                            <span className="bg-blue-600 text-white text-xs px-2 py-0.5 rounded-full">
-                              New
-                            </span>
-                          )}
-                        </div>
-                        <span className="text-xs sm:text-sm text-gray-500">
-                          {message.date}
-                        </span>
-                      </div>
-                      <p className="font-medium text-sm mb-1">
-                        {message.subject}
-                      </p>
-                      <p className="text-xs sm:text-sm text-gray-600">
-                        {message.preview}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+            {/* Chat Tab */}
+            <ChatInterface activeTab={activeTab} />
 
             {/* Profile Tab */}
             {activeTab === "profile" && (

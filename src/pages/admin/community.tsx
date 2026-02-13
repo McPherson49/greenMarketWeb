@@ -133,7 +133,7 @@ export default function AdminCommunityPage() {
                 <tr key={community.id} className="hover:bg-gray-50 transition-colors">
                   <td className="py-4 px-6">
                     <div className="flex items-center gap-4">
-                      <div className="relative w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
+                      <div className="relative w-16 h-16 rounded-lg overflow-hidden shrink-0">
                         <Image
                           src={community.icon}
                           alt={community.name}

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Search,
   Plus,
@@ -9,127 +9,78 @@ import {
   Menu,
   X,
 } from "lucide-react";
-
-interface Message {
-  id: string;
-  text: string;
-  sender: "user" | "other";
-  timestamp: string;
-}
-
-interface Conversation {
-  id: string;
-  name: string;
-  avatar: string;
-  lastMessage: string;
-  timestamp: string;
-  tags: string[];
-  online?: boolean;
-}
+import { getChatList, getMessages, sendMessage, ChatListItem, Message } from "@/services/chat";
 
 const MessagingApp: React.FC = () => {
-  const [selectedConversation, setSelectedConversation] = useState<string>("2");
+  const [selectedConversation, setSelectedConversation] = useState<string>("");
   const [messageText, setMessageText] = useState("");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [chatList, setChatList] = useState<ChatListItem[]>([]);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const conversations: Conversation[] = [
-    {
-      id: "1",
-      name: "Elmer Laverty",
-      avatar: "https://i.pravatar.cc/150?img=12",
-      lastMessage: "Haha oh man 🔥",
-      timestamp: "12m",
-      tags: ["Question", "Help wanted"],
-    },
-    {
-      id: "2",
-      name: "Florencio Dorrance",
-      avatar: "https://i.pravatar.cc/150?img=13",
-      lastMessage: "woohoooo",
-      timestamp: "24m",
-      tags: ["Some content"],
-      online: true,
-    },
-    {
-      id: "3",
-      name: "Lavern Laboy",
-      avatar: "https://i.pravatar.cc/150?img=14",
-      lastMessage: "Haha that's terrifying 😅",
-      timestamp: "1h",
-      tags: ["Bug", "Hacktoberfest"],
-    },
-    {
-      id: "4",
-      name: "Titus Kitamura",
-      avatar: "https://i.pravatar.cc/150?img=15",
-      lastMessage: "omg, this is amazing",
-      timestamp: "5h",
-      tags: ["Question", "Some content"],
-    },
-    {
-      id: "5",
-      name: "Geoffrey Mott",
-      avatar: "https://i.pravatar.cc/150?img=16",
-      lastMessage: "aww 😊",
-      timestamp: "2d",
-      tags: ["Request"],
-    },
-    {
-      id: "6",
-      name: "Alfonzo Schuessler",
-      avatar: "https://i.pravatar.cc/150?img=17",
-      lastMessage: "perfect!",
-      timestamp: "1m",
-      tags: ["Follow up"],
-    },
-  ];
+  // Fetch chat list on component mount
+  useEffect(() => {
+    const fetchChatList = async () => {
+      try {
+        const data = await getChatList();
+        if (data) {
+          setChatList(data);
+          // Auto-select first conversation if none selected
+          if (!selectedConversation && data.length > 0) {
+            setSelectedConversation(data[0].user_id.toString());
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching chat list:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const messages: Message[] = [
-    {
-      id: "1",
-      text: "omg, this is amazing",
-      sender: "other",
-      timestamp: "10:30 AM",
-    },
-    { id: "2", text: "perfect! ✅", sender: "other", timestamp: "10:31 AM" },
-    {
-      id: "3",
-      text: "Wow, this is really epic",
-      sender: "other",
-      timestamp: "10:32 AM",
-    },
-    { id: "4", text: "How are you?", sender: "user", timestamp: "10:35 AM" },
-    {
-      id: "5",
-      text: "just ideas for next time",
-      sender: "other",
-      timestamp: "10:36 AM",
-    },
-    {
-      id: "6",
-      text: "I'll be there in 2 mins ⏰",
-      sender: "other",
-      timestamp: "10:37 AM",
-    },
-    { id: "7", text: "woohoooo", sender: "user", timestamp: "10:38 AM" },
-    { id: "8", text: "Haha oh man", sender: "user", timestamp: "10:39 AM" },
-    {
-      id: "9",
-      text: "Haha that's terrifying 😅",
-      sender: "user",
-      timestamp: "10:40 AM",
-    },
-    { id: "10", text: "aww", sender: "other", timestamp: "10:41 AM" },
-    {
-      id: "11",
-      text: "omg, this is amazing",
-      sender: "other",
-      timestamp: "10:42 AM",
-    },
-    { id: "12", text: "woohoooo 🔥", sender: "other", timestamp: "10:43 AM" },
-  ];
+    fetchChatList();
+  }, []);
 
-  const selectedConv = conversations.find((c) => c.id === selectedConversation);
+  // Fetch messages when conversation is selected
+  useEffect(() => {
+    if (selectedConversation) {
+      const fetchMessages = async () => {
+        try {
+          const data = await getMessages(selectedConversation);
+          if (data) {
+            setMessages(data);
+          }
+        } catch (error) {
+          console.error("Error fetching messages:", error);
+        }
+      };
+
+      fetchMessages();
+    }
+  }, [selectedConversation]);
+
+  const handleSendMessage = async () => {
+    if (!messageText.trim() || !selectedConversation) return;
+
+    try {
+      const newMessage = await sendMessage(selectedConversation, messageText.trim());
+      if (newMessage) {
+        setMessages(prev => [...prev, newMessage]);
+        setMessageText("");
+      }
+    } catch (error) {
+      console.error("Error sending message:", error);
+    }
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
+    }
+  };
+
+  const selectedConv = chatList.find((c) => c.user_id.toString() === selectedConversation);
 
   const getTagColor = (tag: string) => {
     const colors: { [key: string]: string } = {
@@ -174,7 +125,7 @@ const MessagingApp: React.FC = () => {
                   Messages
                 </h1>
                 <ChevronDown className="w-4 h-4 md:w-5 md:h-5 text-gray-500" />
-                <span className="text-xs md:text-sm text-gray-500">12</span>
+                <span className="text-xs md:text-sm text-gray-500">{chatList.length}</span>
               </div>
               <div className="flex items-center space-x-2">
                 <button
@@ -202,53 +153,51 @@ const MessagingApp: React.FC = () => {
 
           {/* Conversations List */}
           <div className="flex-1 overflow-y-auto">
-            {conversations.map((conv) => (
-              <div
-                key={conv.id}
-                onClick={() => handleConversationSelect(conv.id)}
-                className={`p-3 md:p-4 border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors ${
-                  selectedConversation === conv.id ? "bg-gray-50" : ""
-                }`}
-              >
-                <div className="flex items-start space-x-2 md:space-x-3">
-                  <div className="relative">
-                    <img
-                      src={conv.avatar}
-                      alt={conv.name}
-                      className="w-10 h-10 md:w-12 md:h-12 rounded-full"
-                    />
-                    {conv.online && (
-                      <div className="absolute bottom-0 right-0 w-2.5 h-2.5 md:w-3 md:h-3 bg-green-500 rounded-full border-2 border-white"></div>
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between mb-1">
-                      <h3 className="font-semibold text-gray-900 text-sm truncate">
-                        {conv.name}
-                      </h3>
-                      <span className="text-xs text-gray-500 flex-shrink-0 ml-2">
-                        {conv.timestamp}
-                      </span>
+            {loading ? (
+              <div className="p-4 text-center text-gray-500">
+                Loading conversations...
+              </div>
+            ) : chatList.length === 0 ? (
+              <div className="p-4 text-center text-gray-500">
+                No conversations found
+              </div>
+            ) : (
+              chatList.map((conv) => (
+                <div
+                  key={conv.id}
+                  onClick={() => handleConversationSelect(conv.user_id.toString())}
+                  className={`p-3 md:p-4 border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors ${
+                    selectedConversation === conv.user_id.toString() ? "bg-gray-50" : ""
+                  }`}
+                >
+                  <div className="flex items-start space-x-2 md:space-x-3">
+                    <div className="relative">
+                      <img
+                        src={conv.avatar}
+                        alt={conv.name}
+                        className="w-10 h-10 md:w-12 md:h-12 rounded-full"
+                      />
                     </div>
-                    <p className="text-xs md:text-sm text-gray-600 truncate mb-2">
-                      {conv.lastMessage}
-                    </p>
-                    <div className="flex flex-wrap gap-1">
-                      {conv.tags.map((tag, idx) => (
-                        <span
-                          key={idx}
-                          className={`text-xs px-2 py-0.5 rounded-full ${getTagColor(
-                            tag
-                          )}`}
-                        >
-                          {tag}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between mb-1">
+                        <h3 className="font-semibold text-gray-900 text-sm truncate">
+                          {conv.name}
+                        </h3>
+                        <span className="text-xs text-gray-500 shrink-0 ml-2">
+                          {conv.time}
                         </span>
-                      ))}
+                      </div>
+                      <p className="text-xs md:text-sm text-gray-600 truncate mb-2">
+                        {conv.message}
+                      </p>
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-gray-400">{conv.date}</span>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
 
@@ -270,17 +219,11 @@ const MessagingApp: React.FC = () => {
                     alt={selectedConv.name}
                     className="w-8 h-8 md:w-10 md:h-10 rounded-full"
                   />
-                  {selectedConv.online && (
-                    <div className="absolute bottom-0 right-0 w-2.5 h-2.5 md:w-3 md:h-3 bg-green-500 rounded-full border-2 border-white"></div>
-                  )}
                 </div>
                 <div>
                   <h2 className="font-semibold text-gray-900 text-sm md:text-base">
                     {selectedConv.name}
                   </h2>
-                  {selectedConv.online && (
-                    <p className="text-xs text-green-600">Online</p>
-                  )}
                 </div>
               </div>
               {/* <button className="flex items-center space-x-1 md:space-x-2 px-3 md:px-4 py-1.5 md:py-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors">
@@ -292,48 +235,40 @@ const MessagingApp: React.FC = () => {
 
           {/* Messages Area */}
           <div className="flex-1 overflow-y-auto p-3 md:p-4 lg:p-6 space-y-3 md:space-y-4">
-            {messages.map((message) => (
+            {!messages || messages.length === 0 ? (
+              <div className="flex items-center justify-center h-full text-gray-500">
+                <p>No messages yet. Start a conversation!</p>
+              </div>
+            ) : (
+              messages.map((message) => (
               <div
                 key={message.id}
                 className={`flex ${
-                  message.sender === "user" ? "justify-end" : "justify-start"
+                  message.is_sender ? "justify-end" : "justify-start"
                 }`}
               >
-                <div className="flex items-end space-x-1.5 md:space-x-2 max-w-[85%] md:max-w-md lg:max-w-lg">
-                  {message.sender === "other" && (
-                    <img
-                      src={selectedConv?.avatar}
-                      alt="Avatar"
-                      className="w-6 h-6 md:w-8 md:h-8 rounded-full flex-shrink-0"
-                    />
-                  )}
+                <div className="max-w-[85%] md:max-w-md lg:max-w-lg">
                   <div
                     className={`px-3 md:px-4 py-2 rounded-2xl ${
-                      message.sender === "user"
+                      message.is_sender
                         ? "bg-indigo-600 text-white"
                         : "bg-gray-100 text-gray-900"
                     }`}
                   >
-                    <p className="text-xs md:text-sm break-words">
-                      {message.text}
+                    <p className="text-xs md:text-sm wrap-break-word">
+                      {message.message}
                     </p>
                   </div>
-                  {message.sender === "user" && (
-                    <img
-                      src="https://i.pravatar.cc/150?img=33"
-                      alt="Your Avatar"
-                      className="w-6 h-6 md:w-8 md:h-8 rounded-full flex-shrink-0"
-                    />
-                  )}
                 </div>
               </div>
-            ))}
+            ))
+            )}
           </div>
 
           {/* Message Input */}
           <div className="p-3 md:p-4 border-t border-gray-200">
             <div className="flex items-center space-x-2 md:space-x-3">
-              <button className="p-1.5 md:p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors flex-shrink-0">
+              <button className="p-1.5 md:p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors shrink-0">
                 <Paperclip className="w-4 h-4 md:w-5 md:h-5" />
               </button>
               <div className="flex-1 relative">
@@ -341,12 +276,14 @@ const MessagingApp: React.FC = () => {
                   type="text"
                   value={messageText}
                   onChange={(e) => setMessageText(e.target.value)}
-                  placeholder="Type a message"
-                  className="w-full px-3 md:px-4 py-2 md:py-3 bg-gray-100 rounded-full text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  onKeyPress={handleKeyPress}
+                  placeholder="Type a message..."
+                  className="w-full px-3 py-2 md:px-4 md:py-2.5 bg-gray-100 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
               </div>
               <button
-                className="p-1.5 md:p-2 text-white bg-indigo-600 hover:bg-indigo-700 rounded-full transition-colors flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="p-1.5 md:p-2 text-white bg-indigo-600 hover:bg-indigo-700 rounded-full transition-colors shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                onClick={handleSendMessage}
                 disabled={!messageText.trim()}
               >
                 <Send className="w-4 h-4 md:w-5 md:h-5" />

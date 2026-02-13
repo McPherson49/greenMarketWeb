@@ -334,7 +334,7 @@ const CommunityFeed: React.FC = () => {
         className={isNested ? "ml-4 sm:ml-8 md:ml-10 mt-3" : "mt-4"}
       >
         <div className="flex space-x-3">
-          <div className="w-8 h-8 bg-gray-300 rounded-full flex-shrink-0"></div>
+          <div className="w-8 h-8 bg-gray-300 rounded-full shrink-0"></div>
           <div className="flex-1">
             <div className="bg-gray-50 rounded-lg p-3">
               <div className="flex items-center space-x-2 mb-1">
@@ -436,7 +436,7 @@ const CommunityFeed: React.FC = () => {
       {/* Create Post */}
       <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
         <div className="flex items-start space-x-3">
-          <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center text-xl flex-shrink-0">
+          <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center text-xl shrink-0">
             🐄
           </div>
           <div className="flex-1">
@@ -459,7 +459,7 @@ const CommunityFeed: React.FC = () => {
           {/* Post Header */}
           <div className="p-4 flex items-center">
             <div className="flex items-center space-x-3 flex-1">
-              <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center text-xl flex-shrink-0">
+              <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center text-xl shrink-0">
                 {post.avatar}
               </div>
               <div className="min-w-0 flex-1">
@@ -467,7 +467,7 @@ const CommunityFeed: React.FC = () => {
                   {post.author}
                 </p>
                 <div className="flex items-center space-x-2 text-sm text-gray-500">
-                  <MapPin className="w-3 h-3 flex-shrink-0" />
+                  <MapPin className="w-3 h-3 shrink-0" />
                   <span className="truncate">Sabon Lann</span>
                   <span>•</span>
                   <span>{post.timestamp}</span>
@@ -550,7 +550,7 @@ const CommunityFeed: React.FC = () => {
             className="flex flex-col sm:flex-row sm:items-center sm:justify-between py-3 border-b border-gray-100 last:border-b-0 gap-3 sm:gap-0"
           >
             <div className="flex items-center space-x-3 w-full sm:w-auto">
-              <div className="w-12 h-12 bg-gray-300 rounded-full flex-shrink-0"></div>
+              <div className="w-12 h-12 bg-gray-300 rounded-full shrink-0"></div>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center space-x-2">
                   <p className="font-semibold text-gray-900 truncate">
@@ -601,15 +601,15 @@ const CommunityFeed: React.FC = () => {
           </h3>
           <ul className="space-y-2 text-gray-700">
             <li className="flex items-start">
-              <span className="mr-2 flex-shrink-0">•</span>
+              <span className="mr-2 shrink-0">•</span>
               <span>Be respectful and professional in all interactions</span>
             </li>
             <li className="flex items-start">
-              <span className="mr-2 flex-shrink-0">•</span>
+              <span className="mr-2 shrink-0">•</span>
               <span>Share accurate and helpful information</span>
             </li>
             <li className="flex items-start">
-              <span className="mr-2 flex-shrink-0">•</span>
+              <span className="mr-2 shrink-0">•</span>
               <span>No spam or self-promotion without permission</span>
             </li>
             <li className="flex items-center justify-between py-3 border-b border-gray-100">
@@ -669,7 +669,7 @@ const CommunityFeed: React.FC = () => {
             key={event.id}
             className="bg-white rounded-lg shadow-sm overflow-hidden"
           >
-            <div className="h-48 bg-gradient-to-r from-green-400 to-green-600 relative">
+            <div className="h-48 bg-linear-to-r from-green-400 to-green-600 relative">
               <img
                 src={`https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=200&fit=crop`}
                 alt={event.name}
@@ -679,7 +679,7 @@ const CommunityFeed: React.FC = () => {
             <div className="p-4">
               <div className="flex items-start justify-between mb-2">
                 <div className="flex items-center space-x-2 flex-1 min-w-0">
-                  <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center text-lg flex-shrink-0">
+                  <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center text-lg shrink-0">
                     {event.icon}
                   </div>
                   <h3 className="text-lg font-semibold text-gray-900 truncate">
@@ -739,7 +739,7 @@ const CommunityFeed: React.FC = () => {
                 <button
                   key={tab}
                   onClick={() => setSettingsSubTab(tab as any)}
-                  className={`px-3 sm:px-6 py-3 font-medium transition-colors whitespace-nowrap flex-shrink-0 ${
+                  className={`px-3 sm:px-6 py-3 font-medium transition-colors whitespace-nowrap shrink-0 ${
                     settingsSubTab === tab
                       ? "text-green-600 border-b-2 border-green-600"
                       : "text-gray-500 hover:text-gray-700"
@@ -814,7 +814,7 @@ const CommunityFeed: React.FC = () => {
                     className="flex flex-col sm:flex-row sm:items-center sm:justify-between py-3 border-b border-gray-100 gap-3 sm:gap-0"
                   >
                     <div className="flex items-center space-x-3 w-full sm:w-auto">
-                      <div className="w-10 h-10 bg-gray-300 rounded-full flex-shrink-0"></div>
+                      <div className="w-10 h-10 bg-gray-300 rounded-full shrink-0"></div>
                       <div className="min-w-0 flex-1">
                         <p className="font-medium text-gray-900 truncate">
                           {member.name}
@@ -826,7 +826,7 @@ const CommunityFeed: React.FC = () => {
                     </div>
                     <div className="flex items-center space-x-2 w-full sm:w-auto justify-center sm:justify-start">
                       {member.role === "Member" && (
-                        <select className="border border-gray-300 rounded px-2 py-1 text-sm flex-shrink-0">
+                        <select className="border border-gray-300 rounded px-2 py-1 text-sm shrink-0">
                           <option>Member</option>
                           <option>Moderator</option>
                           <option>Admin</option>
@@ -834,11 +834,11 @@ const CommunityFeed: React.FC = () => {
                       )}
                       <button
                         onClick={() => setSelectedMember(member)}
-                        className="text-blue-600 hover:text-blue-700 text-sm flex-shrink-0"
+                        className="text-blue-600 hover:text-blue-700 text-sm shrink-0"
                       >
                         Edit
                       </button>
-                      <button className="text-red-600 hover:text-red-700 text-sm flex-shrink-0">
+                      <button className="text-red-600 hover:text-red-700 text-sm shrink-0">
                         Remove
                       </button>
                     </div>
@@ -936,7 +936,7 @@ const CommunityFeed: React.FC = () => {
     <>
       {/* Community Header */}
       <div className="bg-white rounded-lg shadow-sm overflow-hidden mb-6">
-        <div className="h-32 bg-gradient-to-r from-green-400 to-green-600 relative">
+        <div className="h-32 bg-linear-to-r from-green-400 to-green-600 relative">
           <img
             src="https://images.unsplash.com/photo-1500595046743-cd271d694d30?w=800&h=200&fit=crop"
             alt="Cover"
@@ -946,7 +946,7 @@ const CommunityFeed: React.FC = () => {
         <div className="p-4 sm:p-6">
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
             <div className="flex items-center space-x-4 w-full sm:w-auto">
-              <div className="w-16 h-16 bg-white rounded-full border-4 border-white -mt-8 sm:-mt-12 flex items-center justify-center text-3xl shadow-lg flex-shrink-0">
+              <div className="w-16 h-16 bg-white rounded-full border-4 border-white -mt-8 sm:-mt-12 flex items-center justify-center text-3xl shadow-lg shrink-0">
                 🐄
               </div>
               <div className="min-w-0 flex-1">
@@ -975,7 +975,7 @@ const CommunityFeed: React.FC = () => {
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`px-3 sm:px-6 py-3 font-medium transition-colors whitespace-nowrap flex-shrink-0 ${
+              className={`px-3 sm:px-6 py-3 font-medium transition-colors whitespace-nowrap shrink-0 ${
                 activeTab === tab
                   ? "text-green-600 border-b-2 border-green-600"
                   : "text-gray-500 hover:text-gray-700"
@@ -1003,7 +1003,7 @@ const CommunityFeed: React.FC = () => {
             <div className="flex items-center space-x-1 sm:space-x-4 lg:space-x-8 overflow-x-auto scrollbar-hide border-b border-gray-200 lg:border-b-0 pb-2 lg:pb-0">
               <button
                 onClick={() => setMainSection("Community")}
-                className={`flex items-center px-3 py-2 rounded-t-lg font-semibold transition-colors whitespace-nowrap flex-shrink-0 ${
+                className={`flex items-center px-3 py-2 rounded-t-lg font-semibold transition-colors whitespace-nowrap shrink-0 ${
                   mainSection === "Community"
                     ? "text-green-600 border-b-2 border-green-600 bg-green-50"
                     : "text-gray-600 hover:text-gray-900 cursor-pointer"
@@ -1013,7 +1013,7 @@ const CommunityFeed: React.FC = () => {
               </button>
               <button
                 onClick={() => setMainSection("Events")}
-                className={`flex items-center px-3 py-2 rounded-t-lg font-medium transition-colors whitespace-nowrap flex-shrink-0 ${
+                className={`flex items-center px-3 py-2 rounded-t-lg font-medium transition-colors whitespace-nowrap shrink-0 ${
                   mainSection === "Events"
                     ? "text-green-600 border-b-2 border-green-600 bg-green-50"
                     : "text-gray-600 hover:text-gray-900 cursor-pointer"
@@ -1023,7 +1023,7 @@ const CommunityFeed: React.FC = () => {
               </button>
               <button
                 onClick={() => setMainSection("Settings")}
-                className={`flex items-center px-3 py-2 rounded-t-lg font-medium transition-colors whitespace-nowrap flex-shrink-0 ${
+                className={`flex items-center px-3 py-2 rounded-t-lg font-medium transition-colors whitespace-nowrap shrink-0 ${
                   mainSection === "Settings"
                     ? "text-green-600 border-b-2 border-green-600 bg-green-50"
                     : "text-gray-600 hover:text-gray-900 cursor-pointer"
@@ -1042,7 +1042,7 @@ const CommunityFeed: React.FC = () => {
       <div className="max-w-7xl mx-auto p-4 sm:p-6">
         <div className="flex flex-col lg:flex-row gap-6">
           {/* Left Sidebar */}
-          <aside className="hidden lg:block w-64 flex-shrink-0">
+          <aside className="hidden lg:block w-64 shrink-0">
             {mainSection === "Community" && (
               <>
                 {/* My Community Section */}
@@ -1058,7 +1058,7 @@ const CommunityFeed: React.FC = () => {
                       key={community.id}
                       className="flex items-center space-x-3 py-2 cursor-pointer hover:bg-gray-50 rounded -mx-2 px-2"
                     >
-                      <div className="w-10 h-10 bg-green-100 rounded flex items-center justify-center text-2xl flex-shrink-0">
+                      <div className="w-10 h-10 bg-green-100 rounded flex items-center justify-center text-2xl shrink-0">
                         {community.icon}
                       </div>
                       <div className="flex-1 min-w-0">
@@ -1084,7 +1084,7 @@ const CommunityFeed: React.FC = () => {
                       className="py-3 border-b border-gray-100 last:border-b-0"
                     >
                       <div className="flex items-start space-x-3">
-                        <div className="w-10 h-10 bg-green-100 rounded flex items-center justify-center text-xl flex-shrink-0">
+                        <div className="w-10 h-10 bg-green-100 rounded flex items-center justify-center text-xl shrink-0">
                           {event.icon}
                         </div>
                         <div className="flex-1 min-w-0">
@@ -1120,7 +1120,7 @@ const CommunityFeed: React.FC = () => {
                       key={event.id}
                       className="flex items-center space-x-3 py-2 cursor-pointer hover:bg-gray-50 rounded"
                     >
-                      <div className="w-8 h-8 bg-green-100 rounded flex items-center justify-center text-lg flex-shrink-0">
+                      <div className="w-8 h-8 bg-green-100 rounded flex items-center justify-center text-lg shrink-0">
                         {event.icon}
                       </div>
                       <div className="flex-1 min-w-0">
@@ -1167,7 +1167,7 @@ const CommunityFeed: React.FC = () => {
             {mainSection === "Settings" && renderSettingsMain()}
           </main>
           {/* Right Sidebar */}
-          <aside className="hidden lg:block w-72 flex-shrink-0">
+          <aside className="hidden lg:block w-72 shrink-0">
             {mainSection === "Community" && (
               <div className="bg-white rounded-lg shadow-sm p-4">
                 <div className="flex items-center justify-between mb-4">
@@ -1179,7 +1179,7 @@ const CommunityFeed: React.FC = () => {
                     key={topic.id}
                     className="flex space-x-3 py-3 cursor-pointer hover:bg-gray-50 rounded -mx-2 px-2"
                   >
-                    <div className="flex items-center justify-center w-8 h-8 bg-purple-100 text-purple-600 rounded-full font-semibold text-sm flex-shrink-0">
+                    <div className="flex items-center justify-center w-8 h-8 bg-purple-100 text-purple-600 rounded-full font-semibold text-sm shrink-0">
                       {topic.number}
                     </div>
                     <div className="flex-1 min-w-0">
@@ -1232,7 +1232,7 @@ const CommunityFeed: React.FC = () => {
         </div>
       </div>
       {showCreateEvent && (
-        <div className="fixed inset-0 z-50  flex items-center justify-center bg-black/50 px-4 z-9999 backdrop-blur supports-backdrop-filter:bg-white/60 border-b border-neutral-200 overflow-y-auto">
+        <div className="fixed inset-0 z-50  flex items-center justify-center bg-black/50 px-4 backdrop-blur supports-backdrop-filter:bg-white/60 border-b border-neutral-200 overflow-y-auto">
           <div className="bg-white mt-20 rounded-2xl shadow-2xl max-w-2xl w-full my-8 max-h-screen overflow-y-auto">
             {/* Modal Header */}
             <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between rounded-t-2xl">
@@ -1349,7 +1349,7 @@ const CommunityFeed: React.FC = () => {
                 </label>
                 <div className="space-y-4">
                   {newEvent.previewImage ? (
-                    <div className="relative max-w-full rounded-xl overflow-hidden shadow-md border border-gray-200 aspect-[8/4]">
+                    <div className="relative max-w-full rounded-xl overflow-hidden shadow-md border border-gray-200 aspect-8/4">
                       {/* Use fill for perfect responsiveness */}
                       <Image
                         src={newEvent.previewImage}
@@ -1373,7 +1373,7 @@ const CommunityFeed: React.FC = () => {
                       </button>
                     </div>
                   ) : (
-                    <div className="max-w-full aspect-[8/4] bg-gray-100 rounded-xl border-2 border-dashed border-gray-300 flex items-center justify-center">
+                    <div className="max-w-full aspect-8/4 bg-gray-100 rounded-xl border-2 border-dashed border-gray-300 flex items-center justify-center">
                       <p className="text-gray-400 text-center px-4">
                         No image selected
                       </p>

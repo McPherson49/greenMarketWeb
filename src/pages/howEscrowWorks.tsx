@@ -11,7 +11,7 @@ export default function EscrowPage() {
     <div className="min-h-screen  to-emerald-100">
       {/* Hero Section */}
       <section
-        className="py-12 max-w-7xl mx-auto w-full h-[300px] lg:py-20 cursor-pointer"
+        className="py-12 max-w-7xl mx-auto w-full h-75 lg:py-20 cursor-pointer"
         style={{
           background: "url('/assets/howescrowworks.png')",
           backgroundRepeat: "no-repeat",
@@ -29,7 +29,7 @@ export default function EscrowPage() {
           </h2>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             {/* Step 1 */}
-            <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-6 rounded-xl shadow-md hover:shadow-lg transition-shadow">
+            <div className="bg-linear-to-br from-green-50 to-emerald-50 p-6 rounded-xl shadow-md hover:shadow-lg transition-shadow">
               <div className="w-12 h-12 bg-green-600 text-white rounded-full flex items-center justify-center text-xl font-bold mb-4">
                 1
               </div>
@@ -42,7 +42,7 @@ export default function EscrowPage() {
             </div>
 
             {/* Step 2 */}
-            <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-6 rounded-xl shadow-md hover:shadow-lg transition-shadow">
+            <div className="bg-linear-to-br from-green-50 to-emerald-50 p-6 rounded-xl shadow-md hover:shadow-lg transition-shadow">
               <div className="w-12 h-12 bg-green-600 text-white rounded-full flex items-center justify-center text-xl font-bold mb-4">
                 2
               </div>
@@ -55,7 +55,7 @@ export default function EscrowPage() {
             </div>
 
             {/* Step 3 */}
-            <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-6 rounded-xl shadow-md hover:shadow-lg transition-shadow">
+            <div className="bg-linear-to-br from-green-50 to-emerald-50 p-6 rounded-xl shadow-md hover:shadow-lg transition-shadow">
               <div className="w-12 h-12 bg-green-600 text-white rounded-full flex items-center justify-center text-xl font-bold mb-4">
                 3
               </div>
@@ -68,7 +68,7 @@ export default function EscrowPage() {
             </div>
 
             {/* Step 4 */}
-            <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-6 rounded-xl shadow-md hover:shadow-lg transition-shadow">
+            <div className="bg-linear-to-br from-green-50 to-emerald-50 p-6 rounded-xl shadow-md hover:shadow-lg transition-shadow">
               <div className="w-12 h-12 bg-green-600 text-white rounded-full flex items-center justify-center text-xl font-bold mb-4">
                 4
               </div>
@@ -87,7 +87,7 @@ export default function EscrowPage() {
       {/* Advantages Section */}
       <section
         id="advantages"
-        className="py-16 bg-gradient-to-br from-gray-50 to-green-50"
+        className="py-16 bg-linear-to-br from-gray-50 to-green-50"
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-12 text-center">
@@ -105,7 +105,7 @@ export default function EscrowPage() {
               </div>
               <ul className="space-y-4">
                 <li className="flex items-start">
-                  <CheckCircle className="w-6 h-6 text-green-600 mr-3 mt-1 flex-shrink-0" />
+                  <CheckCircle className="w-6 h-6 text-green-600 mr-3 mt-1 shrink-0" />
                   <div>
                     <span className="font-semibold text-gray-900">
                       Security:
@@ -118,7 +118,7 @@ export default function EscrowPage() {
                   </div>
                 </li>
                 <li className="flex items-start">
-                  <CheckCircle className="w-6 h-6 text-green-600 mr-3 mt-1 flex-shrink-0" />
+                  <CheckCircle className="w-6 h-6 text-green-600 mr-3 mt-1 shrink-0" />
                   <div>
                     <span className="font-semibold text-gray-900">
                       Peace of Mind:
@@ -131,7 +131,7 @@ export default function EscrowPage() {
                   </div>
                 </li>
                 <li className="flex items-start">
-                  <CheckCircle className="w-6 h-6 text-green-600 mr-3 mt-1 flex-shrink-0" />
+                  <CheckCircle className="w-6 h-6 text-green-600 mr-3 mt-1 shrink-0" />
                   <div>
                     <span className="font-semibold text-gray-900">
                       Dispute Protection:
@@ -157,7 +157,7 @@ export default function EscrowPage() {
               </div>
               <ul className="space-y-4">
                 <li className="flex items-start">
-                  <CheckCircle className="w-6 h-6 text-green-600 mr-3 mt-1 flex-shrink-0" />
+                  <CheckCircle className="w-6 h-6 text-green-600 mr-3 mt-1 shrink-0" />
                   <div>
                     <span className="font-semibold text-gray-900">
                       Guaranteed Payment:
@@ -169,7 +169,7 @@ export default function EscrowPage() {
                   </div>
                 </li>
                 <li className="flex items-start">
-                  <CheckCircle className="w-6 h-6 text-green-600 mr-3 mt-1 flex-shrink-0" />
+                  <CheckCircle className="w-6 h-6 text-green-600 mr-3 mt-1 shrink-0" />
                   <div>
                     <span className="font-semibold text-gray-900">
                       Build Trust and Confidence:
@@ -181,7 +181,7 @@ export default function EscrowPage() {
                   </div>
                 </li>
                 <li className="flex items-start">
-                  <CheckCircle className="w-6 h-6 text-green-600 mr-3 mt-1 flex-shrink-0" />
+                  <CheckCircle className="w-6 h-6 text-green-600 mr-3 mt-1 shrink-0" />
                   <div>
                     <span className="font-semibold text-gray-900">
                       Simplified Process:
