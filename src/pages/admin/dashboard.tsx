@@ -11,13 +11,7 @@ import { DashboardData } from '@/types/adminDashboard';
 import { toast } from 'react-toastify';
 
 // Import extracted components
-import DashboardHeader from './components/DashboardHeader';
-import StatCard from './components/StatCard';
-import SalesChart from './components/SalesChart';
-import ChannelsPieChart from './components/ChannelsPieChart';
-import EscrowActivity from './components/EscrowActivity';
-import RecentReviews from './components/RecentReviews';
-import RecentProductsTable from './components/RecentProductsTable';
+import StatCard from '@/components/admin/StatCard';
 
 export default function Dashboard() {
   const [timeFilter, setTimeFilter] = useState('May');
@@ -53,7 +47,6 @@ export default function Dashboard() {
   if (loading) {
     return (
       <div className="space-y-6">
-        <DashboardHeader />
         <div className="p-8 text-center">
           <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-green-500"></div>
           <p className="mt-2 text-sm text-gray-500">Loading dashboard data...</p>
@@ -64,19 +57,6 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6">
-      {/* Overview Section */}
-      <DashboardHeader />
-
-      {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <SalesChart 
-          timeFilter={timeFilter}
-          setTimeFilter={setTimeFilter}
-          walletAmount={dashboardData ? formatWallet(dashboardData.wallet) : '₦0.00'}
-        />
-        <ChannelsPieChart dashboardData={dashboardData} />
-      </div>
-
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
@@ -112,15 +92,6 @@ export default function Dashboard() {
           viewLink="#"
         />
       </div>
-
-      {/* Activity & Products Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <EscrowActivity dashboardData={dashboardData} />
-        <RecentReviews />
-      </div>
-
-      {/* Recent Products Table */}
-      <RecentProductsTable />
     </div>
   );
 }

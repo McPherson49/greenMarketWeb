@@ -206,7 +206,7 @@ const MessagingApp: React.FC = () => {
                 </button>
                 <div className="relative">
                   <img
-                    src={selectedConv.avatar || "https://i.pravatar.cc/150?img=33"}
+                    src={selectedConv?.avatar || "https://i.pravatar.cc/150?img=33"}
                     alt={selectedConv.name}
                     className="w-8 h-8 md:w-10 md:h-10 rounded-full"
                   />
@@ -230,11 +230,11 @@ const MessagingApp: React.FC = () => {
               <div
                 key={message.id}
                 className={`flex ${
-                  message.sender === "user" ? "justify-end" : "justify-start"
+                  message.is_sender ? "justify-end" : "justify-start"
                 }`}
               >
                 <div className="flex items-end space-x-1.5 md:space-x-2 max-w-[85%] md:max-w-md lg:max-w-lg">
-                  {message.sender === "other" && (
+                  {!message.is_sender && (
                     <Image
                       src={selectedConv?.avatar || "https://i.pravatar.cc/150?img=33"}
                       alt="Avatar"
@@ -245,14 +245,14 @@ const MessagingApp: React.FC = () => {
                   )}
                   <div
                     className={`px-3 md:px-4 py-2 rounded-2xl ${
-                      message.sender === "user"
+                      message.is_sender
                         ? "bg-indigo-600 text-white"
                         : "bg-gray-100 text-gray-900"
                     }`}
                   >
-                    <p className="text-xs md:text-sm wrap-break-word">{message.text}</p>
+                    <p className="text-xs md:text-sm wrap-break-word">{message.message}</p>
                   </div>
-                  {message.sender === "user" && (
+                  {message.is_sender && (
                     <Image
                       src="https://i.pravatar.cc/150?img=33"
                       alt="Your Avatar"
