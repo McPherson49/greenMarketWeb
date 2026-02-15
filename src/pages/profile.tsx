@@ -408,7 +408,7 @@ const Profile = () => {
                     : "hover:bg-gray-50"
                 }`}
               >
-                <span>Messages</span>
+                <span>Chat</span>
               </button>
               <button
                 onClick={() => handleTabChange("referrals")}
@@ -867,11 +867,11 @@ const Profile = () => {
                           </span>
                         </div>
 
-                        {/* <Link href={`/edit-product/${product.id}`}>
+                        <Link href={`/edit-product/${product.id}`}>
                           <button className="w-full border border-neutral-200 px-4 py-2 rounded-lg hover:bg-gray-50 text-sm">
                             Edit Product
                           </button>
-                        </Link> */}
+                        </Link>
                       </div>
                     ))}
                   </div>
@@ -918,7 +918,7 @@ const Profile = () => {
             )}
 
             {/* Chat Tab */}
-            <ChatInterface activeTab={activeTab} />
+            {activeTab === "chat" && <ChatInterface activeTab={activeTab}/>}
 
             {/* Profile Tab */}
             {activeTab === "profile" && (

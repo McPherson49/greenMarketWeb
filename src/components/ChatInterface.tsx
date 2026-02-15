@@ -15,10 +15,12 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ activeTab }) => {
 
   // Fetch chat list when tab becomes active
   useEffect(() => {
-    if (activeTab === "Chat") {
+    if (activeTab === "chat") {
       const fetchChatList = async () => {
+        console.log("Fetching chat list...");
         try {
           const data = await getChatList();
+          console.log("Chat list data:", data);
           if (data) {
             setChatList(data);
             if (!selectedConversation && data.length > 0) {
@@ -38,10 +40,12 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ activeTab }) => {
 
   // Fetch messages when conversation is selected
   useEffect(() => {
-    if (selectedConversation && activeTab === "Chat") {
+    if (selectedConversation && activeTab === "chat") {
       const fetchMessages = async () => {
+        console.log("Fetching messages for conversation:", selectedConversation);
         try {
           const data = await getMessages(selectedConversation);
+          console.log("Messages data:", data);
           if (data) {
             setMessages(data);
           }
@@ -77,10 +81,12 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ activeTab }) => {
 
   const selectedConv = chatList.find((c) => c.user_id.toString() === selectedConversation);
 
-  if (activeTab !== "Chat") return null;
+  console.log("ChatInterface render - activeTab:", activeTab, "chatList length:", chatList.length, "selectedConversation:", selectedConversation);
+
+  if (activeTab !== "chat") return null;
 
   return (
-    <div className="flex h-150 bg-white rounded-lg border border-neutral-200">
+    <div className="flex h-[600px] bg-white rounded-lg border border-neutral-200">
       {/* Left Sidebar - Conversations List */}
       <div className="w-full md:w-80 lg:w-96 border-r border-gray-200 flex flex-col">
         {/* Header */}

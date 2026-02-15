@@ -377,7 +377,7 @@ export default function App({ Component, pageProps }: AppProps) {
           <MobileBottomNav />
           <Footer />
           {/* AI Chat Assistant - Only on non-admin pages */}
-          {/* <AIChatAssistant /> */}
+          <AIChatAssistant />
         </>
       )}
     </>
