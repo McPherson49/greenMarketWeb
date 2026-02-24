@@ -359,10 +359,10 @@ export default function NewProductForm() {
     } else {
       // Check image sizes
       const oversizedImages = images.filter(
-        (img) => img.size > 2 * 1024 * 1024
+        (img) => img.size > 5 * 1024 * 1024
       );
       if (oversizedImages.length > 0) {
-        newErrors.images = "Some images exceed 2MB limit";
+        newErrors.images = "Some images exceed 5MB limit";
       }
     }
 
@@ -599,9 +599,9 @@ export default function NewProductForm() {
 
     Array.from(files).forEach((file, index) => {
       // Check file size (2MB = 2 * 1024 * 1024 bytes)
-      if (file.size > 2 * 1024 * 1024) {
-        setImageError(`Image ${file.name} exceeds 2MB limit`);
-        toast.error(`Image ${file.name} exceeds 2MB limit`);
+      if (file.size > 5 * 1024 * 1024) {
+        setImageError(`Image ${file.name} exceeds 5MB limit`);
+        toast.error(`Image ${file.name} exceeds 5MB limit`);
         hasError = true;
         return;
       }
@@ -966,7 +966,7 @@ export default function NewProductForm() {
                     <p className="text-xs text-red-500">{errors.images}</p>
                   )}
                   <p className="text-xs text-gray-500 text-center">
-                    NOTE: IMAGE SIZE SHOULD NOT BE MORE THAN 2MB
+                    NOTE: IMAGE SIZE SHOULD NOT BE MORE THAN 5MB
                   </p>
                 </div>
               </div>

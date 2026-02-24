@@ -22,7 +22,7 @@ import { UIProduct } from "@/types/product";
 const navRoutes = [
   { label: "Home", href: "/" },
   { label: "About", href: "/about" },
-  { label: "shop", href: "/shop" },
+  // { label: "shop", href: "/shop" },
   { label: "How Escrow Works", href: "/howEscrowWorks" },
   { label: "Community", href: "/community" },
   { label: "Blog", href: "/blog" },

@@ -358,7 +358,7 @@ const AIChatAssistant: React.FC = () => {
             bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-green-200"
         >
           {/* Header */}
-          <div className="bg-[#39B54A] from-green-500 to-emerald-600 text-white p-2 flex items-center justify-between shrink-0">
+          <div className="bg-[#39B54A] from-green-500 to-emerald-600 text-white p-2 px-4 flex items-center justify-between shrink-0">
             <div className="flex items-center gap-10">
               <div className=" rounded-full">
                 <Image
@@ -369,7 +369,9 @@ const AIChatAssistant: React.FC = () => {
                 />
               </div>
               <div>
-                <h3 className="font-semibold text-lg">GreenMarket AI</h3>
+                <h3 className="font-semibold hidden md:block text-lg">
+                  GreenMarket AI
+                </h3>
                 <p className="text-xs text-green-100">
                   Your Agricultural Expert
                 </p>
@@ -384,7 +386,6 @@ const AIChatAssistant: React.FC = () => {
             </button>
           </div>
 
-          {/* Messages Container */}
           <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-linear-to-b from-green-50/30 to-white">
             {messages.map((message, index) => (
               <div
