@@ -114,7 +114,7 @@ export const FreePlanSuccessModal: React.FC<FreePlanSuccessModalProps> = ({ isOp
 
   return (
     <div
-      className="fixed inset-0 z-50 mt-20 flex items-center justify-center p-4"
+      className="fixed inset-0 z-9999 flex items-center justify-center p-4"
       onClick={onClose}
     >
       <div className="absolute inset-0 backdrop-blur-[32px] bg-white/10"></div>
