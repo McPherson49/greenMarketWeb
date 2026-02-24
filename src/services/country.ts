@@ -2,12 +2,13 @@
 import { CountryStatesResponse, CitiesResponse, State, CityRequest } from '@/types/country';
 
 class LocationService {
-  private baseURL = 'https://countriesnow.space/api/v0.1/countries';
-  
+  private statesBaseURL = 'https://countriesnow.space/api/v0.1/countries/states';
+  private citiesBaseURL = 'https://countriesnow.space/api/v0.1/countries/state/cities';
+
   // Cache for states and cities to reduce API calls
   private statesCache: Map<string, State[]> = new Map();
   private citiesCache: Map<string, string[]> = new Map();
-  
+
   /**
    * Get all states for a country
    * @param country - Country name
@@ -16,156 +17,139 @@ class LocationService {
   async getStates(country: string, useCache: boolean = true): Promise<State[]> {
     try {
       const cacheKey = country.toLowerCase();
-      
-      // Return cached data if available
+
       if (useCache && this.statesCache.has(cacheKey)) {
         console.log(`Returning cached states for ${country}`);
         return this.statesCache.get(cacheKey)!;
       }
-      
-      const response = await fetch(`${this.baseURL}/states`, {
+
+      const response = await fetch(this.statesBaseURL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ country }),
       });
-      
+
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        console.warn(`States API returned ${response.status} for country: ${country}`);
+        return [];
       }
-      
+
       const data: CountryStatesResponse = await response.json();
-      
+
       if (data.error) {
-        throw new Error(data.msg);
+        console.warn(`States API error for ${country}:`, data.msg);
+        return [];
       }
-      
-      // Cache the result
+
       this.statesCache.set(cacheKey, data.data.states);
-      
       return data.data.states;
-      
+
     } catch (error) {
       console.error('Error fetching states:', error);
-      throw error;
+      return [];
     }
   }
-  
+
   /**
    * Get cities for a specific state in a country
    * @param country - Country name
    * @param state - State name
    * @param useCache - Whether to use cached data (default: true)
    */
- async getCities(country: string, state: string, useCache: boolean = true): Promise<string[]> {
-  try {
-    const normalizedState = state.replace(/\s*state$/i, "").trim();
-    const cacheKey = `${country.toLowerCase()}_${normalizedState.toLowerCase()}`;
+  async getCities(country: string, state: string, useCache: boolean = true): Promise<string[]> {
+    try {
+      // Normalize state name — remove " State" suffix (e.g. "Lagos State" → "Lagos")
+      const normalizedState = state.replace(/\s*state$/i, '').trim();
+      const cacheKey = `${country.toLowerCase()}_${normalizedState.toLowerCase()}`;
 
-    if (useCache && this.citiesCache.has(cacheKey)) {
-      return this.citiesCache.get(cacheKey)!;
-    }
+      if (useCache && this.citiesCache.has(cacheKey)) {
+        console.log(`Returning cached cities for ${normalizedState}, ${country}`);
+        return this.citiesCache.get(cacheKey)!;
+      }
 
-    const requestBody: CityRequest = { country, state: normalizedState };
+      const requestBody: CityRequest = { country, state: normalizedState };
 
-    const response = await fetch(`${this.baseURL}/state/cities`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(requestBody),
-    });
+      const response = await fetch(this.citiesBaseURL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(requestBody),
+      });
 
-    // ✅ Return empty array instead of throwing on 404
-    if (!response.ok) {
-      console.warn(`Cities API returned ${response.status} for state: ${normalizedState}`);
+      if (!response.ok) {
+        console.warn(`Cities API returned ${response.status} for state: ${normalizedState}`);
+        return [];
+      }
+
+      const data: CitiesResponse = await response.json();
+
+      if (data.error) {
+        console.warn(`Cities API error for ${normalizedState}:`, data.msg);
+        return [];
+      }
+
+      this.citiesCache.set(cacheKey, data.data);
+      return data.data;
+
+    } catch (error) {
+      console.error('Error fetching cities:', error);
       return [];
     }
-
-    const data: CitiesResponse = await response.json();
-
-    if (data.error) {
-      console.warn(`Cities API error for ${normalizedState}:`, data.msg);
-      return [];
-    }
-
-    this.citiesCache.set(cacheKey, data.data);
-    return data.data;
-
-  } catch (error) {
-    // ✅ Network failures also return empty array instead of throwing
-    console.error('Error fetching cities:', error);
-    return [];
   }
-}
-  
+
   /**
    * Search states by name or code
-   * @param country - Country name
-   * @param searchTerm - Search term for state name or code
    */
   async searchStates(country: string, searchTerm: string): Promise<State[]> {
     try {
       const states = await this.getStates(country);
-      
       const term = searchTerm.toLowerCase();
-      return states.filter(state => 
-        state.name.toLowerCase().includes(term) || 
-        state.state_code.toLowerCase().includes(term)
+      return states.filter(
+        (state) =>
+          state.name.toLowerCase().includes(term) ||
+          state.state_code.toLowerCase().includes(term)
       );
     } catch (error) {
       console.error('Error searching states:', error);
-      throw error;
+      return [];
     }
   }
-  
+
   /**
    * Search cities in a state
-   * @param country - Country name
-   * @param state - State name
-   * @param searchTerm - Search term for city name
    */
   async searchCities(country: string, state: string, searchTerm: string): Promise<string[]> {
     try {
       const cities = await this.getCities(country, state);
-      
       const term = searchTerm.toLowerCase();
-      return cities.filter(city => 
-        city.toLowerCase().includes(term)
-      );
+      return cities.filter((city) => city.toLowerCase().includes(term));
     } catch (error) {
       console.error('Error searching cities:', error);
-      throw error;
+      return [];
     }
   }
-  
+
   /**
    * Get state by code
-   * @param country - Country name
-   * @param stateCode - State code (e.g., 'LA' for Lagos)
    */
   async getStateByCode(country: string, stateCode: string): Promise<State | null> {
     try {
       const states = await this.getStates(country);
-      const state = states.find(s => 
-        s.state_code.toLowerCase() === stateCode.toLowerCase()
-      );
-      return state || null;
+      return states.find((s) => s.state_code.toLowerCase() === stateCode.toLowerCase()) || null;
     } catch (error) {
       console.error('Error getting state by code:', error);
-      throw error;
+      return null;
     }
   }
-  
+
   /**
    * Clear cache for specific country or all
-   * @param country - Optional country to clear cache for
    */
   clearCache(country?: string): void {
     if (country) {
       const countryKey = country.toLowerCase();
       this.statesCache.delete(countryKey);
-      
-      // Clear all cities for this country
       for (const key of this.citiesCache.keys()) {
         if (key.startsWith(countryKey)) {
           this.citiesCache.delete(key);
@@ -176,14 +160,11 @@ class LocationService {
       this.citiesCache.clear();
     }
   }
-  
+
   /**
    * Get cache statistics
    */
-  getCacheStats(): {
-    statesCacheSize: number;
-    citiesCacheSize: number;
-  } {
+  getCacheStats(): { statesCacheSize: number; citiesCacheSize: number } {
     return {
       statesCacheSize: this.statesCache.size,
       citiesCacheSize: this.citiesCache.size,

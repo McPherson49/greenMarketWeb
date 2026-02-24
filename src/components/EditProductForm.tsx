@@ -487,116 +487,108 @@ useEffect(() => {
   };
 
   // Main function to handle product update
-  const handleUpdateProduct = async () => {
-    if (!selectedPlan) {
-      toast.error("Please select a plan");
-      return;
+ const handleUpdateProduct = async () => {
+  if (!selectedPlan) {
+    toast.error("Please select a plan");
+    return;
+  }
+
+  setIsSubmitting(true);
+
+  try {
+    const selectedPlanData = plans.find((plan) => plan.id === selectedPlan);
+    const isFreemium = selectedPlanData && Array.isArray(selectedPlanData.pricing);
+
+    const apiFormData = new FormData();
+
+    apiFormData.append("_method", "PUT"); // ✅ Add this — Laravel needs method spoofing
+    apiFormData.append("category_id", formData.category);
+    apiFormData.append("title", formData.title);
+    apiFormData.append("description", formData.description);
+    apiFormData.append("state", formData.state);
+    apiFormData.append("local", formData.city);
+    apiFormData.append("price", formData.price);
+    apiFormData.append("nearest", formData.busStop || "N/A"); // ✅ Never send empty string
+    apiFormData.append("use_escrow", "1");
+
+    if (selectedPlanData) {
+      apiFormData.append("plan[title]", selectedPlanData.title);
+      if (!isFreemium && selectedDuration && isPricingObject(selectedPlanData.pricing)) {
+        const planPrice = selectedPlanData.pricing[selectedDuration];
+        apiFormData.append("plan[price]", planPrice.toString());
+        apiFormData.append("plan[span]", selectedDuration);
+      } else {
+        apiFormData.append("plan[price]", "0");
+        apiFormData.append("plan[span]", "free");
+      }
     }
 
-    setIsSubmitting(true);
+    images.forEach((img, index) => {
+      apiFormData.append(`images[${index}]`, img.file);
+    });
 
-    try {
-      const selectedPlanData = plans.find((plan) => plan.id === selectedPlan);
-      const isFreemium =
-        selectedPlanData && Array.isArray(selectedPlanData.pricing);
+    imagesToDelete.forEach((imgUrl, index) => {
+      apiFormData.append(`images_to_delete[${index}]`, imgUrl);
+    });
 
-      // Prepare FormData
-      const apiFormData = new FormData();
+    formData.tags.forEach((tag, index) => {
+      apiFormData.append(`tags[${index}]`, tag);
+    });
 
-      // Add required fields (same as post-ad)
-      apiFormData.append("category_id", formData.category);
-      apiFormData.append("title", formData.title);
-      apiFormData.append("description", formData.description);
-      apiFormData.append("state", formData.state);
-      apiFormData.append("local", formData.city);
-      apiFormData.append("price", formData.price);
-      apiFormData.append("nearest", formData.busStop);
-      apiFormData.append("use_escrow", "1");
+    // ✅ Log everything being sent
+    console.log("=== FormData being sent ===");
+    for (const [key, value] of apiFormData.entries()) {
+      console.log(`${key}:`, value);
+    }
 
-      // Add plan information (same as post-ad)
-      if (selectedPlanData) {
-        apiFormData.append("plan[title]", selectedPlanData.title);
+    const updateProductResponse = await ApiFetcher.post(
+      `/products/${productId}`,
+      apiFormData,
+      { headers: { "Content-Type": "multipart/form-data" } }
+    );
 
-        if (!isFreemium && selectedDuration) {
-          if (isPricingObject(selectedPlanData.pricing)) {
-            const planPrice = selectedPlanData.pricing[selectedDuration];
-            apiFormData.append("plan[price]", planPrice.toString());
-            apiFormData.append("plan[span]", selectedDuration);
-          } else {
-            toast.error("Invalid pricing structure for this plan.");
-            setIsSubmitting(false);
-            return;
-          }
-        } else {
-          apiFormData.append("plan[price]", "0");
-          apiFormData.append("plan[span]", "free");
-        }
-      }
+    const productData: ProductResponse = updateProductResponse.data;
 
-      // Add new images
-      images.forEach((img, index) => {
-        apiFormData.append(`images[${index}]`, img.file);
-      });
+    if (!productData.status || !productData.data) {
+      throw new Error("Failed to update product");
+    }
 
-      // Add images to delete
-      imagesToDelete.forEach((imgUrl, index) => {
-        apiFormData.append(`images_to_delete[${index}]`, imgUrl);
-      });
+    const updatedProdId = productData.data.id.toString();
+    setUpdatedProductId(updatedProdId);
 
-      // Add tags
-      formData.tags.forEach((tag, index) => {
-        apiFormData.append(`tags[${index}]`, tag);
-      });
-
-      // Step 1: Update the product using POST to /products/:id (same as post-ad)
-      const updateProductResponse = await ApiFetcher.post(
-        `/products/${productId}`,
-        apiFormData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
-
-      const productData: ProductResponse = updateProductResponse.data;
-
-      if (!productData.status || !productData.data) {
-        throw new Error("Failed to update product");
-      }
-
-      const updatedProdId = productData.data.id.toString();
-      setUpdatedProductId(updatedProdId);
-
-      // Step 2: Handle based on plan type (same as post-ad)
-      if (isFreemium) {
+    if (isFreemium) {
+      setShowPromoteModal(false);
+      setShowPaymentSuccessModal(true);
+      toast.success("Product updated successfully!");
+    } else {
+      if (selectedPlanData && selectedDuration && isPricingObject(selectedPlanData.pricing)) {
+        const planPrice = selectedPlanData.pricing[selectedDuration];
         setShowPromoteModal(false);
-        setShowPaymentSuccessModal(true);
-        toast.success("Product updated successfully with freemium plan!");
+        await initializePayment(updatedProdId, planPrice, selectedPlanData.title);
       } else {
-        if (
-          selectedPlanData &&
-          selectedDuration &&
-          isPricingObject(selectedPlanData.pricing)
-        ) {
-          const planPrice = selectedPlanData.pricing[selectedDuration];
-          setShowPromoteModal(false);
-          await initializePayment(updatedProdId, planPrice, selectedPlanData.title);
-        } else {
-          toast.error("Unable to process payment for this plan.");
-        }
+        toast.error("Unable to process payment for this plan.");
       }
-    } catch (error: any) {
-      if (error.response?.data?.message) {
-        toast.error(error.response.data.message);
-      } else {
-        toast.error("Failed to update product. Please try again.");
-      }
-      console.error("Error updating product:", error);
-    } finally {
-      setIsSubmitting(false);
     }
-  };
+  } catch (error: any) {
+    // ✅ Full error logging
+    console.log("=== 422 Error Details ===");
+    console.log("Status:", error.response?.status);
+    console.log("Message:", error.response?.data?.message);
+    console.log("Errors:", JSON.stringify(error.response?.data?.errors, null, 2));
+    console.log("Full response data:", JSON.stringify(error.response?.data, null, 2));
+
+    const errors = error.response?.data?.errors;
+    if (errors) {
+      Object.entries(errors).forEach(([field, messages]) => {
+        toast.error(`${field}: ${(messages as string[]).join(", ")}`);
+      });
+    } else {
+      toast.error(error.response?.data?.message || "Failed to update product.");
+    }
+  } finally {
+    setIsSubmitting(false);
+  }
+};
 
   // Handle payment success modal close
   const handlePaymentSuccessClose = () => {
