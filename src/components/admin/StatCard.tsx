@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import React from 'react';
 
 interface StatCardProps {
@@ -30,9 +31,9 @@ export default function StatCard({
       <h3 className="text-sm text-gray-500 mb-1">{title}</h3>
       <div className="flex items-end justify-between">
         <p className="text-2xl font-bold text-gray-800">{value}</p>
-        <button className="px-3 py-1.5 bg-green-500 text-white text-xs font-medium rounded-lg hover:bg-green-600 transition-colors">
+        <Link href={viewLink} className="px-3 py-1.5 bg-green-500 text-white text-xs font-medium rounded-lg hover:bg-green-600 transition-colors">
           View
-        </button>
+        </Link>
       </div>
     </div>
   );

@@ -1,77 +1,91 @@
-import { useState, useEffect } from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { 
-  FaBox, 
-  FaMoneyBillWave, 
-  FaUsers, 
-  FaChartBar, 
-  FaFileAlt, 
-  FaTruck, 
-  FaExclamationTriangle, 
-  FaTimesCircle, 
-  FaCookieBite, 
-  FaWineGlassAlt, 
-  FaHeadphonesAlt, 
+import { useState, useEffect } from "react";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+} from "recharts";
+import {
+  FaBox,
+  FaMoneyBillWave,
+  FaUsers,
+  FaChartBar,
+  FaFileAlt,
+  FaTruck,
+  FaExclamationTriangle,
+  FaTimesCircle,
+  FaCookieBite,
+  FaWineGlassAlt,
+  FaHeadphonesAlt,
   FaFlask,
-  FaEllipsisV 
-} from 'react-icons/fa';
-import React from 'react';
-import { DashboardService } from '@/services/adminDashboard';
-import { DashboardData } from '@/types/adminDashboard';
-import { ProductService } from '@/services/adminProducts';
-import { Product } from '@/types/adminProducts';
-import { toast } from 'react-toastify';
+  FaEllipsisV,
+} from "react-icons/fa";
+import React from "react";
+import { DashboardService } from "@/services/adminDashboard";
+import { DashboardData } from "@/types/adminDashboard";
+import { ProductService } from "@/services/adminProducts";
+import { Product } from "@/types/adminProducts";
+import { toast } from "react-toastify";
+import Link from "next/link";
 
 // Sample data for sales chart (you should replace with real API data)
 const salesData = [
-  { date: '01 Jan', sales: 4200, order: 3800 },
-  { date: '05 Jan', sales: 3800, order: 3200 },
-  { date: '10 Jan', sales: 5100, order: 4500 },
-  { date: '15 Jan', sales: 4600, order: 4200 },
-  { date: '20 Jan', sales: 5800, order: 5200 },
-  { date: '25 Jan', sales: 5200, order: 4800 },
-  { date: '30 Jan', sales: 6100, order: 5600 },
-  { date: '05 Feb', sales: 5500, order: 5000 },
-  { date: '10 Feb', sales: 6800, order: 6200 },
-  { date: '15 Feb', sales: 6200, order: 5800 },
-  { date: '20 Feb', sales: 7100, order: 6500 },
-  { date: '25 Feb', sales: 6600, order: 6000 },
+  { date: "01 Jan", sales: 4200, order: 3800 },
+  { date: "05 Jan", sales: 3800, order: 3200 },
+  { date: "10 Jan", sales: 5100, order: 4500 },
+  { date: "15 Jan", sales: 4600, order: 4200 },
+  { date: "20 Jan", sales: 5800, order: 5200 },
+  { date: "25 Jan", sales: 5200, order: 4800 },
+  { date: "30 Jan", sales: 6100, order: 5600 },
+  { date: "05 Feb", sales: 5500, order: 5000 },
+  { date: "10 Feb", sales: 6800, order: 6200 },
+  { date: "15 Feb", sales: 6200, order: 5800 },
+  { date: "20 Feb", sales: 7100, order: 6500 },
+  { date: "25 Feb", sales: 6600, order: 6000 },
 ];
 
 export default function Dashboard() {
-  const [timeFilter, setTimeFilter] = useState('May');
-  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
+  const [timeFilter, setTimeFilter] = useState("May");
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(
+    null,
+  );
   const [recentProducts, setRecentProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Calculate channel data from dashboard stats
   const getChannelData = () => {
     if (!dashboardData) return [];
-    
+
     return [
-      { 
-        name: 'Total Users', 
+      {
+        name: "Total Users",
         value: dashboardData.admin.users,
-        color: '#10b981' 
+        color: "#10b981",
       },
-      { 
-        name: 'All Products', 
+      {
+        name: "All Products",
         value: dashboardData.admin.products,
-        color: '#3b82f6' 
+        color: "#3b82f6",
       },
-      { 
-        name: 'Escrow Request', 
+      {
+        name: "Escrow Request",
         value: dashboardData.admin.escrows,
-        color: '#f59e0b' 
+        color: "#f59e0b",
       },
     ];
   };
 
   // Format wallet amount
   const formatWallet = (wallet: string) => {
-    return `₦${parseFloat(wallet).toLocaleString('en-US', {
+    return `₦${parseFloat(wallet).toLocaleString("en-US", {
       minimumFractionDigits: 2,
-      maximumFractionDigits: 2
+      maximumFractionDigits: 2,
     })}`;
   };
 
@@ -80,18 +94,22 @@ export default function Dashboard() {
     const fetchData = async () => {
       try {
         setLoading(true);
-        
+
         // Fetch dashboard stats and recent products in parallel
         const [dashboardStats, productsResponse] = await Promise.all([
           DashboardService.getDashboardStats(),
-          ProductService.getProducts({ per_page: 5, sort_by: 'created_at', sort_order: 'desc' })
+          ProductService.getProducts({
+            per_page: 5,
+            sort_by: "created_at",
+            sort_order: "desc",
+          }),
         ]);
-        
+
         setDashboardData(dashboardStats);
         setRecentProducts(productsResponse.data);
       } catch (error) {
-        console.error('Failed to fetch data:', error);
-        toast.error('Failed to load dashboard data');
+        console.error("Failed to fetch data:", error);
+        toast.error("Failed to load dashboard data");
       } finally {
         setLoading(false);
       }
@@ -105,11 +123,15 @@ export default function Dashboard() {
       <div className="space-y-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-800 mb-1">Overview</h1>
-          <p className="text-sm text-gray-500">Monitor your business performance</p>
+          <p className="text-sm text-gray-500">
+            Monitor your business performance
+          </p>
         </div>
         <div className="p-8 text-center">
           <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-green-500"></div>
-          <p className="mt-2 text-sm text-gray-500">Loading dashboard data...</p>
+          <p className="mt-2 text-sm text-gray-500">
+            Loading dashboard data...
+          </p>
         </div>
       </div>
     );
@@ -120,7 +142,9 @@ export default function Dashboard() {
       {/* Overview Section */}
       <div>
         <h1 className="text-2xl font-bold text-gray-800 mb-1">Overview</h1>
-        <p className="text-sm text-gray-500">Monitor your business performance</p>
+        <p className="text-sm text-gray-500">
+          Monitor your business performance
+        </p>
       </div>
 
       {/* Charts Section */}
@@ -129,7 +153,9 @@ export default function Dashboard() {
         <div className="lg:col-span-2 bg-white rounded-xl border border-gray-200 p-6">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h2 className="text-lg font-semibold text-gray-800 mb-1">Sales Chart</h2>
+              <h2 className="text-lg font-semibold text-gray-800 mb-1">
+                Sales Chart
+              </h2>
               <div className="flex items-center gap-4 text-sm">
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 rounded-full bg-green-500"></div>
@@ -157,7 +183,7 @@ export default function Dashboard() {
           <div className="mb-4">
             <div className="flex items-baseline gap-2">
               <span className="text-3xl font-bold text-gray-800">
-                {dashboardData ? formatWallet(dashboardData.wallet) : '₦0.00'}
+                {dashboardData ? formatWallet(dashboardData.wallet) : "₦0.00"}
               </span>
               <span className="text-sm font-medium text-green-600 bg-green-50 px-2 py-0.5 rounded">
                 +8.3%
@@ -168,34 +194,27 @@ export default function Dashboard() {
           <ResponsiveContainer width="100%" height={250}>
             <LineChart data={salesData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis 
-                dataKey="date" 
-                tick={{ fontSize: 12 }}
-                stroke="#9ca3af"
-              />
-              <YAxis 
-                tick={{ fontSize: 12 }}
-                stroke="#9ca3af"
-              />
-              <Tooltip 
+              <XAxis dataKey="date" tick={{ fontSize: 12 }} stroke="#9ca3af" />
+              <YAxis tick={{ fontSize: 12 }} stroke="#9ca3af" />
+              <Tooltip
                 contentStyle={{
-                  backgroundColor: '#fff',
-                  border: '1px solid #e5e7eb',
-                  borderRadius: '8px',
-                  fontSize: '12px'
+                  backgroundColor: "#fff",
+                  border: "1px solid #e5e7eb",
+                  borderRadius: "8px",
+                  fontSize: "12px",
                 }}
               />
-              <Line 
-                type="monotone" 
-                dataKey="sales" 
-                stroke="#10b981" 
+              <Line
+                type="monotone"
+                dataKey="sales"
+                stroke="#10b981"
                 strokeWidth={2}
                 dot={false}
               />
-              <Line 
-                type="monotone" 
-                dataKey="order" 
-                stroke="#6ee7b7" 
+              <Line
+                type="monotone"
+                dataKey="order"
+                stroke="#6ee7b7"
                 strokeWidth={2}
                 dot={false}
               />
@@ -231,20 +250,25 @@ export default function Dashboard() {
 
           <div className="space-y-3">
             {getChannelData().map((channel) => (
-              <div key={channel.name} className="flex items-center justify-between">
+              <div
+                key={channel.name}
+                className="flex items-center justify-between"
+              >
                 <div className="flex items-center gap-2">
-                  <div 
+                  <div
                     className="w-3 h-3 rounded-full"
                     style={{ backgroundColor: channel.color }}
                   ></div>
                   <span className="text-sm text-gray-600">{channel.name}</span>
                 </div>
                 <div className="text-right">
-                  <div className="text-sm font-semibold text-gray-800">{channel.value.toLocaleString()}</div>
+                  <div className="text-sm font-semibold text-gray-800">
+                    {channel.value.toLocaleString()}
+                  </div>
                   <div className="text-xs text-gray-500">
-                    {channel.name === 'Total Users' && 'Active users'}
-                    {channel.name === 'All Products' && 'Total listings'}
-                    {channel.name === 'Escrow Request' && 'Pending requests'}
+                    {channel.name === "Total Users" && "Active users"}
+                    {channel.name === "All Products" && "Total listings"}
+                    {channel.name === "Escrow Request" && "Pending requests"}
                   </div>
                 </div>
               </div>
@@ -261,7 +285,7 @@ export default function Dashboard() {
           value={dashboardData?.admin.products.toString() || "0"}
           trend="+8.5%"
           trendUp={true}
-          viewLink="#"
+          viewLink="/admin/products"
         />
         <StatCard
           Icon={FaMoneyBillWave}
@@ -277,7 +301,7 @@ export default function Dashboard() {
           value={dashboardData?.admin.users.toString() || "0"}
           trend="+12.3%"
           trendUp={true}
-          viewLink="#"
+          viewLink="/admin/users"
         />
         <StatCard
           Icon={FaChartBar}
@@ -285,7 +309,7 @@ export default function Dashboard() {
           value={dashboardData?.admin.escrows.toString() || "0"}
           trend="+6.7%"
           trendUp={true}
-          viewLink="#"
+          viewLink="/admin/escrow"
         />
       </div>
 
@@ -293,14 +317,19 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Escrow Activity */}
         <div className="bg-white rounded-xl border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-gray-800 mb-6">Escrow Activity Overview</h2>
+          <h2 className="text-lg font-semibold text-gray-800 mb-6">
+            Escrow Activity Overview
+          </h2>
           <div className="text-center py-12">
             <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 flex items-center justify-center">
               <FaFileAlt className="w-8 h-8 text-gray-400" />
             </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No Escrow Activity</h3>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              No Escrow Activity
+            </h3>
             <p className="text-sm text-gray-500 max-w-sm mx-auto">
-              Escrow transactions and activities will appear here once they are initiated.
+              Escrow transactions and activities will appear here once they are
+              initiated.
             </p>
           </div>
         </div>
@@ -308,15 +337,20 @@ export default function Dashboard() {
         {/* Recent Reviews */}
         <div className="bg-white rounded-xl border border-gray-200 p-6">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-semibold text-gray-800">Recent Reviews</h2>
+            <h2 className="text-lg font-semibold text-gray-800">
+              Recent Reviews
+            </h2>
           </div>
           <div className="text-center py-12">
             <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 flex items-center justify-center">
               <FaTimesCircle className="w-8 h-8 text-gray-400" />
             </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No Reviews Yet</h3>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              No Reviews Yet
+            </h3>
             <p className="text-sm text-gray-500 max-w-sm mx-auto">
-              Customer reviews and ratings will appear here once customers start reviewing products.
+              Customer reviews and ratings will appear here once customers start
+              reviewing products.
             </p>
           </div>
         </div>
@@ -325,28 +359,43 @@ export default function Dashboard() {
       {/* Recent Products Table */}
       <div className="bg-white rounded-xl border border-gray-200 p-6">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-lg font-semibold text-gray-800">Recent Listed Products</h2>
+          <h2 className="text-lg font-semibold text-gray-800">
+            Recent Listed Products
+          </h2>
         </div>
-        
+
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr className="border-b border-gray-200">
-                <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase">Photo</th>
-                <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase">Product Name</th>
-                <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase">Status</th>
-                <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase">Price</th>
-                <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase">Actions</th>
+                <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase">
+                  Photo
+                </th>
+                <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase">
+                  Product Name
+                </th>
+                <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase">
+                  Status
+                </th>
+                <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase">
+                  Price
+                </th>
+                <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody>
               {recentProducts.map((product) => (
-                <tr key={product.id} className="border-b border-gray-100 hover:bg-gray-50">
+                <tr
+                  key={product.id}
+                  className="border-b border-gray-100 hover:bg-gray-50"
+                >
                   <td className="py-4 px-4">
                     <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center overflow-hidden">
                       {product.thumbnail ? (
-                        <img 
-                          src={product.thumbnail} 
+                        <img
+                          src={product.thumbnail}
                           alt={product.title}
                           className="w-full h-full object-cover"
                         />
@@ -358,23 +407,30 @@ export default function Dashboard() {
                     </div>
                   </td>
                   <td className="py-4 px-4">
-                    <span className="text-sm font-medium text-gray-800">{product.title}</span>
-                  </td>
-                  <td className="py-4 px-4">
-                    <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium ${
-                      product.status === 'publish' 
-                        ? 'bg-green-100 text-green-700'
-                        : product.status === 'pending'
-                        ? 'bg-yellow-100 text-yellow-700'
-                        : product.status === 'draft'
-                        ? 'bg-gray-100 text-gray-700'
-                        : 'bg-red-100 text-red-700'
-                    }`}>
-                      {product.status.charAt(0).toUpperCase() + product.status.slice(1)}
+                    <span className="text-sm font-medium text-gray-800">
+                      {product.title}
                     </span>
                   </td>
                   <td className="py-4 px-4">
-                    <span className="text-sm font-semibold text-gray-800">₦{product.price.toLocaleString()}</span>
+                    <span
+                      className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium ${
+                        product.status === "publish"
+                          ? "bg-green-100 text-green-700"
+                          : product.status === "pending"
+                            ? "bg-yellow-100 text-yellow-700"
+                            : product.status === "draft"
+                              ? "bg-gray-100 text-gray-700"
+                              : "bg-red-100 text-red-700"
+                      }`}
+                    >
+                      {product.status.charAt(0).toUpperCase() +
+                        product.status.slice(1)}
+                    </span>
+                  </td>
+                  <td className="py-4 px-4">
+                    <span className="text-sm font-semibold text-gray-800">
+                      ₦{product.price.toLocaleString()}
+                    </span>
                   </td>
                   <td className="py-4 px-4">
                     <button className="text-gray-400 hover:text-gray-600">
@@ -395,14 +451,14 @@ export default function Dashboard() {
   );
 }
 
-function StatCard({ 
-  Icon, 
-  title, 
-  value, 
-  trend, 
-  trendUp, 
-  viewLink 
-}: { 
+function StatCard({
+  Icon,
+  title,
+  value,
+  trend,
+  trendUp,
+  viewLink,
+}: {
   Icon: React.ComponentType;
   title: string;
   value: string;
@@ -416,27 +472,34 @@ function StatCard({
         <div className="w-12 text-[#39B54A] h-12 rounded-lg bg-green-50 flex items-center justify-center text-2xl">
           <Icon />
         </div>
-        <span className={`text-sm font-medium ₦{trendUp ? 'text-green-600' : 'text-red-600'}`}>
+        <span
+          className={`text-sm font-medium ₦{trendUp ? 'text-green-600' : 'text-red-600'}`}
+        >
           {trend}
         </span>
       </div>
       <h3 className="text-sm text-gray-500 mb-1">{title}</h3>
       <div className="flex items-end justify-between">
         <p className="text-2xl font-bold text-gray-800">{value}</p>
-        <button className="px-3 py-1.5 bg-green-500 text-white text-xs font-medium rounded-lg hover:bg-green-600 transition-colors">
-          View
-        </button>
+        {viewLink && viewLink !== "#" && (
+          <Link
+            href={viewLink}
+            className="px-3 py-1.5 bg-green-500 text-white text-xs font-medium rounded-lg hover:bg-green-600 transition-colors"
+          >
+            View
+          </Link>
+        )}
       </div>
     </div>
   );
 }
 
-function ActivityCard({ 
-  Icon, 
-  label, 
-  value, 
-  subtitle 
-}: { 
+function ActivityCard({
+  Icon,
+  label,
+  value,
+  subtitle,
+}: {
   Icon: React.ComponentType;
   label: string;
   value: string;
@@ -454,7 +517,11 @@ function ActivityCard({
   );
 }
 
-function ReviewCard({ name, rating, comment }: {
+function ReviewCard({
+  name,
+  rating,
+  comment,
+}: {
   name: string;
   rating: number;
   comment: string;
@@ -464,7 +531,10 @@ function ReviewCard({ name, rating, comment }: {
       <div className="flex items-start gap-3">
         <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center shrink-0">
           <span className="text-green-600 font-semibold text-sm">
-            {name.split(' ').map(n => n[0]).join('')}
+            {name
+              .split(" ")
+              .map((n) => n[0])
+              .join("")}
           </span>
         </div>
         <div className="flex-1 min-w-0">
@@ -472,7 +542,10 @@ function ReviewCard({ name, rating, comment }: {
             <h4 className="text-sm font-semibold text-gray-800">{name}</h4>
             <div className="flex gap-0.5">
               {[...Array(5)].map((_, i) => (
-                <span key={i} className={i < rating ? 'text-yellow-400' : 'text-gray-300'}>
+                <span
+                  key={i}
+                  className={i < rating ? "text-yellow-400" : "text-gray-300"}
+                >
                   ★
                 </span>
               ))}

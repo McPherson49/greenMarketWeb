@@ -1232,7 +1232,7 @@ const CommunityFeed: React.FC = () => {
         </div>
       </div>
       {showCreateEvent && (
-        <div className="fixed inset-0 z-50  flex items-center justify-center bg-black/50 px-4 backdrop-blur supports-backdrop-filter:bg-white/60 border-b border-neutral-200 overflow-y-auto">
+        <div className="fixed inset-0 z-9999  flex items-center justify-center bg-black/50 px-4 backdrop-blur supports-backdrop-filter:bg-white/60 border-b border-neutral-200 overflow-y-auto">
           <div className="bg-white mt-20 rounded-2xl shadow-2xl max-w-2xl w-full my-8 max-h-screen overflow-y-auto">
             {/* Modal Header */}
             <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between rounded-t-2xl">
