@@ -9,7 +9,7 @@ import { toast } from "react-toastify";
 import { useRouter } from "next/navigation";
 
 // Import the PaymentSuccessModal component
-import { PaymentSuccessModal } from "./paymentModal";
+import { PaymentSuccessModal, FreePlanSuccessModal } from "./paymentModal";
 import { X } from "lucide-react";
 
 type Category = {
@@ -130,6 +130,7 @@ export default function NewProductForm() {
 
   // New states for payment flow
   const [showPaymentSuccessModal, setShowPaymentSuccessModal] = useState(false);
+  const [showFreePlanSuccessModal, setShowFreePlanSuccessModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [createdProductId, setCreatedProductId] = useState<string | null>(null);
 
@@ -454,7 +455,7 @@ export default function NewProductForm() {
             return;
           }
         } else {
-          apiFormData.append("plan[price]", "0");
+          apiFormData.append("plan[price]", "1");
           apiFormData.append("plan[span]", "free");
         }
       }
@@ -497,9 +498,9 @@ export default function NewProductForm() {
 
       // Step 2: Handle based on plan type
       if (isFreemium) {
-        // For freemium plan, show success modal directly
+        // For freemium plan, show free plan success modal directly
         setShowPromoteModal(false);
-        setShowPaymentSuccessModal(true);
+        setShowFreePlanSuccessModal(true);
         toast.success("Ad posted successfully with freemium plan!");
       } else {
         // For paid plans, initialize payment
@@ -535,6 +536,30 @@ export default function NewProductForm() {
   // Handle payment success modal close
   const handlePaymentSuccessClose = () => {
     setShowPaymentSuccessModal(false);
+
+    // Reset form after successful submission
+    setFormData({
+      title: "",
+      category: "",
+      price: "",
+      description: "",
+      state:
+        states.find((s) => s.name.toLowerCase().includes("lagos"))?.name || "",
+      city: "",
+      busStop: "",
+      tags: [],
+    });
+    setImages([]);
+    setSelectedPlan(null);
+    setSelectedDuration(null);
+
+    // Redirect to profile page
+    router.push("/profile");
+  };
+
+  // Handle free plan success modal close
+  const handleFreePlanSuccessClose = () => {
+    setShowFreePlanSuccessModal(false);
 
     // Reset form after successful submission
     setFormData({
@@ -1313,6 +1338,14 @@ export default function NewProductForm() {
         <PaymentSuccessModal
           isOpen={showPaymentSuccessModal}
           onClose={handlePaymentSuccessClose}
+        />
+      )}
+
+      {/* Free Plan Success Modal */}
+      {showFreePlanSuccessModal && (
+        <FreePlanSuccessModal
+          isOpen={showFreePlanSuccessModal}
+          onClose={handleFreePlanSuccessClose}
         />
       )}
     </div>
