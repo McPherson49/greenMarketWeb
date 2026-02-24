@@ -48,22 +48,20 @@ export default function Dashboard() {
   const getChannelData = () => {
     if (!dashboardData) return [];
     
-    const total = dashboardData.admin.users + dashboardData.admin.products + dashboardData.admin.escrows;
-    
     return [
       { 
         name: 'Total Users', 
-        value: Math.round((dashboardData.admin.users / total) * 100),
+        value: dashboardData.admin.users,
         color: '#10b981' 
       },
       { 
         name: 'All Products', 
-        value: Math.round((dashboardData.admin.products / total) * 100),
+        value: dashboardData.admin.products,
         color: '#3b82f6' 
       },
       { 
         name: 'Escrow Request', 
-        value: Math.round((dashboardData.admin.escrows / total) * 100),
+        value: dashboardData.admin.escrows,
         color: '#f59e0b' 
       },
     ];
@@ -242,11 +240,11 @@ export default function Dashboard() {
                   <span className="text-sm text-gray-600">{channel.name}</span>
                 </div>
                 <div className="text-right">
-                  <div className="text-sm font-semibold text-gray-800">{channel.value}%</div>
+                  <div className="text-sm font-semibold text-gray-800">{channel.value.toLocaleString()}</div>
                   <div className="text-xs text-gray-500">
-                    {channel.name === 'Total Users' && `+${dashboardData?.admin.users}`}
-                    {channel.name === 'All Products' && `+${dashboardData?.admin.products}`}
-                    {channel.name === 'Escrow Request' && `+${dashboardData?.admin.escrows}`}
+                    {channel.name === 'Total Users' && 'Active users'}
+                    {channel.name === 'All Products' && 'Total listings'}
+                    {channel.name === 'Escrow Request' && 'Pending requests'}
                   </div>
                 </div>
               </div>
@@ -296,31 +294,14 @@ export default function Dashboard() {
         {/* Escrow Activity */}
         <div className="bg-white rounded-xl border border-gray-200 p-6">
           <h2 className="text-lg font-semibold text-gray-800 mb-6">Escrow Activity Overview</h2>
-          <div className="grid grid-cols-2 gap-4">
-            <ActivityCard
-              Icon={FaFileAlt}
-              label="Escrow Requested"
-              value={dashboardData?.escrow.toString() || "0"}
-              subtitle="Product"
-            />
-            <ActivityCard
-              Icon={FaTruck}
-              label="Successful Delivered"
-              value="72"
-              subtitle="New"
-            />
-            <ActivityCard
-              Icon={FaExclamationTriangle}
-              label="Reported"
-              value="16"
-              subtitle="Supplier Item Cases"
-            />
-            <ActivityCard
-              Icon={FaTimesCircle}
-              label="Rejected"
-              value="84"
-              subtitle="Rejected Cases"
-            />
+          <div className="text-center py-12">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 flex items-center justify-center">
+              <FaFileAlt className="w-8 h-8 text-gray-400" />
+            </div>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No Escrow Activity</h3>
+            <p className="text-sm text-gray-500 max-w-sm mx-auto">
+              Escrow transactions and activities will appear here once they are initiated.
+            </p>
           </div>
         </div>
 
@@ -329,22 +310,14 @@ export default function Dashboard() {
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-lg font-semibold text-gray-800">Recent Reviews</h2>
           </div>
-          <div className="space-y-4">
-            <ReviewCard
-              name="Johneth Sidesley"
-              rating={4}
-              comment="Very nice glasses, I ordered for my friend."
-            />
-            <ReviewCard
-              name="Sarah Mitchell"
-              rating={5}
-              comment="Excellent quality products and fast delivery!"
-            />
-            <ReviewCard
-              name="Michael Chen"
-              rating={4}
-              comment="Good service overall, would recommend."
-            />
+          <div className="text-center py-12">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 flex items-center justify-center">
+              <FaTimesCircle className="w-8 h-8 text-gray-400" />
+            </div>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No Reviews Yet</h3>
+            <p className="text-sm text-gray-500 max-w-sm mx-auto">
+              Customer reviews and ratings will appear here once customers start reviewing products.
+            </p>
           </div>
         </div>
       </div>
