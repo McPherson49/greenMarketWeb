@@ -18,6 +18,8 @@ import {
 import React from 'react';
 import { DashboardService } from '@/services/adminDashboard';
 import { DashboardData } from '@/types/adminDashboard';
+import { ProductService } from '@/services/adminProducts';
+import { Product } from '@/types/adminProducts';
 import { toast } from 'react-toastify';
 
 // Sample data for sales chart (you should replace with real API data)
@@ -36,17 +38,10 @@ const salesData = [
   { date: '25 Feb', sales: 6600, order: 6000 },
 ];
 
-// Recent products data
-const recentProducts = [
-  { id: 1, Icon: FaCookieBite, name: 'Cookie', status: 'Rejected' as const, price: '₦10.00' },
-  { id: 2, Icon: FaWineGlassAlt, name: 'Glass', status: 'Accepted' as const, price: '₦70.10' },
-  { id: 3, Icon: FaHeadphonesAlt, name: 'Headphone', status: 'Pending' as const, price: '₦870.50' },
-  { id: 4, Icon: FaFlask, name: 'Perfume', status: 'Pending' as const, price: '₦70.50' },
-];
-
 export default function Dashboard() {
   const [timeFilter, setTimeFilter] = useState('May');
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
+  const [recentProducts, setRecentProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Calculate channel data from dashboard stats
@@ -82,21 +77,29 @@ export default function Dashboard() {
     })}`;
   };
 
-  // Fetch dashboard data
+  // Fetch dashboard data and recent products
   useEffect(() => {
-    const fetchDashboardData = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true);
-        const data = await DashboardService.getDashboardStats();
-        setDashboardData(data);
+        
+        // Fetch dashboard stats and recent products in parallel
+        const [dashboardStats, productsResponse] = await Promise.all([
+          DashboardService.getDashboardStats(),
+          ProductService.getProducts({ per_page: 5, sort_by: 'created_at', sort_order: 'desc' })
+        ]);
+        
+        setDashboardData(dashboardStats);
+        setRecentProducts(productsResponse.data);
       } catch (error) {
-        console.error('Failed to fetch dashboard data:', error);
+        console.error('Failed to fetch data:', error);
+        toast.error('Failed to load dashboard data');
       } finally {
         setLoading(false);
       }
     };
 
-    fetchDashboardData();
+    fetchData();
   }, []);
 
   if (loading) {
@@ -356,9 +359,6 @@ export default function Dashboard() {
           <table className="w-full">
             <thead>
               <tr className="border-b border-gray-200">
-                <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase">
-                  <input type="checkbox" className="rounded border-gray-300" />
-                </th>
                 <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase">Photo</th>
                 <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase">Product Name</th>
                 <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase">Status</th>
@@ -370,29 +370,38 @@ export default function Dashboard() {
               {recentProducts.map((product) => (
                 <tr key={product.id} className="border-b border-gray-100 hover:bg-gray-50">
                   <td className="py-4 px-4">
-                    <input type="checkbox" className="rounded border-gray-300" />
-                  </td>
-                  <td className="py-4 px-4">
-                    <div className="w-10 text-[#39B54A] h-10 rounded-lg bg-gray-100 flex items-center justify-center text-2xl">
-                      <product.Icon />
+                    <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center overflow-hidden">
+                      {product.thumbnail ? (
+                        <img 
+                          src={product.thumbnail} 
+                          alt={product.title}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center text-2xl text-[#39B54A]">
+                          <FaBox />
+                        </div>
+                      )}
                     </div>
                   </td>
                   <td className="py-4 px-4">
-                    <span className="text-sm font-medium text-gray-800">{product.name}</span>
+                    <span className="text-sm font-medium text-gray-800">{product.title}</span>
                   </td>
                   <td className="py-4 px-4">
                     <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium ${
-                      product.status === 'Accepted' 
+                      product.status === 'publish' 
                         ? 'bg-green-100 text-green-700'
-                        : product.status === 'Pending'
+                        : product.status === 'pending'
                         ? 'bg-yellow-100 text-yellow-700'
+                        : product.status === 'draft'
+                        ? 'bg-gray-100 text-gray-700'
                         : 'bg-red-100 text-red-700'
                     }`}>
-                      {product.status}
+                      {product.status.charAt(0).toUpperCase() + product.status.slice(1)}
                     </span>
                   </td>
                   <td className="py-4 px-4">
-                    <span className="text-sm font-semibold text-gray-800">{product.price}</span>
+                    <span className="text-sm font-semibold text-gray-800">₦{product.price.toLocaleString()}</span>
                   </td>
                   <td className="py-4 px-4">
                     <button className="text-gray-400 hover:text-gray-600">

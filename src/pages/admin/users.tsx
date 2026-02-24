@@ -357,7 +357,8 @@ const UserDataTable: React.FC = () => {
                             }}
                           />
                         </div>
-                      ) : (
+                      ) :
+                       (
                         <div className={`w-10 h-10 rounded-full ${user.avatarColor} flex items-center justify-center text-white font-semibold`}>
                           {user.initial}
                         </div>
