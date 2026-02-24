@@ -528,7 +528,7 @@ useEffect(() => {
           }
         } else {
           apiFormData.append("plan[price]", "1");
-          apiFormData.append("plan[span]", "free");
+          apiFormData.append("plan[span]", "1");
         }
       }
 
