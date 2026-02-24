@@ -6,7 +6,7 @@ import { getPlans } from "@/services/plan";
 import locationService from "@/services/country";
 import ApiFetcher from "@/utils/apis";
 import { toast } from "react-toastify";
-import { PaymentSuccessModal } from "../pages/paymentModal";
+import { PaymentSuccessModal, FreePlanSuccessModal } from "../pages/paymentModal";
 import { X } from "lucide-react";
 
 type Category = {
@@ -140,6 +140,7 @@ export default function EditProductForm({ productId }: Props) {
 
   // States for payment flow
   const [showPaymentSuccessModal, setShowPaymentSuccessModal] = useState(false);
+  const [showFreePlanSuccessModal, setShowFreePlanSuccessModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [updatedProductId, setUpdatedProductId] = useState<string | null>(null);
 
@@ -511,17 +512,25 @@ useEffect(() => {
     apiFormData.append("nearest", formData.busStop || "N/A"); // ✅ Never send empty string
     apiFormData.append("use_escrow", "1");
 
-    if (selectedPlanData) {
-      apiFormData.append("plan[title]", selectedPlanData.title);
-      if (!isFreemium && selectedDuration && isPricingObject(selectedPlanData.pricing)) {
-        const planPrice = selectedPlanData.pricing[selectedDuration];
-        apiFormData.append("plan[price]", planPrice.toString());
-        apiFormData.append("plan[span]", selectedDuration);
-      } else {
-        apiFormData.append("plan[price]", "0");
-        apiFormData.append("plan[span]", "free");
+      // Add plan information (same as post-ad)
+      if (selectedPlanData) {
+        apiFormData.append("plan[title]", selectedPlanData.title);
+
+        if (!isFreemium && selectedDuration) {
+          if (isPricingObject(selectedPlanData.pricing)) {
+            const planPrice = selectedPlanData.pricing[selectedDuration];
+            apiFormData.append("plan[price]", planPrice.toString());
+            apiFormData.append("plan[span]", selectedDuration);
+          } else {
+            toast.error("Invalid pricing structure for this plan.");
+            setIsSubmitting(false);
+            return;
+          }
+        } else {
+          apiFormData.append("plan[price]", "1");
+          apiFormData.append("plan[span]", "free");
+        }
       }
-    }
 
     images.forEach((img, index) => {
       apiFormData.append(`images[${index}]`, img.file);
@@ -556,43 +565,45 @@ useEffect(() => {
     const updatedProdId = productData.data.id.toString();
     setUpdatedProductId(updatedProdId);
 
-    if (isFreemium) {
-      setShowPromoteModal(false);
-      setShowPaymentSuccessModal(true);
-      toast.success("Product updated successfully!");
-    } else {
-      if (selectedPlanData && selectedDuration && isPricingObject(selectedPlanData.pricing)) {
-        const planPrice = selectedPlanData.pricing[selectedDuration];
+      // Step 2: Handle based on plan type (same as post-ad)
+      if (isFreemium) {
         setShowPromoteModal(false);
-        await initializePayment(updatedProdId, planPrice, selectedPlanData.title);
+        setShowFreePlanSuccessModal(true);
+        toast.success("Product updated successfully with freemium plan!");
       } else {
-        toast.error("Unable to process payment for this plan.");
+        if (
+          selectedPlanData &&
+          selectedDuration &&
+          isPricingObject(selectedPlanData.pricing)
+        ) {
+          const planPrice = selectedPlanData.pricing[selectedDuration];
+          setShowPromoteModal(false);
+          await initializePayment(updatedProdId, planPrice, selectedPlanData.title);
+        } else {
+          toast.error("Unable to process payment for this plan.");
+        }
       }
+    } catch (error: any) {
+      if (error.response?.data?.message) {
+        toast.error(error.response.data.message);
+      } else {
+        toast.error("Failed to update product. Please try again.");
+      }
+      console.error("Error updating product:", error);
+    } finally {
+      setIsSubmitting(false);
     }
-  } catch (error: any) {
-    // ✅ Full error logging
-    console.log("=== 422 Error Details ===");
-    console.log("Status:", error.response?.status);
-    console.log("Message:", error.response?.data?.message);
-    console.log("Errors:", JSON.stringify(error.response?.data?.errors, null, 2));
-    console.log("Full response data:", JSON.stringify(error.response?.data, null, 2));
-
-    const errors = error.response?.data?.errors;
-    if (errors) {
-      Object.entries(errors).forEach(([field, messages]) => {
-        toast.error(`${field}: ${(messages as string[]).join(", ")}`);
-      });
-    } else {
-      toast.error(error.response?.data?.message || "Failed to update product.");
-    }
-  } finally {
-    setIsSubmitting(false);
-  }
-};
+  };
 
   // Handle payment success modal close
   const handlePaymentSuccessClose = () => {
     setShowPaymentSuccessModal(false);
+    router.push("/profile");
+  };
+
+  // Handle free plan success modal close
+  const handleFreePlanSuccessClose = () => {
+    setShowFreePlanSuccessModal(false);
     router.push("/profile");
   };
 
@@ -1405,6 +1416,14 @@ useEffect(() => {
         <PaymentSuccessModal
           isOpen={showPaymentSuccessModal}
           onClose={handlePaymentSuccessClose}
+        />
+      )}
+
+      {/* Free Plan Success Modal */}
+      {showFreePlanSuccessModal && (
+        <FreePlanSuccessModal
+          isOpen={showFreePlanSuccessModal}
+          onClose={handleFreePlanSuccessClose}
         />
       )}
     </div>
