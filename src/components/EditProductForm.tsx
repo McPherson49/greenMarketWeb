@@ -561,7 +561,6 @@ useEffect(() => {
     if (!productData.status || !productData.data) {
       throw new Error("Failed to update product");
     }
-
     const updatedProdId = productData.data.id.toString();
     setUpdatedProductId(updatedProdId);
 
