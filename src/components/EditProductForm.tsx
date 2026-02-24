@@ -1,6 +1,6 @@
 'use client';
 import React, { useState, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "next/router";
 import { getCategories } from "@/services/category";
 import { getPlans } from "@/services/plan";
 import locationService from "@/services/country";
@@ -158,32 +158,7 @@ export default function EditProductForm({ productId }: Props) {
   }, []);
 
   // Handle client-side rendering
-  if (!isClient) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-12 h-12 border-4 border-[#39B54A] border-t-transparent rounded-full animate-spin mx-auto"></div>
-          <p className="text-gray-600 mt-4">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-  
-  if (!productId) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-gray-600">No product ID provided</p>
-          <button
-            onClick={() => router.push('/profile')}
-            className="mt-4 bg-[#39B54A] text-white px-6 py-2 rounded-md hover:bg-[#188727]"
-          >
-            Back to Profile
-          </button>
-        </div>
-      </div>
-    );
-  }
+
 
   // Fetch product details on mount
   useEffect(() => {
@@ -288,37 +263,32 @@ export default function EditProductForm({ productId }: Props) {
   }, [country]);
 
   // Fetch cities when state changes
-  useEffect(() => {
-    async function fetchCitiesForState() {
-      if (!formData.state) return;
+useEffect(() => {
+  async function fetchCitiesForState() {
+    if (!formData.state) return;
 
-      setLoadingCities(true);
-      try {
-        const citiesData = await locationService.getCities(
-          country,
-          formData.state
-        );
-        if (citiesData && citiesData.length > 0) {
-          setCities(citiesData);
-        } else {
-          toast.error(
-            `No cities found for ${formData.state}. Please select another state.`
-          );
-          setCities([]);
-        }
-      } catch (error) {
-        toast.error(
-          `Failed to load cities for ${formData.state}. Please try again.`
-        );
-        console.error(`Error loading cities for ${formData.state}:`, error);
+    setLoadingCities(true);
+    try {
+      const citiesData = await locationService.getCities(
+        country,
+        formData.state
+      );
+      if (citiesData && citiesData.length > 0) {
+        setCities(citiesData);
+      } else {
         setCities([]);
-      } finally {
-        setLoadingCities(false);
       }
+    } catch (error) {
+      // ✅ Don't crash — just set empty cities and let user pick manually
+      console.warn(`Could not load cities for "${formData.state}":`, error);
+      setCities([]);
+    } finally {
+      setLoadingCities(false);
     }
+  }
 
-    fetchCitiesForState();
-  }, [formData.state, country]);
+  fetchCitiesForState();
+}, [formData.state, country]);
 
   // Auto-select Lagos and first city when states/cities load (only for new products, not editing)
   useEffect(() => {
@@ -450,8 +420,8 @@ export default function EditProductForm({ productId }: Props) {
     );
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = (e?: React.FormEvent) => {
+    e?.preventDefault();
     const newErrors: { [key: string]: string } = {};
 
     if (!formData.title) newErrors.title = "Title field is mandatory";

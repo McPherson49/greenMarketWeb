@@ -1,17 +1,11 @@
-'use client';
-
 import EditProductForm from '@/components/EditProductForm';
-import { useParams } from 'next/navigation';
-
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
+import { useRouter } from 'next/router';
 
 export default function EditProductPage() {
-  const params = useParams();
-  console.log("EditProductPage reached, params:", params);
+  const router = useRouter();
+  const { id } = router.query;
 
-  const productId =
-    typeof params?.id === 'string' ? params.id : null;
+  const productId = typeof id === 'string' ? id : null;
 
   if (!productId) {
     return (
