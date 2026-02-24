@@ -273,8 +273,8 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 ">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-8 ">
+    <div className=" flex items-center justify-center md:p-10 px-4 py-10 ">
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md md:p-8 py-10   ">
         {/* Tabs */}
         <div className="flex justify-center mb-3 border-b border-gray-200">
           <button

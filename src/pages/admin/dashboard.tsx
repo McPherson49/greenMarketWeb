@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   LineChart,
   Line,
@@ -56,6 +56,8 @@ export default function Dashboard() {
     null,
   );
   const [recentProducts, setRecentProducts] = useState<Product[]>([]);
+  const [openDropdown, setOpenDropdown] = useState<number | null>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
   const [loading, setLoading] = useState(true);
 
   // Calculate channel data from dashboard stats
@@ -116,6 +118,19 @@ export default function Dashboard() {
     };
 
     fetchData();
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setOpenDropdown(null);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   if (loading) {
@@ -433,9 +448,54 @@ export default function Dashboard() {
                     </span>
                   </td>
                   <td className="py-4 px-4">
-                    <button className="text-gray-400 hover:text-gray-600">
-                      <FaEllipsisV className="w-5 h-5" />
-                    </button>
+                    <div
+                      className="relative"
+                      ref={openDropdown === product.id ? dropdownRef : null}
+                    >
+                      <button
+                        className="text-gray-400 hover:text-gray-600"
+                        onClick={() =>
+                          setOpenDropdown(
+                            openDropdown === product.id ? null : product.id,
+                          )
+                        }
+                      >
+                        <FaEllipsisV className="w-5 h-5" />
+                      </button>
+
+                      {openDropdown === product.id && (
+                        <div className="absolute right-0 mt-0 w-36 bg-white rounded-lg border border-gray-200 shadow-lg z-10">
+                          {[
+                            {
+                              label: "Pending",
+                              color: "text-yellow-600 hover:bg-yellow-50",
+                            },
+                            {
+                              label: "Publish",
+                              color: "text-green-600 hover:bg-green-50",
+                            },
+                            {
+                              label: "Draft",
+                              color: "text-gray-600 hover:bg-gray-50",
+                            },
+                            {
+                              label: "Trash",
+                              color: "text-red-600 hover:bg-red-50",
+                            },
+                          ].map(({ label, color }) => (
+                            <button
+                              key={label}
+                              onClick={() => {
+                                setOpenDropdown(null);
+                              }}
+                              className={`w-full text-left px-4 py-2 text-sm font-medium ${color} transition-colors first:rounded-t-lg last:rounded-b-lg`}
+                            >
+                              {label}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}
