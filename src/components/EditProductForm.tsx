@@ -6,7 +6,7 @@ import { getPlans } from "@/services/plan";
 import locationService from "@/services/country";
 import ApiFetcher from "@/utils/apis";
 import { toast } from "react-toastify";
-import { PaymentSuccessModal } from "../pages/paymentModal";
+import { PaymentSuccessModal, FreePlanSuccessModal } from "../pages/paymentModal";
 import { X } from "lucide-react";
 
 type Category = {
@@ -140,6 +140,7 @@ export default function EditProductForm({ productId }: Props) {
 
   // States for payment flow
   const [showPaymentSuccessModal, setShowPaymentSuccessModal] = useState(false);
+  const [showFreePlanSuccessModal, setShowFreePlanSuccessModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [updatedProductId, setUpdatedProductId] = useState<string | null>(null);
 
@@ -528,7 +529,7 @@ useEffect(() => {
             return;
           }
         } else {
-          apiFormData.append("plan[price]", "0");
+          apiFormData.append("plan[price]", "1");
           apiFormData.append("plan[span]", "free");
         }
       }
@@ -571,7 +572,7 @@ useEffect(() => {
       // Step 2: Handle based on plan type (same as post-ad)
       if (isFreemium) {
         setShowPromoteModal(false);
-        setShowPaymentSuccessModal(true);
+        setShowFreePlanSuccessModal(true);
         toast.success("Product updated successfully with freemium plan!");
       } else {
         if (
@@ -601,6 +602,12 @@ useEffect(() => {
   // Handle payment success modal close
   const handlePaymentSuccessClose = () => {
     setShowPaymentSuccessModal(false);
+    router.push("/profile");
+  };
+
+  // Handle free plan success modal close
+  const handleFreePlanSuccessClose = () => {
+    setShowFreePlanSuccessModal(false);
     router.push("/profile");
   };
 
@@ -1413,6 +1420,14 @@ useEffect(() => {
         <PaymentSuccessModal
           isOpen={showPaymentSuccessModal}
           onClose={handlePaymentSuccessClose}
+        />
+      )}
+
+      {/* Free Plan Success Modal */}
+      {showFreePlanSuccessModal && (
+        <FreePlanSuccessModal
+          isOpen={showFreePlanSuccessModal}
+          onClose={handleFreePlanSuccessClose}
         />
       )}
     </div>
