@@ -140,6 +140,55 @@ export const getProfileProductCount = async (): Promise<number | null> => {
   }
 };
 
+// UPDATE USER PROFILE
+export const updateProfile = async (profileData: Partial<UserProfile>): Promise<UserProfile | null> => {
+  try {
+    const response = await ApiFetcher.put<GetProfileResponse>(`/auth/profile`, profileData);
+
+    if (response?.data?.data) {
+      toast.success("Profile updated successfully!");
+      return response.data.data;
+    }
+
+    toast.error("Failed to update profile");
+    return null;
+  } catch (error) {
+    console.error("Error updating profile:", error);
+    toast.error("Error updating profile");
+    return null;
+  }
+};
+
+// UPDATE PROFILE AVATAR
+export const updateProfileAvatar = async (avatarFile: File): Promise<string | null> => {
+  try {
+    const formData = new FormData();
+    formData.append('avatar', avatarFile);
+
+    const response = await ApiFetcher.post<{data: {avatar: string}, message: string, status: boolean}>(
+      `/auth/profile/avatar`, 
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      }
+    );
+
+    if (response?.data?.data?.avatar) {
+      toast.success("Avatar updated successfully!");
+      return response.data.data.avatar;
+    }
+
+    toast.error("Failed to update avatar");
+    return null;
+  } catch (error) {
+    console.error("Error updating avatar:", error);
+    toast.error("Error updating avatar");
+    return null;
+  }
+};
+
 // CHECK IF USER IS ADMIN
 export const isUserAdmin = async (): Promise<boolean | null> => {
   try {

@@ -6,44 +6,7 @@ import Link from 'next/link';
 import { Pencil, Trash2, Eye, Plus, CheckCircle, XCircle, PauseCircle, Calendar, User, Users } from 'lucide-react';
 
 // Mock community data (replace with real API fetch later)
-const mockCommunities = [
-  {
-    id: '1',
-    name: 'Livestock & Poultry Network',
-    creator: 'Basäm',
-    createdDate: '15 Jan 2024',
-    members: 1234,
-    status: 'Approved',
-    icon: '/assets/community1.png',
-  },
-  {
-    id: '2',
-    name: 'Bulk Supply Marketplace',
-    creator: 'Sinan',
-    createdDate: '20 Feb 2024',
-    members: 567,
-    status: 'Pending',
-    icon: '/assets/community2.png',
-  },
-  {
-    id: '3',
-    name: 'Export & International Trade',
-    creator: 'Michael Brown',
-    createdDate: '10 Mar 2024',
-    members: 890,
-    status: 'Suspended',
-    icon: '/assets/community3.png',
-  },
-  {
-    id: '4',
-    name: 'Sustainable Farming Collective',
-    creator: 'Alice Oyekan',
-    createdDate: '5 Apr 2024',
-    members: 456,
-    status: 'Approved',
-    icon: '/assets/community4.png',
-  },
-];
+const mockCommunities: any[] = [];
 
 export default function AdminCommunityPage() {
   const [communities, setCommunities] = useState(mockCommunities);
@@ -104,148 +67,170 @@ export default function AdminCommunityPage() {
 
       {/* Community Table */}
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-gray-200 bg-gray-50">
-                <th className="text-left py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                  Community
-                </th>
-                <th className="text-left py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider hidden sm:table-cell">
-                  Creator
-                </th>
-                <th className="text-left py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider hidden md:table-cell">
-                  Created
-                </th>
-                <th className="text-left py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider hidden lg:table-cell">
-                  Members
-                </th>
-                <th className="text-left py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="text-center py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {communities.map((community) => (
-                <tr key={community.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="py-4 px-6">
-                    <div className="flex items-center gap-4">
-                      <div className="relative w-16 h-16 rounded-lg overflow-hidden shrink-0">
-                        <Image
-                          src={community.icon}
-                          alt={community.name}
-                          fill
-                          className="object-contain"
-                        />
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-sm font-medium text-gray-900 line-clamp-2">
-                          {community.name}
-                        </p>
-                      </div>
-                    </div>
-                  </td>
-
-                  <td className="py-4 px-6 hidden sm:table-cell text-sm text-gray-700">
-                    {community.creator}
-                  </td>
-
-                  <td className="py-4 px-6 hidden md:table-cell">
-                    <div className="flex items-center gap-2 text-gray-600">
-                      <Calendar className="w-4 h-4" />
-                      <span className="text-sm">{community.createdDate}</span>
-                    </div>
-                  </td>
-
-                  <td className="py-4 px-6 hidden lg:table-cell">
-                    <div className="flex items-center gap-2 text-gray-600">
-                      <Users className="w-4 h-4" />
-                      <span className="text-sm">{community.members}</span>
-                    </div>
-                  </td>
-
-                  <td className="py-4 px-6">
-                    <span
-                      className={`inline-flex px-3 py-1 rounded-full text-xs font-medium ${
-                        community.status === 'Approved'
-                          ? 'bg-green-100 text-green-700'
-                          : community.status === 'Pending'
-                          ? 'bg-yellow-100 text-yellow-700'
-                          : 'bg-red-100 text-red-700'
-                      }`}
-                    >
-                      {community.status}
-                    </span>
-                  </td>
-
-                  <td className="py-4 px-6">
-                    <div className="flex items-center justify-center gap-2">
-                      <Link
-                        href={`/community/${community.id}`}
-                        className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                        title="View"
-                      >
-                        <Eye className="w-4 h-4" />
-                      </Link>
-
-                      <Link
-                        href={`/admin/community/${community.id}`}
-                        className="p-2 text-gray-500 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
-                        title="Edit"
-                      >
-                        <Pencil className="w-4 h-4" />
-                      </Link>
-
-                      {community.status === 'Pending' && (
-                        <button
-                          onClick={() => handleActionClick(community, 'approve')}
-                          className="p-2 text-gray-500 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-                          title="Approve"
-                        >
-                          <CheckCircle className="w-4 h-4" />
-                        </button>
-                      )}
-
-                      {community.status === 'Approved' && (
-                        <button
-                          onClick={() => handleActionClick(community, 'suspend')}
-                          className="p-2 text-gray-500 hover:text-yellow-600 hover:bg-yellow-50 rounded-lg transition-colors"
-                          title="Suspend"
-                        >
-                          <PauseCircle className="w-4 h-4" />
-                        </button>
-                      )}
-
-                      <button
-                        onClick={() => handleActionClick(community, 'delete')}
-                        className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                        title="Delete"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-
-          {communities.length === 0 && (
-            <div className="text-center py-12">
-              <p className="text-gray-500">No communities found.</p>
+        {communities.length === 0 ? (
+          <div className="text-center py-16">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 flex items-center justify-center">
+              <Users className="w-8 h-8 text-gray-400" />
             </div>
-          )}
-        </div>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No Communities Yet</h3>
+            <p className="text-sm text-gray-500 max-w-sm mx-auto mb-6">
+              Community groups will appear here once they are created by users.
+            </p>
+            <div className="flex items-center justify-center gap-4 text-xs text-gray-400">
+              <div className="flex items-center gap-1">
+                <div className="w-2 h-2 rounded-full bg-green-100 border border-green-300"></div>
+                <span>Approved</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <div className="w-2 h-2 rounded-full bg-yellow-100 border border-yellow-300"></div>
+                <span>Pending</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <div className="w-2 h-2 rounded-full bg-red-100 border border-red-300"></div>
+                <span>Suspended</span>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-gray-200 bg-gray-50">
+                    <th className="text-left py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                      Community
+                    </th>
+                    <th className="text-left py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider hidden sm:table-cell">
+                      Creator
+                    </th>
+                    <th className="text-left py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider hidden md:table-cell">
+                      Created
+                    </th>
+                    <th className="text-left py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider hidden lg:table-cell">
+                      Members
+                    </th>
+                    <th className="text-left py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                      Status
+                    </th>
+                    <th className="text-center py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {communities.map((community) => (
+                    <tr key={community.id} className="hover:bg-gray-50 transition-colors">
+                      <td className="py-4 px-6">
+                        <div className="flex items-center gap-4">
+                          <div className="relative w-16 h-16 rounded-lg overflow-hidden shrink-0">
+                            <Image
+                              src={community.icon}
+                              alt={community.name}
+                              fill
+                              className="object-contain"
+                            />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-sm font-medium text-gray-900 line-clamp-2">
+                              {community.name}
+                            </p>
+                          </div>
+                        </div>
+                      </td>
 
-        {/* Footer Note */}
-        <div className="px-6 py-4 border-t border-gray-200">
-          <p className="text-sm text-gray-500">
-            Showing {communities.length} communit{communities.length !== 1 ? 'ies' : 'y'}
-          </p>
-        </div>
+                      <td className="py-4 px-6 hidden sm:table-cell text-sm text-gray-700">
+                        {community.creator}
+                      </td>
+
+                      <td className="py-4 px-6 hidden md:table-cell">
+                        <div className="flex items-center gap-2 text-gray-600">
+                          <Calendar className="w-4 h-4" />
+                          <span className="text-sm">{community.createdDate}</span>
+                        </div>
+                      </td>
+
+                      <td className="py-4 px-6 hidden lg:table-cell">
+                        <div className="flex items-center gap-2 text-gray-600">
+                          <Users className="w-4 h-4" />
+                          <span className="text-sm">{community.members}</span>
+                        </div>
+                      </td>
+
+                      <td className="py-4 px-6">
+                        <span
+                          className={`inline-flex px-3 py-1 rounded-full text-xs font-medium ${
+                            community.status === 'Approved'
+                              ? 'bg-green-100 text-green-700'
+                              : community.status === 'Pending'
+                              ? 'bg-yellow-100 text-yellow-700'
+                              : 'bg-red-100 text-red-700'
+                          }`}
+                        >
+                          {community.status}
+                        </span>
+                      </td>
+
+                      <td className="py-4 px-6">
+                        <div className="flex items-center justify-center gap-2">
+                          <Link
+                            href={`/community/${community.id}`}
+                            className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                            title="View"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </Link>
+
+                          <Link
+                            href={`/admin/community/${community.id}`}
+                            className="p-2 text-gray-500 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
+                            title="Edit"
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </Link>
+
+                          {community.status === 'Pending' && (
+                            <button
+                              onClick={() => handleActionClick(community, 'approve')}
+                              className="p-2 text-gray-500 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                              title="Approve"
+                            >
+                              <CheckCircle className="w-4 h-4" />
+                            </button>
+                          )}
+
+                          {community.status === 'Approved' && (
+                            <button
+                              onClick={() => handleActionClick(community, 'suspend')}
+                              className="p-2 text-gray-500 hover:text-yellow-600 hover:bg-yellow-50 rounded-lg transition-colors"
+                              title="Suspend"
+                            >
+                              <PauseCircle className="w-4 h-4" />
+                            </button>
+                          )}
+
+                          <button
+                            onClick={() => handleActionClick(community, 'delete')}
+                            className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                            title="Delete"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Footer Note */}
+            <div className="px-6 py-4 border-t border-gray-200">
+              <p className="text-sm text-gray-500">
+                Showing {communities.length} communit{communities.length !== 1 ? 'ies' : 'y'}
+              </p>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Action Confirmation Modal */}
