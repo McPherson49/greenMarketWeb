@@ -222,7 +222,7 @@ export default function Profile() {
                 <input
                   type="text"
                   name="name"
-                  value={formData.name}
+                  value={formData?.name || ''}
                   onChange={handleInputChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
                 />
@@ -239,14 +239,14 @@ export default function Profile() {
                 <input
                   type="email"
                   name="email"
-                  value={formData.email}
+                  value={formData?.email || ''}
                   onChange={handleInputChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
                 />
               ) : (
                 <div className="flex items-center gap-2">
                   <p className="text-sm text-gray-900">{profile.email}</p>
-                  {profile.emailVerified && <FaCheck className="text-green-500 w-4 h-4" />}
+                  {formData?.emailVerified && <FaCheck className="text-green-500 w-4 h-4" />}
                 </div>
               )}
             </div>
@@ -261,14 +261,14 @@ export default function Profile() {
                 <input
                   type="tel"
                   name="phone"
-                  value={formData.phone}
+                  value={formData?.phone || ''}
                   onChange={handleInputChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
                 />
               ) : (
                 <div className="flex items-center gap-2">
                   <p className="text-sm text-gray-900">{profile.phone}</p>
-                  {formData.phoneVerified && <FaCheck className="text-green-500 w-4 h-4" />}
+                  {formData?.phoneVerified && <FaCheck className="text-green-500 w-4 h-4" />}
                 </div>
               )}
             </div>
@@ -291,12 +291,12 @@ export default function Profile() {
                   <input
                     type="text"
                     name="businessName"
-                    value={formData.businessName}
+                    value={formData?.businessName || ''}
                     onChange={handleInputChange}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
                   />
                 ) : (
-                  <p className="text-sm text-gray-900">{formData.businessName}</p>
+                  <p className="text-sm text-gray-900">{formData?.businessName || 'N/A'}</p>
                 )}
               </div>
               <div>
@@ -305,12 +305,12 @@ export default function Profile() {
                   <input
                     type="text"
                     name="businessAddress"
-                    value={formData.businessAddress}
+                    value={formData?.businessAddress || ''}
                     onChange={handleInputChange}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
                   />
                 ) : (
-                  <p className="text-sm text-gray-900">{formData.businessAddress}</p>
+                  <p className="text-sm text-gray-900">{formData?.businessAddress || 'N/A'}</p>
                 )}
               </div>
             </div>
@@ -320,13 +320,13 @@ export default function Profile() {
                 {editing ? (
                   <textarea
                     name="businessDescription"
-                    value={formData.businessDescription}
+                    value={formData?.businessDescription || ''}
                     onChange={handleInputChange}
                     rows={3}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 resize-none"
                   />
                 ) : (
-                  <p className="text-sm text-gray-900">{formData.businessDescription}</p>
+                  <p className="text-sm text-gray-900">{formData?.businessDescription || 'N/A'}</p>
                 )}
               </div>
             </div>
