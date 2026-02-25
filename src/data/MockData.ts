@@ -1,4 +1,10 @@
-import { Community, Event, TrendingTopic, Member, Post } from "../types/community";
+import {
+  Community,
+  Event,
+  TrendingTopic,
+  Member,
+  Post,
+} from "../types/community";
 
 export const communities: Community[] = [
   { id: "1", name: "Livestock & Poultry Network", icon: "🐄", members: 1234 },
@@ -52,6 +58,24 @@ export const events: Event[] = [
     isJoined: false,
   },
 ];
+
+export interface Message {
+  id: string;
+  subject: string;
+  from: string;
+  preview: string;
+}
+
+export interface Order {
+  id: string;
+  product: string;
+  quantity: number;
+  status: "Pending" | "Shipped" | "Delivered" | "Cancelled";
+  date: string;
+  total: string;
+    customerName: string;
+}
+
 
 export const trendingTopics: TrendingTopic[] = [
   {
@@ -122,6 +146,57 @@ export const members: Member[] = [
     avatar: "",
     joined: "1 month ago",
     email: "greg@example.com",
+  },
+];
+
+export const messages: Message[] = [
+  {
+    id: "1",
+    subject: "Welcome to GreenMarket!",
+    from: "GreenMarket Team",
+    preview: "Thanks for joining. Here's how to get started on the platform...",
+  },
+  {
+    id: "2",
+    subject: "New event: AgriFood Nigeria 2025",
+    from: "Livestock & Poultry Network",
+    preview: "You've been invited to join the upcoming exhibition in Lagos...",
+  },
+  {
+    id: "3",
+    subject: "Your order has been shipped",
+    from: "Bulk Supply Marketplace",
+    preview: "Your order #3 for Maize (100kg bag) is on its way...",
+  },
+];
+
+export const orders: Order[] = [
+  {
+    id: "1",
+    product: "Poultry Feed (50kg)",
+    quantity: 10,
+    status: "Delivered",
+    date: "Feb 10, 2025",
+    total: "₦45,000",
+    customerName: "Michael Brown",
+  },
+  {
+    id: "2",
+    product: "Organic Fertilizer",
+    quantity: 5,
+    status: "Shipped",
+    date: "Feb 18, 2025",
+    total: "₦22,500",
+    customerName: "Adeline Enterprise",
+  },
+  {
+    id: "3",
+    product: "Maize (100kg bag)",
+    quantity: 3,
+    status: "Pending",
+    date: "Feb 24, 2025",
+    total: "₦18,000",
+    customerName: "Olajuwon Francis",
   },
 ];
 

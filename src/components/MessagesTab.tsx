@@ -1,5 +1,5 @@
 import React from "react";
-import { Message } from "@/data/MockData";
+import { Message } from "../data/mockData";
 
 interface Props {
   messages: Message[];

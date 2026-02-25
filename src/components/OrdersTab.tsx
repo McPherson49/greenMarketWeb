@@ -1,5 +1,5 @@
 import React from "react";
-import { Order } from "@/data/MockData";
+import { Order } from "@/data/mockData";
 
 interface Props {
   orders: Order[];
