@@ -154,12 +154,12 @@ export default function Profile() {
   }
 
   return (
-    <div className="space-y-6 p-6 bg-gray-50 min-h-screen">
+    <div className="space-y-6  bg-gray-50 min-h-screen">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-800 mb-1 flex items-center gap-2">
-            Profile <span className="text-green-500">🍃</span>
+            Profile <span className="text-green-500"></span>
           </h1>
           <p className="text-sm text-gray-500">Manage your profile settings</p>
           {profile && (

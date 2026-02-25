@@ -1,245 +1,273 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import Image from 'next/image';
-import { useRouter } from 'next/router';
-import { Save, X, Upload } from 'lucide-react';
+import Link from 'next/link';
+import { useRouter } from 'next/router';   // ← Pages Router
+import {
+  ArrowLeft, Pencil, CheckCircle, PauseCircle,
+  Trash2, Users, Calendar, Globe, Lock, Tag, AlertCircle,
+} from 'lucide-react';
+import { GiCow, GiWheat, GiGrain, GiCargoShip, GiMoneyStack } from 'react-icons/gi';
+import { Fish, Truck, Cpu, HelpCircle } from 'lucide-react';
 
-// Mock data (replace with real API later)
-const getCommunityById = (id: string) => {
-  const communities: Record<string, any> = {
-    '1': {
-      id: '1',
-      name: 'Livestock & Poultry Network',
-      description: 'A community for farmers raising livestock and poultry to share knowledge, best practices, and market opportunities.',
-      icon: '/assets/community1.png',
-      cover: 'https://images.unsplash.com/photo-1500595046743-cd271d694d30?w=1200&h=400&fit=crop',
-      rules: '• Be respectful\n• No spam\n• Share accurate information\n• Posts must be agriculture-related',
-      status: 'Approved',
-    },
-    // Add more communities as needed
-  };
-  return communities[id] || null;
+// ── Icon map (mirrors CreateCommunityModal) ─────────────────────────────────
+const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
+  'Livestock & Poultry':     GiCow,
+  'Crop Farming':            GiWheat,
+  'Aquaculture':             Fish,
+  'Agro-processing':         GiGrain,
+  'Export & Trade':          GiCargoShip,
+  'Supply & Logistics':      Truck,
+  'Finance & Investment':    GiMoneyStack,
+  'Technology & Innovation': Cpu,
+  'Other':                   HelpCircle,
 };
 
-export default function EditCommunity() {
-  const router = useRouter();
-  const { id } = router.query;
+const statusStyles: Record<string, string> = {
+  Approved:  'bg-green-100 text-green-700',
+  Pending:   'bg-yellow-100 text-yellow-700',
+  Suspended: 'bg-red-100 text-red-700',
+};
 
-  const [formData, setFormData] = useState<any>(null);
-  const [iconPreview, setIconPreview] = useState<string | null>(null);
-  const [coverPreview, setCoverPreview] = useState<string | null>(null);
+// ── TODO: replace with real API call ────────────────────────────────────────
+// e.g. const { data: community } = useSWR(`/api/admin/communities/${id}`)
+interface Community {
+  id: string;
+  name: string;
+  description: string;
+  category: string;
+  icon: string;
+  coverImage: string | null;
+  creator: string;
+  createdDate: string;
+  members: number;
+  status: 'Pending' | 'Approved' | 'Suspended';
+  isPrivate: boolean;
+  tags: string[];
+}
+
+const PLACEHOLDER: Community = {
+  id: '',
+  name: 'Community Name',
+  description: 'Community details will load here once the API is connected.',
+  category: 'Other',
+  icon: 'Other',
+  coverImage: null,
+  creator: '—',
+  createdDate: '—',
+  members: 0,
+  status: 'Pending',
+  isPrivate: false,
+  tags: [],
+};
+// ─────────────────────────────────────────────────────────────────────────────
+
+export default function AdminCommunityViewPage() {
+  const router = useRouter();
+  const { id } = router.query as { id: string };  // ← router.query for Pages Router
+
+  const [community, setCommunity] = useState<Community>({ ...PLACEHOLDER });
   const [loading, setLoading] = useState(true);
+  const [status, setStatus] = useState<Community['status']>('Pending');
+  const [actionModal, setActionModal] = useState<'approve' | 'suspend' | 'delete' | null>(null);
 
   useEffect(() => {
-    if (!id || Array.isArray(id)) return;
+    if (!id) return;
 
-    const community = getCommunityById(id);
-    if (community) {
-      setFormData(community);
-      setIconPreview(community.icon);
-      setCoverPreview(community.cover);
-      setLoading(false);
-    } else {
-      setLoading(false);
-    }
+    // TODO: replace with real fetch
+    // const data = await CommunityService.getById(id);
+    // setCommunity(data);
+    // setStatus(data.status);
+
+    setCommunity({ ...PLACEHOLDER, id });
+    setStatus(PLACEHOLDER.status);
+    setLoading(false);
   }, [id]);
 
-  if (loading) {
-    return <div className="p-8 text-center text-gray-600">Loading community...</div>;
-  }
-
-  if (!formData) {
-    return <div className="p-8 text-center text-red-600">Community not found</div>;
-  }
-
-  // Unified image handler
-  const handleImageUpload = (
-    e: React.ChangeEvent<HTMLInputElement>,
-    type: 'icon' | 'cover'
-  ) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const previewUrl = URL.createObjectURL(file);
-
-    if (type === 'icon') {
-      setIconPreview(previewUrl);
-      setFormData({ ...formData, icon: file });
-    } else if (type === 'cover') {
-      setCoverPreview(previewUrl);
-      setFormData({ ...formData, cover: file });
-    }
+  const confirmAction = () => {
+    if (actionModal === 'approve') setStatus('Approved');
+    if (actionModal === 'suspend') setStatus('Suspended');
+    if (actionModal === 'delete')  router.push('/admin/community');
+    // TODO: call API here e.g. await CommunityService.updateStatus(id, actionModal)
+    setActionModal(null);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log('Updated community:', formData);
-    alert('Community updated successfully!');
-    // In real app: send to API
-  };
+  const CommunityIcon = ICON_MAP[community.icon] ?? HelpCircle;
+
+  if (loading || !id) {
+    return (
+      <div className="flex items-center justify-center py-24">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500" />
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-8">
-      <div className="max-w-6xl mx-auto space-y-8">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Edit Community</h1>
-            <p className="text-gray-600 mt-2">Update details, rules, and images</p>
-          </div>
-          <button
-            onClick={handleSubmit}
-            className="flex items-center gap-3 bg-green-500 hover:bg-green-600 text-white px-8 py-3 rounded-lg font-semibold shadow-md transition-colors"
+    <div className="space-y-6 max-w-4xl">
+
+      {/* ── Header ──────────────────────────────────────────────────────── */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <Link
+          href="/admin/community"
+          className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-800 transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back to Communities
+        </Link>
+
+        <div className="flex items-center gap-2 flex-wrap">
+          <Link
+            href={`/admin/community/${id}/edit`}
+            className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 text-sm font-medium transition-colors"
           >
-            <Save className="w-5 h-5" />
-            Save Changes
+            <Pencil className="w-4 h-4" />
+            Edit
+          </Link>
+
+          {status === 'Pending' && (
+            <button
+              onClick={() => setActionModal('approve')}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg text-sm font-medium transition-colors"
+            >
+              <CheckCircle className="w-4 h-4" />
+              Approve
+            </button>
+          )}
+
+          {(status === 'Pending' || status === 'Approved') && (
+            <button
+              onClick={() => setActionModal('suspend')}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg text-sm font-medium transition-colors"
+            >
+              <PauseCircle className="w-4 h-4" />
+              {status === 'Pending' ? 'Reject' : 'Suspend'}
+            </button>
+          )}
+
+          {status === 'Suspended' && (
+            <button
+              onClick={() => setActionModal('approve')}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg text-sm font-medium transition-colors"
+            >
+              <CheckCircle className="w-4 h-4" />
+              Re-approve
+            </button>
+          )}
+
+          <button
+            onClick={() => setActionModal('delete')}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm font-medium transition-colors"
+          >
+            <Trash2 className="w-4 h-4" />
+            Delete
           </button>
         </div>
+      </div>
 
-        <div className="grid lg:grid-cols-3 gap-8">
-          {/* Main Content */}
-          <div className="lg:col-span-2 space-y-8">
-            {/* Name & Description */}
-            <div className="bg-white rounded-2xl border border-gray-200 p-8 shadow-sm">
-              <label className="block text-lg font-semibold text-gray-900 mb-4">
-                Community Name
-              </label>
-              <input
-                type="text"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="w-full text-3xl font-bold text-gray-900 border-b-2 border-gray-300 focus:border-green-500 outline-none pb-4 mb-8"
-                placeholder="Enter community name"
-              />
+      {/* ── API notice ──────────────────────────────────────────────────── */}
+      <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-sm text-amber-800">
+        <AlertCircle className="w-4 h-4 mt-0.5 shrink-0 text-amber-500" />
+        <span>
+          <strong>API not connected yet.</strong> Showing placeholder UI.
+          Wire up the <code className="bg-amber-100 px-1 rounded text-xs">useEffect</code> fetch once the endpoint is ready.
+        </span>
+      </div>
 
-              <label className="block text-lg font-semibold text-gray-900 mb-4">
-                Description
-              </label>
-              <textarea
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                rows={6}
-                className="w-full px-5 py-4 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 resize-none text-gray-700 leading-relaxed"
-                placeholder="Describe what this community is about..."
-              />
+      {/* ── Cover + community card ───────────────────────────────────────── */}
+      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div className="h-40 bg-gradient-to-r from-green-400 to-emerald-500 relative">
+          {community.coverImage && (
+            <img src={community.coverImage} alt="Cover" className="w-full h-full object-cover" />
+          )}
+        </div>
+
+        <div className="px-6 pb-6">
+          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 -mt-8 mb-4">
+            <div className="w-16 h-16 rounded-2xl bg-white border-4 border-white shadow-lg flex items-center justify-center shrink-0">
+              <CommunityIcon className="w-8 h-8 text-green-600" />
             </div>
-
-            {/* Community Rules */}
-            <div className="bg-white rounded-2xl border border-gray-200 p-8 shadow-sm">
-              <label className="block text-lg font-semibold text-gray-900 mb-4">
-                Community Rules
-              </label>
-              <textarea
-                value={formData.rules}
-                onChange={(e) => setFormData({ ...formData, rules: e.target.value })}
-                rows={8}
-                placeholder="One rule per line...&#10;e.g. • Be respectful&#10;• No spam"
-                className="w-full px-5 py-4 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 resize-none font-mono text-sm text-gray-700"
-              />
-              <p className="text-xs text-gray-500 mt-3">Use • at the start of each line for bullet points</p>
-            </div>
+            <span className={`self-start sm:self-auto inline-flex px-3 py-1 rounded-full text-xs font-semibold ${statusStyles[status]}`}>
+              {status}
+            </span>
           </div>
 
-          {/* Sidebar */}
-          <div className="space-y-6">
-            {/* Community Icon */}
-            <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
-              <h3 className="font-semibold text-gray-900 mb-4">Community Icon</h3>
-              <div className="flex flex-col items-center">
-                {iconPreview ? (
-                  <div className="relative w-32 h-32 rounded-full overflow-hidden shadow-lg border-4 border-white mb-4">
-                    <Image
-                      src="/assets/refer.png"
-                      alt="Community icon"
-                      width={128}
-                      height={128}
-                      className="object-cover w-full h-full"
-                    />
-                  </div>
-                ) : (
-                  <div className="w-32 h-32 bg-gray-200 rounded-full mb-4 border-4 border-white" />
-                )}
-                <label className="cursor-pointer">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => handleImageUpload(e, 'icon')}
-                    className="hidden"
-                  />
-                  <span className="flex items-center gap-2 text-green-600 hover:text-green-700 font-medium">
-                    <Upload className="w-5 h-5" />
-                    Change Icon
-                  </span>
-                </label>
-                <p className="text-xs text-gray-500 mt-2 text-center">Square image · 200×200px recommended</p>
-              </div>
+          <h1 className="text-2xl font-bold text-gray-900 mb-1">{community.name}</h1>
+          <p className="text-sm text-gray-400 mb-4">{community.category}</p>
+          <p className="text-gray-700 leading-relaxed">{community.description}</p>
+
+          {community.tags.length > 0 && (
+            <div className="flex flex-wrap gap-2 mt-4">
+              {community.tags.map((tag) => (
+                <span key={tag} className="inline-flex items-center gap-1 text-xs bg-gray-100 text-gray-600 px-2.5 py-1 rounded-full">
+                  <Tag className="w-3 h-3" />{tag}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* ── Meta grid ───────────────────────────────────────────────────── */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        {[
+          { label: 'Members',  value: community.members.toLocaleString(), Icon: Users    },
+          { label: 'Created',  value: community.createdDate,              Icon: Calendar },
+          { label: 'Privacy',  value: community.isPrivate ? 'Private' : 'Public', Icon: community.isPrivate ? Lock : Globe },
+          { label: 'Creator',  value: community.creator,                  Icon: Users    },
+        ].map(({ label, value, Icon }) => (
+          <div key={label} className="bg-white rounded-xl border border-gray-200 p-4">
+            <div className="flex items-center gap-2 text-gray-400 mb-2">
+              <Icon className="w-4 h-4" />
+              <span className="text-xs font-medium uppercase tracking-wide">{label}</span>
+            </div>
+            <p className="text-sm font-semibold text-gray-900">{value}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* ── Action confirmation modal ────────────────────────────────────── */}
+      {actionModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
+            <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-4 ${
+              actionModal === 'approve' ? 'bg-green-100'  :
+              actionModal === 'suspend' ? 'bg-yellow-100' : 'bg-red-100'
+            }`}>
+              {actionModal === 'approve' && <CheckCircle className="w-6 h-6 text-green-600" />}
+              {actionModal === 'suspend' && <PauseCircle  className="w-6 h-6 text-yellow-600" />}
+              {actionModal === 'delete'  && <Trash2       className="w-6 h-6 text-red-600" />}
             </div>
 
-            {/* Cover Photo */}
-            <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
-              <h3 className="font-semibold text-gray-900 mb-4">Cover Photo</h3>
-              <div className="space-y-4">
-                {coverPreview ? (
-                  <div className="relative max-w-full rounded-xl overflow-hidden shadow-md border border-gray-200">
-                    <Image
-                      src={coverPreview}
-                      alt="Cover preview"
-                      width={800}
-                      height={300}
-                      className="w-full object-cover"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setCoverPreview(null);
-                        setFormData({ ...formData, cover: null });
-                      }}
-                      className="absolute top-3 right-3 bg-white/90 hover:bg-white p-2 rounded-full shadow-lg transition-colors"
-                    >
-                      <X className="w-5 h-5 text-red-600" />
-                    </button>
-                  </div>
-                ) : (
-                  <div className="max-w-full aspect-[8/3] bg-gray-100 rounded-xl border-2 border-dashed border-gray-300 flex items-center justify-center">
-                    <p className="text-gray-400">No cover image</p>
-                  </div>
-                )}
+            <h3 className="text-lg font-semibold text-gray-900 mb-2 capitalize">
+              {actionModal} Community?
+            </h3>
+            <p className="text-sm text-gray-500 mb-6">
+              {actionModal === 'approve' && 'This will make the community live and visible to all users.'}
+              {actionModal === 'suspend' && 'This will temporarily hide the community from all users.'}
+              {actionModal === 'delete'  && 'This will permanently remove the community. This action cannot be undone.'}
+            </p>
 
-                <div className="text-center">
-                  <label className="cursor-pointer inline-flex items-center gap-3 px-6 py-3 bg-green-500 hover:bg-green-600 text-white rounded-lg font-medium transition-colors">
-                    <Upload className="w-5 h-5" />
-                    Upload Cover
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => handleImageUpload(e, 'cover')}
-                      className="hidden"
-                    />
-                  </label>
-                  <p className="text-xs text-gray-500 mt-3">
-                    Recommended: 1600×500px · JPG, PNG · Max 5MB
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Status */}
-            <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
-              <h3 className="font-semibold text-gray-900 mb-4">Community Status</h3>
-              <select
-                value={formData.status}
-                onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setActionModal(null)}
+                className="px-5 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium"
               >
-                <option value="Approved">Approved</option>
-                <option value="Pending">Pending Review</option>
-                <option value="Suspended">Suspended</option>
-              </select>
+                Cancel
+              </button>
+              <button
+                onClick={confirmAction}
+                className={`px-5 py-2.5 rounded-lg font-medium text-white ${
+                  actionModal === 'approve' ? 'bg-green-600 hover:bg-green-700'   :
+                  actionModal === 'suspend' ? 'bg-yellow-600 hover:bg-yellow-700' :
+                  'bg-red-600 hover:bg-red-700'
+                }`}
+              >
+                {actionModal === 'approve' ? 'Approve' : actionModal === 'suspend' ? 'Suspend' : 'Delete'}
+              </button>
             </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

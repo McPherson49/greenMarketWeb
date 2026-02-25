@@ -212,6 +212,12 @@ function AdminLayout({ children }: { children: React.ReactNode }) {
       items: [
         { icon: FaUser, label: "Profile", href: "/admin/profile", badge: null },
         {
+          icon: Tags,
+          label: "Ad Pricing",
+          href: "/admin/ad-pricing",
+          badge: null,
+        },
+        {
           icon: FaCog,
           label: "Admin Management",
           href: "/admin/adminMgt",
