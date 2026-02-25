@@ -367,10 +367,7 @@ export default function AdPricingAdmin(): React.JSX.Element {
         );
       })}
 
-      {/* Hint */}
-      <p className="text-xs text-gray-400 text-center pb-4">
-        Click the edit buttons to update duration or price for each tier.
-      </p>
+    
     </div>
   );
 }
