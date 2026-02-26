@@ -297,11 +297,11 @@ export default function AdPricingAdmin(): React.JSX.Element {
                   Free
                 </span>
               )}
-              {plan.recommended && (
+              {/* {plan.recommended && (
                 <span className="inline-flex px-2.5 py-1 text-xs font-semibold bg-green-100 text-green-700 rounded-full">
                   ★ Recommended
                 </span>
-              )}
+              )} */}
             </div>
 
             {isFree ? (
