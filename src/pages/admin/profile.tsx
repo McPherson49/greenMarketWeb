@@ -100,6 +100,7 @@ export default function Profile() {
         }
       }
 
+      if (!formData) return;
       // Update profile data
       const updatedProfile = await updateProfile({
         name: formData.name,
