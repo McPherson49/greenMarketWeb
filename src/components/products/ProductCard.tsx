@@ -42,7 +42,7 @@ export default function ProductCard({ product }: { product: Product }) {
             {product.name}
           </p>
 
-          <span className="inline-flex items-center gap-1 text-xs text-amber-500 flex-shrink-0">
+          <span className="inline-flex items-center gap-1 text-xs text-amber-500 shrink-0">
             <Star className="size-3 fill-current" />
             {product.rating.toFixed(1)}
           </span>
@@ -59,7 +59,7 @@ export default function ProductCard({ product }: { product: Product }) {
 
         {/* Price + View */}
         <div className="flex justify-between items-center gap-2">
-          <div className="text-sm font-semibold text-[#E4130C] flex-shrink-0">
+          <div className="text-sm font-semibold text-[#E4130C] shrink-0">
             &#8358;{product.price.toLocaleString()}
           </div>
 

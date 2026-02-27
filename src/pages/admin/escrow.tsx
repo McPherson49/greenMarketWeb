@@ -202,7 +202,7 @@ export default function EscrowRequests() {
                 <th className="text-left py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider">Seller</th>
                 <th className="text-left py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider">Date</th>
                 <th className="text-left py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
-                <th className="text-left py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
+                {/* <th className="text-left py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th> */}
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
@@ -303,9 +303,9 @@ export default function EscrowRequests() {
                               </button>
                             </>
                           )}
-                          <button className="text-gray-400 hover:text-gray-600 p-1 rounded hover:bg-gray-100">
+                          {/* <button className="text-gray-400 hover:text-gray-600 p-1 rounded hover:bg-gray-100">
                             <FaEllipsisV className="w-4 h-4" />
-                          </button>
+                          </button> */}
                         </div>
                       </td>
                     </tr>

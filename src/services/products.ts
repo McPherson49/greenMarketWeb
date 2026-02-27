@@ -22,6 +22,7 @@ export const getProducts = async (
 
     // Check if response exists
     if (response?.data) {
+      console.log("Products data:", response.data.data);
       return response.data;  // Return response.data directly
     }
 

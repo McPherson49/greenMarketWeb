@@ -1,6 +1,10 @@
 import ApiFetcher from "@/utils/apis";
 import { toast } from "react-toastify";
-import { ProductsResponse, ProductsParams, Product } from "@/types/adminProducts";
+import {
+  ProductsResponse,
+  ProductsParams,
+  Product,
+} from "@/types/adminProducts";
 
 export const ProductService = {
   /**
@@ -8,15 +12,15 @@ export const ProductService = {
    */
   async getProducts(params?: ProductsParams): Promise<ProductsResponse> {
     try {
-      const response = await ApiFetcher.get<ProductsResponse>('/products', { 
+      const response = await ApiFetcher.get<ProductsResponse>("/products", {
         params: {
           ...params,
-          byAdmin: true // Always include byAdmin=true for admin panel
-        }
+          byAdmin: true, // Always include byAdmin=true for admin panel
+        },
       });
       return response.data;
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to fetch products');
+      toast.error(error.response?.data?.message || "Failed to fetch products");
       throw error;
     }
   },
@@ -29,7 +33,7 @@ export const ProductService = {
       const response = await ApiFetcher.get<Product>(`/products/${id}`);
       return response.data;
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to fetch product');
+      toast.error(error.response?.data?.message || "Failed to fetch product");
       throw error;
     }
   },
@@ -37,13 +41,20 @@ export const ProductService = {
   /**
    * Update product status (PATCH method)
    */
-  async updateProductStatus(id: number, status: 'rejected' | 'publish' | 'pending' | 'draft' | 'trash'): Promise<Product> {
+  async updateProductStatus(
+    id: number,
+    status: "rejected" | "publish" | "pending" | "draft" | "trash",
+  ): Promise<Product> {
     try {
-      const response = await ApiFetcher.patch<Product>(`/products/${id}`, { status });
-      toast.success('Product status updated successfully');
+      const response = await ApiFetcher.patch<Product>(`/products/${id}`, {
+        status,
+      });
+      toast.success("Product status updated successfully");
       return response.data;
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to update product status');
+      toast.error(
+        error.response?.data?.message || "Failed to update product status",
+      );
       throw error;
     }
   },
@@ -53,11 +64,13 @@ export const ProductService = {
    */
   async deleteProduct(id: number): Promise<Product> {
     try {
-      const response = await ApiFetcher.patch<Product>(`/products/${id}`, { status: 'trash' });
-      toast.success('Product moved to trash successfully');
+      const response = await ApiFetcher.patch<Product>(`/products/${id}`, {
+        status: "trash",
+      });
+      toast.success("Product moved to trash successfully");
       return response.data;
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to delete product');
+      toast.error(error.response?.data?.message || "Failed to delete product");
       throw error;
     }
   },
@@ -65,7 +78,10 @@ export const ProductService = {
   /**
    * Search products by title, description, or tags
    */
-  async searchProducts(query: string, params?: Omit<ProductsParams, 'search'>): Promise<ProductsResponse> {
+  async searchProducts(
+    query: string,
+    params?: Omit<ProductsParams, "search">,
+  ): Promise<ProductsResponse> {
     return this.getProducts({
       ...params,
       search: query,
@@ -77,11 +93,21 @@ export const ProductService = {
    */
   async boostProductAd(id: number): Promise<any> {
     try {
+      console.log("Boosting product:", id);
+      console.log(
+        "Full URL:",
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/products/${id}/boost`,
+      );
+
       const response = await ApiFetcher.post(`/products/${id}/boost`);
-      toast.success('Product ad boosted successfully');
+      toast.success("Product ad boosted successfully");
       return response.data;
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to boost product ad');
+      console.log("Boost error:", error.response); // if undefined, endpoint doesn't exist
+      console.log("Boost error status:", error.response?.status);
+      toast.error(
+        error.response?.data?.message || "Failed to boost product ad",
+      );
       throw error;
     }
   },
