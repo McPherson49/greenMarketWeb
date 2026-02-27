@@ -179,7 +179,7 @@ export default function Hero() {
                 {/* Overlay */}
                 <div
                   className={`absolute inset-0 ${
-                    darkOverlay ? "bg-[#000000]/50" : "bg-white/40"
+                    darkOverlay ? "md:bg-black/10 bg-black/50" : "bg-white/40"
                   }`}
                 ></div>
 
@@ -188,8 +188,8 @@ export default function Hero() {
                   <div className="relative z-10 flex flex-col items-center justify-center text-center p-6 py-12 md:py-16 lg:px-20 min-h-100 md:min-h-125">
                     <div className="max-w-3xl">
                       <h1
-                        className={`text-3xl md:text-5xl font-bold ${
-                          darkOverlay ? "text-white" : "text-[#253D4E]"
+                        className={`text-2xl md:text-5xl font-bold ${
+                          darkOverlay ? "md:text-black text-white" : "text-[#253D4E]"
                         }`}
                       >
                         {title}
@@ -197,9 +197,9 @@ export default function Hero() {
 
                       {description2 && (
                         <p
-                          className={`mt-4 text-sm md:text-base ${
+                          className={`mt-4 md:w-2/3 mx-auto text-sm md:text-base ${
                           darkOverlay
-                            ? "text-white"
+                            ? "md:text-black text-white"
                             : "text-[#253D4E]/80"
                         }`}
                         >
