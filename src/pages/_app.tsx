@@ -79,7 +79,7 @@ function CategoryDrawer({
   return (
     <div className="fixed inset-0 z-99998">
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
-      <aside className="absolute inset-y-0 left-0 w-[85vw] max-w-md bg-white border-r border-neutral-200 shadow-xl flex flex-col">
+      <aside className="absolute inset-y-0 left-0 w-[85vw] max-w-xs bg-white border-r border-neutral-200 shadow-xl flex flex-col">
         <div className="flex items-center justify-between p-4 border-b border-neutral-200 shrink-0">
           <div className="">
             <Image
@@ -118,23 +118,42 @@ function CategoryDrawer({
               {categories.map((c) => (
                 <Link
                   key={c.id}
-                  href={`/shop?category=${c.slug}`}
+                  href={`/shop?category=${c.id}`}
                   className="flex items-center justify-between px-4 py-3 hover:bg-emerald-50"
                   onClick={handleCategoryClick}
                 >
                   <span className="flex items-center gap-2">
                     <span className="inline-flex size-7 items-center justify-center rounded-md bg-emerald-100 shrink-0">
-                      <Image
-                        src={c.icon ?? "/assets/default.png"}
-                        alt={c.name}
-                        width={50}
-                        height={50}
-                        className="object-contain"
-                      />
+                      {c.icon?.startsWith("data:") ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={c.icon}
+                          alt={c.name}
+                          width={50}
+                          height={50}
+                          className="object-contain"
+                        />
+                      ) : (
+                        <Image
+                          src={c.icon ?? "/assets/default.png"}
+                          alt={c.name}
+                          width={50}
+                          height={50}
+                          className="object-contain"
+                        />
+                      )}
                     </span>
                     <span className="text-sm">{c.name}</span>
                   </span>
-                  <ChevronRight className="size-4 text-neutral-400 shrink-0" />
+                  <span className="flex items-center gap-2">
+                    {/* ✅ show product count badge */}
+                    {c.products_count > 0 && (
+                      <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-medium">
+                        {c.products_count}
+                      </span>
+                    )}
+                    <ChevronRight className="size-4 text-neutral-400 shrink-0" />
+                  </span>
                 </Link>
               ))}
             </nav>

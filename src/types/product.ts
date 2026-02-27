@@ -74,6 +74,7 @@ export interface GetProductsRequest {
   category_id?: number;
   state?: string;
   search?: string;
+  ads?: string;
 }
 
 export interface GetProductsResponse {

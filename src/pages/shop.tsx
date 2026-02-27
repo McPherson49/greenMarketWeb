@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import Newsletter from "@/components/newsletter/Newsletter";
 import { getProducts } from "@/services/products";
 import ProductCard from "@/components/products/ProductCard";
-import { UIProduct } from "@/types/product";
+import { UIProduct, GetProductsRequest } from "@/types/product";
 import ProductCardSkeleton from "@/components/products/ProductCardSkeleton";
 
 const PER_PAGE = 24;
@@ -16,32 +16,34 @@ export default function Shop() {
 
   const [products, setProducts] = useState<UIProduct[]>([]);
   const [loading, setLoading] = useState(true);
-
   const [currentPage, setCurrentPage] = useState(1);
   const [lastPage, setLastPage] = useState(1);
 
-  // -----------------------------
-  // FETCH PRODUCTS
-  // -----------------------------
   const fetchProducts = async (page: number) => {
     try {
       setLoading(true);
-  
-      const res = await getProducts({
-        page,
+
+      const params: GetProductsRequest = {
         per_page: PER_PAGE,
-      });
-  
-      // Check if res is null or undefined
+      };
+
+      if (categoryParam) {
+        params.category_id = Number(categoryParam);
+      } else {
+        params.page = page;
+        params.search = "";
+        params.ads = "top";
+      }
+
+      const res = await getProducts(params);
+
       if (!res) {
         console.error("No products data received");
         return;
       }
-  
-      // Check if res.data exists and is an array
+
       const productsArray = Array.isArray(res.data) ? res.data : [];
-  
-      // ✅ CRITICAL FIX: map API → UI product
+
       const formattedProducts: UIProduct[] = productsArray.map((p: any) => ({
         id: p.id,
         name: p.title,
@@ -50,12 +52,10 @@ export default function Shop() {
         vendor: p.business?.name || p.user?.name || "Unknown",
         rating: p.business?.rating ?? 0,
       }));
-  
-      console.log("Formatted products:", formattedProducts); // Debug log
-  
+
       setProducts(formattedProducts);
-      setCurrentPage(res.current_page || 1);  // Use res.current_page instead of res.data.current_page
-      setLastPage(res.last_page || 1);        // Use res.last_page instead of res.data.last_page
+      setCurrentPage(res.current_page || 1);
+      setLastPage(res.last_page || 1);
     } catch (error) {
       console.error("Error loading products:", error);
     } finally {
@@ -63,15 +63,11 @@ export default function Shop() {
     }
   };
 
-  // Initial load + category change
   useEffect(() => {
     setCurrentPage(1);
     fetchProducts(1);
   }, [categoryParam]);
 
-  // -----------------------------
-  // PAGINATION HANDLERS
-  // -----------------------------
   const nextPage = () => {
     if (currentPage < lastPage) {
       fetchProducts(currentPage + 1);
@@ -86,7 +82,6 @@ export default function Shop() {
 
   return (
     <div className="min-h-screen">
-      {/* Banner */}
       <section
         className="relative bg-cover bg-center py-16 px-4 mb-10"
         style={{ backgroundImage: "url('/assets/Footer.png')" }}
@@ -99,7 +94,6 @@ export default function Shop() {
         </div>
       </section>
 
-      {/* Products */}
       <div className="max-w-7xl mx-auto px-4">
         {loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-8">
@@ -119,7 +113,6 @@ export default function Shop() {
               ))}
             </div>
 
-            {/* Pagination */}
             {lastPage > 1 && (
               <div className="flex justify-center items-center gap-4 mb-12">
                 <button
@@ -129,11 +122,9 @@ export default function Shop() {
                 >
                   Previous
                 </button>
-
                 <span className="text-sm font-medium">
                   Page {currentPage} of {lastPage}
                 </span>
-
                 <button
                   onClick={nextPage}
                   disabled={currentPage === lastPage}

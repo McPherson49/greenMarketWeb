@@ -21,6 +21,7 @@ export const getCategories = async (): Promise<Category[] | null> => {
     const response = await ApiFetcher.get<GetCategoriesResponse>("/categories");
 
     if (response?.data?.data) {
+      console.log("Categories data:", response.data.data);
       return response.data.data;
     }
 

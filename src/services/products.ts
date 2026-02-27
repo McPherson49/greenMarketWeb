@@ -5,25 +5,24 @@ import { GetProductsRequest, GetProductsResponse, ProductData } from "@/types/pr
 // GET ALL PRODUCTS
 export const getProducts = async (
   params: GetProductsRequest = {}
-): Promise<ProductData | null> => {  // Change return type
+): Promise<ProductData | null> => {
   try {
     const query = new URLSearchParams(
       Object.entries(params).reduce((acc, [key, value]) => {
         if (value !== undefined && value !== null) {
-          acc[key] = String(value);
+          // ✅ remap category_id → category for the API
+          const apiKey = key === "category_id" ? "category" : key;
+          acc[apiKey] = String(value);
         }
         return acc;
       }, {} as Record<string, string>)
     ).toString();
 
-    const response = await ApiFetcher.get<ProductData>(  // Change generic type
-      `/products?${query}`
-    );
+    const response = await ApiFetcher.get<ProductData>(`/products?${query}`);
 
-    // Check if response exists
     if (response?.data) {
       console.log("Products data:", response.data.data);
-      return response.data;  // Return response.data directly
+      return response.data;
     }
 
     toast.error("Failed to load Products");
