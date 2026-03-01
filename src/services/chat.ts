@@ -82,12 +82,12 @@ export const getMessages = async (receiverId: string): Promise<Message[] | null>
 // SEND MESSAGE
 export const sendMessage = async (
   receiverId: string, 
-  text: string
+  message: string
 ): Promise<Message | null> => {
   try {
     const response = await ApiFetcher.post<{ messages: { [date: string]: Message[] } }>(
       `/chats/messages/${receiverId}`, 
-      { text }
+      { message }
     );
     if (response?.data?.messages) {
       // Get the most recent message from the response
