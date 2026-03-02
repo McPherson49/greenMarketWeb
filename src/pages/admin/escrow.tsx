@@ -64,6 +64,7 @@ function UserDetails({ user, isExpanded }: UserDetailsProps) {
         <FaUser className="text-gray-400 text-sm" />
         <span className="text-sm font-medium text-gray-800 truncate max-w-37.5">
           {fullName}
+          
         </span>
       </div>
       {isExpanded && (
