@@ -6,6 +6,8 @@ export interface Message {
   id: number;
   chat_id: number;
   message: string;
+  media_url?: string;       // URL of uploaded media returned by server
+  media_type?: string;      // "image" | "video" | "file"
   meta: any;
   created_at: string;
   updated_at: string;
@@ -38,6 +40,13 @@ export interface ChatListItem {
   name: string;
 }
 
+// Helper: flatten + sort grouped messages
+const flattenMessages = (grouped: { [date: string]: Message[] }): Message[] => {
+  const all: Message[] = [];
+  Object.values(grouped).forEach((dayMessages) => all.push(...dayMessages));
+  return all.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+};
+
 // GET CHAT LIST
 export const getChatList = async (): Promise<ChatListItem[] | null> => {
   try {
@@ -59,15 +68,7 @@ export const getMessages = async (receiverId: string): Promise<Message[] | null>
   try {
     const response = await ApiFetcher.get<MessagesResponse>(`/chats/messages/${receiverId}`);
     if (response?.data?.data) {
-      // Flatten the grouped messages into a single array
-      const allMessages: Message[] = [];
-      Object.values(response.data.data).forEach((dayMessages) => {
-        allMessages.push(...dayMessages);
-      });
-      // Sort by created_at to maintain chronological order
-      return allMessages.sort((a, b) => 
-        new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-      );
+      return flattenMessages(response.data.data);
     }
     toast.error("Failed to load messages");
     return null;
@@ -78,34 +79,61 @@ export const getMessages = async (receiverId: string): Promise<Message[] | null>
   }
 };
 
-
-// SEND MESSAGE
+// SEND TEXT MESSAGE
 export const sendMessage = async (
-  receiverId: string, 
+  receiverId: string,
   message: string
 ): Promise<Message | null> => {
   try {
     const response = await ApiFetcher.post<{ messages: { [date: string]: Message[] } }>(
-      `/chats/messages/${receiverId}`, 
+      `/chats/messages/${receiverId}`,
       { message }
     );
     if (response?.data?.messages) {
-      // Get the most recent message from the response
-      const allMessages: Message[] = [];
-      Object.values(response.data.messages).forEach((dayMessages) => {
-        allMessages.push(...dayMessages);
-      });
-      // Sort by created_at and return the latest message
-      const sortedMessages = allMessages.sort((a, b) => 
-        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-      );
-      return sortedMessages[0] || null;
+      const sorted = flattenMessages(response.data.messages);
+      return sorted[sorted.length - 1] || null;
     }
     toast.error("Failed to send message");
     return null;
   } catch (error) {
     console.error("Error sending message:", error);
     toast.error("Error sending message");
+    return null;
+  }
+};
+
+// SEND MEDIA MESSAGE (image / video / file)
+// Posts as multipart/form-data so the server receives the actual file.
+// Optionally include a caption text alongside the media.
+export const sendMediaMessage = async (
+  receiverId: string,
+  file: File,
+  caption?: string
+): Promise<Message | null> => {
+  try {
+    const formData = new FormData();
+    formData.append("media", file);
+    if (caption?.trim()) {
+      formData.append("message", caption.trim());
+    }
+
+    const response = await ApiFetcher.post<{ messages: { [date: string]: Message[] } }>(
+      `/chats/messages/${receiverId}`,
+      formData,
+      // Tell axios (or your fetcher) not to set Content-Type manually —
+      // the browser sets it automatically with the correct boundary for FormData.
+      { headers: { "Content-Type": "multipart/form-data" } }
+    );
+
+    if (response?.data?.messages) {
+      const sorted = flattenMessages(response.data.messages);
+      return sorted[sorted.length - 1] || null;
+    }
+    toast.error("Failed to send media");
+    return null;
+  } catch (error) {
+    console.error("Error sending media:", error);
+    toast.error("Error sending media");
     return null;
   }
 };

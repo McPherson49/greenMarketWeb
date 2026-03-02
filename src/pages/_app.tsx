@@ -258,7 +258,7 @@ function AdminLayout({ children }: { children: React.ReactNode }) {
 
       {/* Sidebar - Fixed on desktop, drawer on mobile */}
       <aside
-        className={`fixed top-0 left-0 z-50 h-screen w-64 bg-white border-r border-gray-200 transform transition-transform duration-300 ease-in-out ${
+        className={`fixed top-0 left-0 z-100 h-screen w-64 bg-white border-r border-gray-200 transform transition-transform duration-300 ease-in-out ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         } lg:translate-x-0`}
       >
@@ -347,9 +347,9 @@ function AdminLayout({ children }: { children: React.ReactNode }) {
       </aside>
 
       {/* Main Content Area - with left margin on desktop */}
-      <div className="min-h-screen ml-0 lg:ml-64">
+      <div className="h-screen flex flex-col ml-0 lg:ml-64 overflow-hidden">
         {/* Top Bar */}
-        <header className="sticky top-0 z-30 bg-white border-b border-gray-200 px-4 lg:px-6 py-6">
+        <header className="shrink-0 sticky top-0 z-30 bg-white border-b border-gray-200 px-4 lg:px-6 py-6">
           <div className="flex lg:hidden w-full h-f items-center justify-between">
             <Image
               src={"/assets/logo.svg"}
@@ -370,7 +370,9 @@ function AdminLayout({ children }: { children: React.ReactNode }) {
         </header>
 
         {/* Page Content */}
-        <main className="p-4 lg:p-6">{children}</main>
+      <main className={`flex-1 min-h-0 overflow-hidden ${router.pathname === '/admin/chats' ? '' : 'overflow-y-auto p-4 lg:p-6'}`}>
+  {children}
+</main>
       </div>
     </div>
   );

@@ -1,33 +1,32 @@
-import React, { useState, useEffect } from 'react';
-import { 
-  FaUser, 
-  FaEnvelope, 
-  FaPhone, 
+import React, { useState, useEffect } from "react";
+import {
+  FaUser,
+  FaEnvelope,
+  FaPhone,
   FaMapMarkerAlt,
-  FaCheckCircle, 
-  FaTimesCircle, 
+  FaCheckCircle,
+  FaTimesCircle,
   FaExclamationTriangle,
   FaTruck,
   FaEllipsisV,
   FaChevronDown,
   FaChevronUp,
-  FaSpinner
-} from 'react-icons/fa';
-import { getOffers, acceptOffer, rejectOffer } from '@/services/escrow';
-import { EscrowOffer, EscrowStatus, GetOffersRequest } from '@/types/escrow';
-import { toast } from 'react-toastify';
-
+  FaSpinner,
+} from "react-icons/fa";
+import { getOffers, acceptOffer, rejectOffer } from "@/services/escrow";
+import { EscrowOffer, EscrowStatus, GetOffersRequest } from "@/types/escrow";
+import { toast } from "react-toastify";
 
 const statusColors = {
-  pending: 'bg-yellow-100 text-yellow-700 border-yellow-200',
-  accepted: 'bg-blue-100 text-blue-700 border-blue-200',
-  success: 'bg-green-100 text-green-700 border-green-200',
-  failed: 'bg-red-100 text-red-700 border-red-200',
-  rejected: 'bg-red-100 text-red-700 border-red-200',
-  cancelled: 'bg-gray-100 text-gray-700 border-gray-200',
-  disputed: 'bg-orange-100 text-orange-700 border-orange-200',
-  abandoned: 'bg-gray-100 text-gray-700 border-gray-200',
-  in_escrow: 'bg-purple-100 text-purple-700 border-purple-200',
+  pending: "bg-yellow-100 text-yellow-700 border-yellow-200",
+  accepted: "bg-blue-100 text-blue-700 border-blue-200",
+  success: "bg-green-100 text-green-700 border-green-200",
+  failed: "bg-red-100 text-red-700 border-red-200",
+  rejected: "bg-red-100 text-red-700 border-red-200",
+  cancelled: "bg-gray-100 text-gray-700 border-gray-200",
+  disputed: "bg-orange-100 text-orange-700 border-orange-200",
+  abandoned: "bg-gray-100 text-gray-700 border-gray-200",
+  in_escrow: "bg-purple-100 text-purple-700 border-purple-200",
 };
 
 const statusIcons = {
@@ -53,13 +52,19 @@ interface UserDetailsProps {
 }
 
 function UserDetails({ user, isExpanded }: UserDetailsProps) {
-  const fullName = user.last_name ? `${user.first_name} ${user.last_name}` : user.first_name;
-  
+  const fullName = user.last_name
+    ? `${user.first_name} ${user.last_name}`
+    : user.first_name;
+
   return (
-    <div className={`space-y-2 ${isExpanded ? 'bg-gray-50 p-3 rounded-lg border border-gray-200' : ''}`}>
+    <div
+      className={`space-y-2 ${isExpanded ? "bg-gray-50 p-3 rounded-lg border border-gray-200" : ""}`}
+    >
       <div className="flex items-center gap-2">
         <FaUser className="text-gray-400 text-sm" />
-        <span className="text-sm font-medium text-gray-800 truncate max-w-37.5">{fullName}</span>
+        <span className="text-sm font-medium text-gray-800 truncate max-w-37.5">
+          {fullName}
+        </span>
       </div>
       {isExpanded && (
         <>
@@ -81,12 +86,12 @@ function UserDetails({ user, isExpanded }: UserDetailsProps) {
 
 export default function EscrowRequests() {
   const [requests, setRequests] = useState<EscrowOffer[]>([]);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set());
   const [loading, setLoading] = useState(false);
   const [totalPages, setTotalPages] = useState(1);
-  const [statusFilter, setStatusFilter] = useState<EscrowStatus | ''>('');
+  const [statusFilter, setStatusFilter] = useState<EscrowStatus | "">("");
 
   const itemsPerPage = 5;
 
@@ -95,14 +100,14 @@ export default function EscrowRequests() {
     try {
       const params: GetOffersRequest = { page };
       if (status) params.status = status;
-      
+
       const response = await getOffers(params);
       if (response) {
         setRequests(response.data);
         setTotalPages(response.last_page);
       }
     } catch (error) {
-      console.error('Failed to fetch offers:', error);
+      console.error("Failed to fetch offers:", error);
     } finally {
       setLoading(false);
     }
@@ -116,12 +121,12 @@ export default function EscrowRequests() {
     (req) =>
       req.buyer.first_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       req.seller.first_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      req.product.title.toLowerCase().includes(searchTerm.toLowerCase())
+      req.product.title.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   const paginatedRequests = filteredRequests.slice(
     (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
+    currentPage * itemsPerPage,
   );
 
   const toggleRowExpansion = (id: number) => {
@@ -148,7 +153,17 @@ export default function EscrowRequests() {
     }
   };
 
-  const statusOptions: EscrowStatus[] = ['pending', 'accepted', 'rejected', 'cancelled', 'success', 'failed', 'disputed', 'abandoned', 'in_escrow'];
+  const statusOptions: EscrowStatus[] = [
+    "pending",
+    "accepted",
+    "rejected",
+    "cancelled",
+    "success",
+    "failed",
+    "disputed",
+    "abandoned",
+    "in_escrow",
+  ];
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -156,24 +171,30 @@ export default function EscrowRequests() {
 
   return (
     <div className="space-y-6 bg-gray-50 min-h-screen">
-      <div className="flex items-center justify-between">
+      {/* Header */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-800 mb-1">Escrow Requests</h1>
-          <p className="text-sm text-gray-500">Manage and update escrow request details</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-1">
+            Escrow Requests
+          </h1>
+          <p className="text-sm text-gray-500">
+            Manage and update escrow request details
+          </p>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
           <select
             value={statusFilter}
             onChange={(e) => {
-              setStatusFilter(e.target.value as EscrowStatus | '');
+              setStatusFilter(e.target.value as EscrowStatus | "");
               setCurrentPage(1);
             }}
-            className="px-4 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white shadow-sm"
+            className="w-full sm:w-auto px-4 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white shadow-sm"
           >
             <option value="">All Status</option>
             {statusOptions.map((status) => (
               <option key={status} value={status}>
-                {status.charAt(0).toUpperCase() + status.slice(1).replace('_', ' ')}
+                {status.charAt(0).toUpperCase() +
+                  status.slice(1).replace("_", " ")}
               </option>
             ))}
           </select>
@@ -185,24 +206,38 @@ export default function EscrowRequests() {
               setSearchTerm(e.target.value);
               setCurrentPage(1);
             }}
-            className="px-4 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white shadow-sm"
+            className="w-full sm:w-auto px-4 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white shadow-sm"
           />
         </div>
       </div>
 
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
+        {/* ── Desktop Table (hidden on mobile) ── */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full">
             <thead className="bg-gray-50">
               <tr>
-                <th className="text-left py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider">ID</th>
-                <th className="text-left py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider">Product</th>
-                <th className="text-left py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider">Price</th>
-                <th className="text-left py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider">Buyer</th>
-                <th className="text-left py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider">Seller</th>
-                <th className="text-left py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider">Date</th>
-                <th className="text-left py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
-                {/* <th className="text-left py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th> */}
+                <th className="text-left py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  ID
+                </th>
+                <th className="text-left py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  Product
+                </th>
+                <th className="text-left py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  Price
+                </th>
+                <th className="text-left py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  Buyer
+                </th>
+                <th className="text-left py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  Seller
+                </th>
+                <th className="text-left py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  Date
+                </th>
+                <th className="text-left py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  Status
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
@@ -210,57 +245,79 @@ export default function EscrowRequests() {
                 <tr>
                   <td colSpan={8} className="py-12 text-center">
                     <FaSpinner className="mx-auto h-8 w-8 text-green-500 animate-spin mb-4" />
-                    <p className="text-sm text-gray-500">Loading escrow requests...</p>
+                    <p className="text-sm text-gray-500">
+                      Loading escrow requests...
+                    </p>
                   </td>
                 </tr>
               ) : paginatedRequests.length === 0 ? (
                 <tr>
                   <td colSpan={8} className="py-12 text-center">
                     <FaExclamationTriangle className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">No Escrow Requests</h3>
-                    <p className="text-sm">No escrow requests found matching the search criteria.</p>
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">
+                      No Escrow Requests
+                    </h3>
+                    <p className="text-sm">
+                      No escrow requests found matching the search criteria.
+                    </p>
                   </td>
                 </tr>
               ) : (
                 paginatedRequests.map((request) => {
                   const isExpanded = expandedRows.has(request.id);
-                  const StatusIcon = statusIcons[request.status as keyof typeof statusIcons];
+                  const StatusIcon =
+                    statusIcons[request.status as keyof typeof statusIcons];
                   return (
-                    <tr key={request.id} className="hover:bg-gray-50 transition-colors">
+                    <tr
+                      key={request.id}
+                      className="hover:bg-gray-50 transition-colors"
+                    >
                       <td className="py-4 px-6">
-                        <span className="text-sm font-medium text-gray-800">#{request.id}</span>
+                        <span className="text-sm font-medium text-gray-800">
+                          #{request.id}
+                        </span>
                       </td>
                       <td className="py-4 px-6">
                         <div className="flex items-center gap-3">
                           <img
-                            src={request.product.images[0] || 'https://via.placeholder.com/48?text=Product'}
+                            src={
+                              request.product.images[0] ||
+                              "https://via.placeholder.com/48?text=Product"
+                            }
                             alt={request.product.title}
                             className="w-12 h-12 rounded-lg object-cover shadow-md"
                             onError={(e) => {
-                              (e.target as HTMLImageElement).src = 'https://via.placeholder.com/48?text=Product';
+                              (e.target as HTMLImageElement).src =
+                                "https://via.placeholder.com/48?text=Product";
                             }}
                           />
                           <div>
-                            <span className="text-sm font-medium text-gray-800 block">{request.product.title}</span>
+                            <span className="text-sm font-medium text-gray-800 block">
+                              {request.product.title}
+                            </span>
                           </div>
                         </div>
                       </td>
                       <td className="py-4 px-6">
-                        <span className="text-sm font-semibold text-gray-800">${request.amount.toFixed(2)}</span>
+                        <span className="text-sm font-semibold text-gray-800">
+                          #{request.amount.toFixed(2)}
+                        </span>
                       </td>
                       <td className="py-4 px-6 max-w-xs">
                         <div
                           className="cursor-pointer"
                           onClick={() => toggleRowExpansion(request.id)}
                         >
-                          <UserDetails user={request.buyer} isExpanded={isExpanded} />
-                          {isExpanded && (
+                          <UserDetails
+                            user={request.buyer}
+                            isExpanded={isExpanded}
+                          />
+                          {isExpanded ? (
                             <button className="text-xs text-green-600 hover:text-green-700 flex items-center gap-1 mt-2">
                               <FaChevronUp className="w-3 h-3" />
                               <span>Collapse</span>
                             </button>
-                          )}
-                          {!isExpanded && (
+                          ) : (
                             <button className="text-xs text-green-600 hover:text-green-700 flex items-center gap-1 mt-2">
                               <FaChevronDown className="w-3 h-3" />
                               <span>Expand</span>
@@ -273,21 +330,29 @@ export default function EscrowRequests() {
                           className="cursor-pointer"
                           onClick={() => toggleRowExpansion(request.id)}
                         >
-                          <UserDetails user={request.seller} isExpanded={isExpanded} />
+                          <UserDetails
+                            user={request.seller}
+                            isExpanded={isExpanded}
+                          />
                         </div>
                       </td>
                       <td className="py-4 px-6">
-                        <span className="text-sm text-gray-800">{new Date(request.created_at).toLocaleDateString()}</span>
+                        <span className="text-sm text-gray-800">
+                          {new Date(request.created_at).toLocaleDateString()}
+                        </span>
                       </td>
                       <td className="py-4 px-6">
-                        <div className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium border ${statusColors[request.status as keyof typeof statusColors]}`}>
+                        <div
+                          className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium border ${statusColors[request.status as keyof typeof statusColors]}`}
+                        >
                           <StatusIcon className="w-3 h-3" />
-                          {request.status.charAt(0).toUpperCase() + request.status.slice(1).replace('_', ' ')}
+                          {request.status.charAt(0).toUpperCase() +
+                            request.status.slice(1).replace("_", " ")}
                         </div>
                       </td>
                       <td className="py-4 px-6">
                         <div className="flex items-center gap-2">
-                          {request.status === 'pending' && (
+                          {request.status === "pending" && (
                             <>
                               <button
                                 onClick={() => handleAcceptOffer(request.id)}
@@ -303,9 +368,6 @@ export default function EscrowRequests() {
                               </button>
                             </>
                           )}
-                          {/* <button className="text-gray-400 hover:text-gray-600 p-1 rounded hover:bg-gray-100">
-                            <FaEllipsisV className="w-4 h-4" />
-                          </button> */}
                         </div>
                       </td>
                     </tr>
@@ -316,16 +378,154 @@ export default function EscrowRequests() {
           </table>
         </div>
 
+        {/* ── Mobile Cards (visible only on mobile) ── */}
+        <div className="md:hidden divide-y divide-gray-200">
+          {loading ? (
+            <div className="py-12 text-center">
+              <FaSpinner className="mx-auto h-8 w-8 text-green-500 animate-spin mb-4" />
+              <p className="text-sm text-gray-500">
+                Loading escrow requests...
+              </p>
+            </div>
+          ) : paginatedRequests.length === 0 ? (
+            <div className="py-12 text-center px-4">
+              <FaExclamationTriangle className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                No Escrow Requests
+              </h3>
+              <p className="text-sm text-gray-500">
+                No escrow requests found matching the search criteria.
+              </p>
+            </div>
+          ) : (
+            paginatedRequests.map((request) => {
+              const isExpanded = expandedRows.has(request.id);
+              const StatusIcon =
+                statusIcons[request.status as keyof typeof statusIcons];
+              return (
+                <div key={request.id} className="p-4 space-y-3">
+                  {/* Top row: product image + title + price + status */}
+                  <div className="flex items-start gap-3">
+                    <img
+                      src={
+                        request.product.images[0] ||
+                        "https://via.placeholder.com/48?text=Product"
+                      }
+                      alt={request.product.title}
+                      className="w-14 h-14 rounded-lg object-cover shadow-sm shrink-0"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src =
+                          "https://via.placeholder.com/48?text=Product";
+                      }}
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold text-gray-800 truncate">
+                            {request.product.title}
+                          </p>
+                          <p className="text-xs text-gray-500 mt-0.5">
+                            #{request.id}
+                          </p>
+                        </div>
+                        <div
+                          className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border shrink-0 ${statusColors[request.status as keyof typeof statusColors]}`}
+                        >
+                          <StatusIcon className="w-3 h-3" />
+                          {request.status.charAt(0).toUpperCase() +
+                            request.status.slice(1).replace("_", " ")}
+                        </div>
+                      </div>
+                      <p className="text-sm font-bold text-gray-900 mt-1">
+                        #{request.amount.toFixed(2)}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Buyer / Seller row */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-gray-50 rounded-lg p-2.5">
+                      <p className="text-xs font-semibold text-gray-400 uppercase mb-1">
+                        Buyer
+                      </p>
+                      <UserDetails
+                        user={request.buyer}
+                        isExpanded={isExpanded}
+                      />
+                    </div>
+                    <div className="bg-gray-50 rounded-lg p-2.5">
+                      <p className="text-xs font-semibold text-gray-400 uppercase mb-1">
+                        Seller
+                      </p>
+                      <UserDetails
+                        user={request.seller}
+                        isExpanded={isExpanded}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Date + expand + actions */}
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-gray-500">
+                      {new Date(request.created_at).toLocaleDateString()}
+                    </span>
+                    <div className="flex items-center gap-2">
+                      {request.status === "pending" && (
+                        <>
+                          <button
+                            onClick={() => handleAcceptOffer(request.id)}
+                            className="px-3 py-1.5 text-xs bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
+                          >
+                            Accept
+                          </button>
+                          <button
+                            onClick={() => handleRejectOffer(request.id)}
+                            className="px-3 py-1.5 text-xs bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                          >
+                            Reject
+                          </button>
+                        </>
+                      )}
+                      <button
+                        onClick={() => toggleRowExpansion(request.id)}
+                        className="text-xs text-green-600 hover:text-green-700 flex items-center gap-1 px-2 py-1.5 rounded-lg hover:bg-green-50 transition-colors"
+                      >
+                        {isExpanded ? (
+                          <>
+                            <FaChevronUp className="w-3 h-3" />
+                            <span>Less</span>
+                          </>
+                        ) : (
+                          <>
+                            <FaChevronDown className="w-3 h-3" />
+                            <span>More</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="bg-gray-50 px-6 py-4 flex items-center justify-between">
-            <div className="text-sm text-gray-500">
-              Showing <span className="font-medium">{(currentPage - 1) * itemsPerPage + 1}</span> to{' '}
-              <span className="font-medium">{Math.min(currentPage * itemsPerPage, filteredRequests.length)}</span> of{' '}
-              <span className="font-medium">{filteredRequests.length}</span> results
+          <div className="bg-gray-50 px-4 sm:px-6 py-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-t border-gray-200">
+            <div className="text-sm text-gray-500 text-center sm:text-left">
+              Showing{" "}
+              <span className="font-medium">
+                {(currentPage - 1) * itemsPerPage + 1}
+              </span>{" "}
+              to{" "}
+              <span className="font-medium">
+                {Math.min(currentPage * itemsPerPage, filteredRequests.length)}
+              </span>{" "}
+              of <span className="font-medium">{filteredRequests.length}</span>{" "}
+              results
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center justify-center gap-2">
               <button
                 onClick={() => handlePageChange(currentPage - 1)}
                 disabled={currentPage === 1}
@@ -334,19 +534,21 @@ export default function EscrowRequests() {
                 Previous
               </button>
               <div className="flex gap-1">
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                  <button
-                    key={page}
-                    onClick={() => handlePageChange(page)}
-                    className={`px-3 py-2 text-sm font-medium rounded-md ${
-                      currentPage === page
-                        ? 'bg-green-500 text-white'
-                        : 'text-gray-500 bg-white border border-gray-300 hover:bg-gray-50'
-                    }`}
-                  >
-                    {page}
-                  </button>
-                ))}
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                  (page) => (
+                    <button
+                      key={page}
+                      onClick={() => handlePageChange(page)}
+                      className={`px-3 py-2 text-sm font-medium rounded-md ${
+                        currentPage === page
+                          ? "bg-green-500 text-white"
+                          : "text-gray-500 bg-white border border-gray-300 hover:bg-gray-50"
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  ),
+                )}
               </div>
               <button
                 onClick={() => handlePageChange(currentPage + 1)}

@@ -113,7 +113,7 @@ export default function Hero() {
   ];
 
   return (
-    <section className="rounded-xl overflow-hidden">
+    <section className="md:rounded-xl overflow-hidden">
       <style jsx global>{`
         .slick-slider {
           position: relative;
