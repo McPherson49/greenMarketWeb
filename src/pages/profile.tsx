@@ -126,6 +126,8 @@ const Profile = () => {
   useEffect(() => {
     if (router.query.tab === "chat") {
       setActiveTab("chat");
+    } else if (router.query.tab === "orders") {
+      setActiveTab("orders");
     }
   }, [router.query.tab]);
 

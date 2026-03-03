@@ -140,7 +140,7 @@ const Footer = () => {
                       { label: "Sign In", href: "/signin" },
                       { label: "My Wishlist", href: "/profile" },
                       { label: "Product", href: "/products" },
-                      { label: "Order", href: "/orders" },
+                      { label: "Order", href: "/profile?tab=orders" },
                       { label: "Profile", href: "/profile" },
                     ].map((item) => (
                       <li key={item.label}>
@@ -324,7 +324,7 @@ const Footer = () => {
                 { label: "Sign In", href: "/signin" },
                 { label: "My Wishlist", href: "/profile" },
                 { label: "Product", href: "/products" },
-                { label: "Order", href: "/orders" },
+                { label: "Order", href: "/profile?tab=orders" },
                 { label: "Profile", href: "/profile" },
               ].map((item) => (
                 <li key={item.label}>
