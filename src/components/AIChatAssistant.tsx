@@ -1,6 +1,6 @@
 import Image from "next/image";
 import React, { useState, useRef, useEffect } from "react";
-import { FaComments, FaTimes, FaPaperPlane, FaLeaf } from "react-icons/fa";
+import { FaComments, FaTimes, FaPaperPlane, FaLeaf, FaBrain, FaRobot } from "react-icons/fa";
 import { GiPlantRoots } from "react-icons/gi";
 
 interface Message {
@@ -316,7 +316,7 @@ const AIChatAssistant: React.FC = () => {
           aria-label="Open AI Chat Assistant"
         >
           <div className="relative pointer-events-none">
-            <FaComments className="text-2xl" />
+           <FaRobot className="text-2xl" />
             {!isDragging && (
               <>
                 <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full animate-ping"></span>

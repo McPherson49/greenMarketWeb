@@ -156,7 +156,7 @@ export default function IndexPage() {
 
   return (
     <main className="w-full">
-      <div className="container mt-10 max-w-7xl mx-auto">
+      <div className="container mt-3 max-w-7xl mx-auto">
         <Home
           products={products}
           categories={categories}
