@@ -1,42 +1,57 @@
 "use client";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Home, Users, MessageCircle, CircleUser } from "lucide-react";
 import { FaAd } from "react-icons/fa";
 import { useState, useEffect } from "react";
 
 const bottomNavItems = [
-  { label: "Home", href: "/", icon: Home },
-  { label: "Post Ad", href: "/post-ad", icon: FaAd },
-  { label: "profile", href: "/profile", icon: CircleUser }, 
-  { label: "Community", href: "/community", icon: Users },
+  { label: "Home",      href: "/",                 icon: Home },
+  { label: "Message",   href: "/profile?tab=chat", icon: MessageCircle },
+  { label: "Post Ad",   href: "/post-ad",           icon: FaAd },
+  { label: "Profile",   href: "/profile",           icon: CircleUser },
+  { label: "Community", href: "/community",         icon: Users },
 ];
 
 export default function MobileBottomNav() {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [isVisible, setIsVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
 
   useEffect(() => {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
-      
-      // Show navbar when scrolling up, hide when scrolling down
+
       if (currentScrollY < lastScrollY || currentScrollY < 10) {
         setIsVisible(true);
       } else if (currentScrollY > lastScrollY && currentScrollY > 10) {
         setIsVisible(false);
       }
-      
+
       setLastScrollY(currentScrollY);
     };
 
     window.addEventListener("scroll", handleScroll, { passive: true });
-    
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-    };
+    return () => window.removeEventListener("scroll", handleScroll);
   }, [lastScrollY]);
+
+  const isActive = (href: string) => {
+    // Message tab: active only when on /profile with ?tab=chat
+    if (href === "/profile?tab=chat") {
+      return pathname === "/profile" && searchParams?.get("tab") === "chat";
+    }
+    // Profile tab: active on /profile but NOT when ?tab=chat (that's Message)
+    if (href === "/profile") {
+      return pathname === "/profile" && searchParams?.get("tab") !== "chat";
+    }
+    // Home: exact match only
+    if (href === "/") {
+      return pathname === "/";
+    }
+    // Everything else: starts with href
+    return pathname?.startsWith(href) ?? false;
+  };
 
   return (
     <nav
@@ -47,20 +62,19 @@ export default function MobileBottomNav() {
       <div className="flex items-center justify-around px-2 py-3">
         {bottomNavItems.map((item) => {
           const Icon = item.icon;
-          // const isActive = pathname === item.href || 
-          //   (item.href !== "/" && pathname.startsWith(item.href));
-            const isActive = pathname === item.href || (item.href !== "/" && pathname?.startsWith(item.href));
+          const active = isActive(item.href);
+
           return (
             <Link
               key={item.label}
               href={item.href}
               className={`flex flex-col items-center gap-1 px-3 py-1 rounded-lg transition-all ${
-                isActive
+                active
                   ? "text-[#39B54A] font-medium"
                   : "text-neutral-600 hover:text-[#39B54A]"
               }`}
             >
-              <Icon className={`size-5 ${isActive ? "scale-110" : ""}`} />
+              <Icon className={`size-5 ${active ? "scale-110" : ""}`} />
               <span className="text-xs">{item.label}</span>
             </Link>
           );

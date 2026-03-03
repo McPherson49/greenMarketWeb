@@ -386,9 +386,9 @@ export default function ComingSoon() {
 
           {/* Sub */}
           <p className="sub">
-            This feature is being carefully cultivated. We'll be launching soon — sign up to be the first to know when it's ready.
+            This feature is being carefully cultivated. We'll be launching soon, Sign up to be the first to know when it's ready.
           </p>
-
+          
           {/* Countdown */}
           <div className="countdown">
             {[

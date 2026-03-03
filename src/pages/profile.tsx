@@ -1,5 +1,15 @@
 import React, { useState, useEffect } from "react";
-import { Edit, User, Package, ShoppingCart, Home, Menu, X, UserPlus, ArrowRightLeft } from "lucide-react";
+import {
+  Edit,
+  User,
+  Package,
+  ShoppingCart,
+  Home,
+  Menu,
+  X,
+  UserPlus,
+  ArrowRightLeft,
+} from "lucide-react";
 import { FaChevronRight } from "react-icons/fa6";
 import EscrowRequests from "@/components/EscrowOrders";
 import { getDashboardStats, DashboardStats } from "@/services/dashboard";
@@ -18,6 +28,7 @@ import ApiFetcher from "@/utils/apis";
 import ReferralTab from "@/components/ReferralTab";
 import ProfileImageUpdateModal from "@/components/ProfileImageUpdateModal";
 import ChatInterface from "@/components/ChatInterface";
+import { useRouter } from "next/router";
 // Types
 interface VendorProfile {
   firstName: string;
@@ -54,7 +65,7 @@ const Profile = () => {
   const [myProducts, setMyProducts] = useState<ProductData | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [dashboardData, setDashboardData] = useState<DashboardStats | null>(
-    null
+    null,
   );
   const [loading, setLoading] = useState(false);
   const [profileLoading, setProfileLoading] = useState(false);
@@ -63,6 +74,7 @@ const Profile = () => {
   const [currentOrdersPage, setCurrentOrdersPage] = useState(1);
   const [ordersPerPage, setOrdersPerPage] = useState(10);
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+  const router = useRouter();
   const [ordersFilters, setOrdersFilters] = useState({
     page: 1,
     per_page: 10,
@@ -110,6 +122,12 @@ const Profile = () => {
       fetchOrdersData();
     }
   }, [activeTab, ordersFilters]);
+
+  useEffect(() => {
+    if (router.query.tab === "chat") {
+      setActiveTab("chat");
+    }
+  }, [router.query.tab]);
 
   const fetchDashboardData = async () => {
     setLoading(true);
@@ -177,21 +195,21 @@ const Profile = () => {
     if (userProfile) {
       setUserProfile({
         ...userProfile,
-        avatar: newAvatar
+        avatar: newAvatar,
       });
     }
-    
+
     if (activeTab === "dashboard") {
       fetchDashboardData();
     }
   };
 
   const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
-    e.currentTarget.style.display = 'none';
+    e.currentTarget.style.display = "none";
     const parent = e.currentTarget.parentElement;
     if (parent) {
-      const fallbackIcon = document.createElement('div');
-      fallbackIcon.className = 'w-full h-full flex items-center justify-center';
+      const fallbackIcon = document.createElement("div");
+      fallbackIcon.className = "w-full h-full flex items-center justify-center";
       fallbackIcon.innerHTML = '<User className="w-6 h-6 text-gray-600" />';
       parent.appendChild(fallbackIcon);
     }
@@ -330,7 +348,7 @@ const Profile = () => {
                     <User className="w-6 h-6 text-gray-600" />
                   )}
                 </div>
-                
+
                 {/* Edit Icon Overlay */}
                 <button
                   onClick={() => setIsImageModalOpen(true)}
@@ -340,7 +358,7 @@ const Profile = () => {
                   <Edit className="w-3 h-3" />
                 </button>
               </div>
-              
+
               <div className="min-w-0 flex-1">
                 <p className="text-sm text-gray-500">Welcome back!</p>
                 <p className="font-medium truncate">
@@ -701,13 +719,13 @@ const Profile = () => {
                                   </td>
                                   <td className="p-3 sm:p-4 text-sm">
                                     {formatPrice(
-                                      Number(order.transactable?.amount ?? 0)
+                                      Number(order.transactable?.amount ?? 0),
                                     )}
                                   </td>
                                   <td className="p-3 sm:p-4">
                                     <span
                                       className={`text-xs px-2 sm:px-3 py-1 rounded-full whitespace-nowrap ${getStatusColor(
-                                        order.status ?? "pending"
+                                        order.status ?? "pending",
                                       )}`}
                                     >
                                       {order.status}
@@ -852,8 +870,8 @@ const Profile = () => {
                               product.status === "published"
                                 ? "bg-green-100 text-green-800"
                                 : product.status === "draft"
-                                ? "bg-yellow-100 text-yellow-800"
-                                : "bg-gray-100 text-gray-800"
+                                  ? "bg-yellow-100 text-yellow-800"
+                                  : "bg-gray-100 text-gray-800"
                             }`}
                           >
                             {product.status}
@@ -918,7 +936,7 @@ const Profile = () => {
             )}
 
             {/* Chat Tab */}
-            {activeTab === "chat" && <ChatInterface activeTab={activeTab}/>}
+            {activeTab === "chat" && <ChatInterface activeTab={activeTab} />}
 
             {/* Profile Tab */}
             {activeTab === "profile" && (
