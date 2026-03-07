@@ -35,7 +35,7 @@ const ProductDetailsSkeleton = () => {
             <div className="w-36 h-10 bg-gray-200 rounded-md" />
           </div>
 
-          <div className="mt-6 bg-gray-50 border rounded-lg p-4">
+          <div className="mt-6 bg-gray-50 border border-gray-300 rounded-lg p-4">
             <div className="w-32 h-5 bg-gray-200 rounded mb-3" />
             {[1, 2, 3, 4, 5].map((i) => (
               <div key={i} className="w-3/4 h-4 bg-gray-200 rounded mb-2" />
@@ -44,7 +44,7 @@ const ProductDetailsSkeleton = () => {
         </div>
 
         {/* Categories */}
-        <div className="bg-white border rounded-xl p-4">
+        <div className="bg-white border border-gray-300 rounded-xl p-4">
           <div className="w-32 h-6 bg-gray-200 rounded mb-3" />
           {[1, 2, 3, 4, 5, 6].map((i) => (
             <div
@@ -59,7 +59,7 @@ const ProductDetailsSkeleton = () => {
       </div>
 
       {/* Tabs */}
-      <div className="border rounded-lg bg-white">
+      <div className="border border-gray-300 rounded-lg bg-white">
         <div className="flex border-b">
           {[1, 2, 3].map((i) => (
             <div key={i} className="px-5 py-3">
@@ -80,7 +80,7 @@ const ProductDetailsSkeleton = () => {
         <div className="w-48 h-6 bg-gray-200 rounded mb-4" />
         <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-5">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="border rounded-xl overflow-hidden">
+            <div key={i} className="border border-gray-300 rounded-xl overflow-hidden">
               <div className="h-48 bg-gray-200" />
               <div className="p-3 space-y-2">
                 <div className="w-3/4 h-4 bg-gray-200 rounded" />

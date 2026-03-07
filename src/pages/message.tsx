@@ -1,106 +1,212 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+import { Search, ChevronDown, Paperclip, Send, Menu, X } from "lucide-react";
+import { useRouter } from "next/router";
 import {
-  Search,
-  Plus,
-  ChevronDown,
-  Paperclip,
-  Send,
-  Menu,
-  X,
-} from "lucide-react";
-import Image from "next/image";
-import { getMessages, sendMessage, Message as ChatMessage } from "@/services/chat";
-import ApiFetcher from "@/utils/apis"; // assuming you have this like in your sample service
+  getChatList,
+  getMessages,
+  sendMessage,
+  sendMediaMessage,
+  Message as ChatMessage,
+  ChatListItem,
+} from "@/services/chat";
 import { toast } from "react-toastify";
+import Link from "next/link";
 
-interface Conversation {
-  id: string;
+// ── AVATAR COMPONENT ──
+const Avatar = ({
+  src,
+  name,
+  className = "w-11 h-11",
+}: {
+  src: string;
   name: string;
-  avatar?: string;
-  lastMessage?: string;
-  timestamp?: string;
-  tags?: string[];
-  online?: boolean;
-}
+  className?: string;
+}) => {
+  const [failed, setFailed] = useState(false);
 
+  const initials =
+    name
+      ?.split(" ")
+      .map((w) => w[0])
+      .slice(0, 2)
+      .join("")
+      .toUpperCase() || "?";
+
+  const colors = [
+    "bg-red-400",
+    "bg-orange-400",
+    "bg-amber-400",
+    "bg-green-500",
+    "bg-teal-500",
+    "bg-blue-500",
+    "bg-indigo-500",
+    "bg-purple-500",
+    "bg-pink-500",
+  ];
+  const colorIndex =
+    name?.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0) %
+    colors.length;
+  const bgColor = colors[colorIndex] || "bg-gray-400";
+
+  if (failed || !src) {
+    return (
+      <div
+        className={`${className} ${bgColor} rounded-full flex items-center justify-center shrink-0`}
+      >
+        <span className="text-white font-semibold text-xs">{initials}</span>
+      </div>
+    );
+  }
+
+  return (
+    <img
+      src={src}
+      alt={name}
+      onError={() => setFailed(true)}
+      className={`${className} rounded-full object-cover shrink-0`}
+    />
+  );
+};
+
+// ── MAIN COMPONENT ──
 const MessagingApp: React.FC = () => {
-  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const router = useRouter();
+  const { chat: chatIdFromQuery } = router.query;
+
+  const [conversations, setConversations] = useState<ChatListItem[]>([]);
   const [selectedConversation, setSelectedConversation] = useState<string>("");
+  const [selectedReceiverId, setSelectedReceiverId] = useState<string>("");
   const [messageText, setMessageText] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [loadingConversations, setLoadingConversations] = useState(true);
+  const [loadingMessages, setLoadingMessages] = useState(false);
+  const [sendingMessage, setSendingMessage] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const messagesContainerRef = useRef<HTMLDivElement | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  // FETCH CONVERSATIONS
+  // ── FETCH CONVERSATIONS ──
   const fetchConversations = async () => {
+    setLoadingConversations(true);
     try {
-      const response = await ApiFetcher.get<{ data: Conversation[] }>("/chat");
-      if (response?.data?.data) {
-        setConversations(response.data.data);
-        if (!selectedConversation && response.data.data.length > 0) {
-          setSelectedConversation(response.data.data[0].id);
+      const list = await getChatList();
+      if (list) {
+        setConversations(list);
+
+        const targetId = chatIdFromQuery as string | null;
+
+        if (targetId) {
+          const exists = list.find(
+            (c) => String(c.user_id) === String(targetId),
+          );
+          if (exists) {
+            setSelectedConversation(String(exists.id));
+            setSelectedReceiverId(String(exists.user_id));
+          } else {
+            setSelectedReceiverId(String(targetId));
+            setSelectedConversation("");
+            toast.info(
+              "Send a message to start a conversation with this seller.",
+            );
+          }
+        } else if (list.length > 0) {
+          setSelectedConversation(String(list[0].id));
+          setSelectedReceiverId(String(list[0].user_id));
         }
-      } else {
-        toast.error("Failed to load conversations");
       }
-    } catch (error) {
-      console.error("Error fetching conversations:", error);
-      toast.error("Error fetching conversations");
+    } finally {
+      setLoadingConversations(false);
     }
   };
 
   useEffect(() => {
+    if (!router.isReady) return;
     fetchConversations();
-  }, []);
+  }, [router.isReady, chatIdFromQuery]);
 
-  // FETCH MESSAGES ON CONVERSATION CHANGE
+  // ── FETCH MESSAGES ──
   useEffect(() => {
-    if (!selectedConversation) return;
+    if (!selectedReceiverId) return;
 
     const fetchMessages = async () => {
-      const msgs = await getMessages(selectedConversation);
-      if (msgs) setMessages(msgs);
+      setLoadingMessages(true);
+      try {
+        const msgs = await getMessages(selectedReceiverId);
+        setMessages(msgs || []);
+      } finally {
+        setLoadingMessages(false);
+      }
     };
 
     fetchMessages();
-  }, [selectedConversation]);
+  }, [selectedReceiverId]);
 
-  // AUTO SCROLL TO LATEST MESSAGE
+  // ── AUTO SCROLL ──
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTop =
+        messagesContainerRef.current.scrollHeight;
+    }
   }, [messages]);
 
-  // SEND MESSAGE
+  // ── SEND TEXT ──
   const handleSendMessage = async () => {
-    if (!messageText.trim() || !selectedConversation) return;
+    if (!messageText.trim() || !selectedReceiverId || sendingMessage) return;
 
-    const newMsg = await sendMessage(selectedConversation, messageText.trim());
+    setSendingMessage(true);
+    const text = messageText.trim();
+    setMessageText("");
+
+    const newMsg = await sendMessage(selectedReceiverId, text);
     if (newMsg) {
       setMessages((prev) => [...prev, newMsg]);
-      setMessageText("");
+
+      if (!selectedConversation) {
+        const list = await getChatList();
+        if (list) {
+          setConversations(list);
+          const newConv = list.find(
+            (c) => String(c.user_id) === String(selectedReceiverId),
+          );
+          if (newConv) setSelectedConversation(String(newConv.id));
+        }
+      }
     }
+    setSendingMessage(false);
   };
 
-  const getTagColor = (tag?: string) => {
-    const colors: { [key: string]: string } = {
-      Question: "bg-orange-100 text-orange-700",
-      "Help wanted": "bg-teal-100 text-teal-700",
-      Bug: "bg-orange-100 text-orange-700",
-      Hacktoberfest: "bg-teal-100 text-teal-700",
-      Request: "bg-green-100 text-green-700",
-      "Follow up": "bg-gray-100 text-gray-700",
-      "Some content": "bg-gray-100 text-gray-700",
-    };
-    return tag ? colors[tag] || "bg-gray-100 text-gray-700" : "bg-gray-100 text-gray-700";
+  // ── SEND MEDIA ──
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !selectedReceiverId) return;
+
+    const newMsg = await sendMediaMessage(selectedReceiverId, file);
+    if (newMsg) setMessages((prev) => [...prev, newMsg]);
+
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  const selectedConv = conversations.find((c) => c.id === selectedConversation);
+  // ── SELECT CONVERSATION ──
+  const handleSelectConversation = (conv: ChatListItem) => {
+    setSelectedConversation(String(conv.id));
+    setSelectedReceiverId(String(conv.user_id));
+    setMessages([]);
+    setIsSidebarOpen(false);
+  };
+
+  const selectedConv = conversations.find(
+    (c) => String(c.id) === selectedConversation,
+  );
 
   return (
-    <div className="flex h-screen">
-      <div className="max-w-7xl mx-auto w-full flex h-screen bg-white">
+    <div
+      className="flex overflow-hidden rounded-lg mb-40 border border-gray-200"
+      style={{ height: "calc(100vh - 220px)" }}
+    >
+      <div className="max-w-7xl mx-auto w-full flex bg-white overflow-hidden">
         {/* Mobile Backdrop */}
         {isSidebarOpen && (
           <div
@@ -109,186 +215,289 @@ const MessagingApp: React.FC = () => {
           />
         )}
 
-        {/* Left Sidebar - Conversations List */}
+        {/* ── LEFT SIDEBAR ── */}
         <div
-          className={`fixed inset-y-0 left-0 w-full md:w-80 lg:w-96 bg-white border-r border-gray-200 flex flex-col transform transition-transform duration-300 ease-in-out z-50 ${
-            isSidebarOpen ? "translate-x-0" : "-translate-x-full"
-          } md:relative md:translate-x-0 md:z-auto`}
+          className={`fixed inset-y-0 left-0 w-full md:w-80 lg:w-96 bg-white border-r border-gray-200 flex flex-col z-50 transform transition-transform duration-300 ease-in-out
+            ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"}
+            md:relative md:translate-x-0 md:z-auto md:h-full`}
         >
-          {/* Header */}
-          <div className="p-3 md:p-4 border-b border-gray-200">
-            <div className="flex items-center justify-between mb-3 md:mb-4">
-              <div className="flex items-center space-x-2">
-                <h1 className="text-lg md:text-xl font-semibold text-gray-900">
+          {/* Sidebar Header */}
+          <div className="p-3 md:p-4 border-b border-gray-200 shrink-0">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <h1 className="text-lg font-semibold text-gray-900">
                   Messages
                 </h1>
-                <ChevronDown className="w-4 h-4 md:w-5 md:h-5 text-gray-500" />
-                <span className="text-xs md:text-sm text-gray-500">{conversations.length}</span>
+                <ChevronDown className="w-4 h-4 text-gray-500" />
+                <span className="text-xs text-gray-400">
+                  {conversations.length}
+                </span>
               </div>
-              <div className="flex items-center space-x-2">
-                <button
-                  className="md:hidden p-1 text-gray-500 hover:text-gray-700"
-                  onClick={() => setIsSidebarOpen(false)}
-                >
-                  <X className="w-5 h-5" />
-                </button>
-                <button className="w-7 h-7 md:w-8 md:h-8 bg-indigo-600 rounded-full flex items-center justify-center hover:bg-indigo-700">
-                  <Plus className="w-4 h-4 md:w-5 md:h-5 text-white" />
-                </button>
-              </div>
+              <button
+                className="md:hidden p-1 text-gray-500 hover:text-gray-700"
+                onClick={() => setIsSidebarOpen(false)}
+              >
+                <X className="w-5 h-5" />
+              </button>
             </div>
 
             {/* Search */}
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
               <input
                 type="text"
                 placeholder="Search messages"
-                className="w-full pl-10 pr-4 py-2 bg-gray-100 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full pl-10 pr-4 py-2 bg-gray-100 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#39B54A]"
               />
             </div>
           </div>
 
           {/* Conversations List */}
           <div className="flex-1 overflow-y-auto">
-            {conversations.map((conv) => (
-              <div
-                key={conv.id}
-                onClick={() => setSelectedConversation(conv.id)}
-                className={`p-3 md:p-4 border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors ${
-                  selectedConversation === conv.id ? "bg-gray-50" : ""
-                }`}
-              >
-                <div className="flex items-start space-x-2 md:space-x-3">
-                  <div className="relative">
-                    <img
-                      src={conv.avatar || "https://i.pravatar.cc/150?img=33"}
-                      alt={conv.name}
-                      className="w-10 h-10 md:w-12 md:h-12 rounded-full"
-                    />
-                    {conv.online && (
-                      <div className="absolute bottom-0 right-0 w-2.5 h-2.5 md:w-3 md:h-3 bg-green-500 rounded-full border-2 border-white"></div>
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between mb-1">
-                      <h3 className="font-semibold text-gray-900 text-sm truncate">{conv.name}</h3>
-                      <span className="text-xs text-gray-500 shrink-0 ml-2">{conv.timestamp || ""}</span>
+            {loadingConversations ? (
+              <div className="flex flex-col gap-3 p-4">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className="flex items-center gap-3 animate-pulse"
+                  >
+                    <div className="w-12 h-12 rounded-full bg-gray-200 shrink-0" />
+                    <div className="flex-1 space-y-2">
+                      <div className="h-3 bg-gray-200 rounded w-3/4" />
+                      <div className="h-3 bg-gray-200 rounded w-1/2" />
                     </div>
-                    <p className="text-xs md:text-sm text-gray-600 truncate mb-2">{conv.lastMessage || ""}</p>
-                    <div className="flex flex-wrap gap-1">
-                      {conv.tags?.map((tag, idx) => (
-                        <span
-                          key={idx}
-                          className={`text-xs px-2 py-0.5 rounded-full ${getTagColor(tag)}`}
-                        >
-                          {tag}
+                  </div>
+                ))}
+              </div>
+            ) : conversations.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-full text-gray-400 p-6">
+                <p className="text-sm text-center">No conversations yet.</p>
+              </div>
+            ) : (
+              conversations.map((conv) => (
+                <div
+                  key={conv.id}
+                  onClick={() => handleSelectConversation(conv)}
+                  className={`p-3 md:p-4 border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors ${
+                    selectedConversation === String(conv.id)
+                      ? "bg-green-50 border-l-4 border-l-[#39B54A]"
+                      : ""
+                  }`}
+                >
+                  <div className="flex items-start gap-3">
+                    <Avatar
+                      src={conv.avatar}
+                      name={conv.name}
+                      className="w-11 h-11"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between mb-0.5">
+                        <h3 className="font-semibold text-gray-900 text-sm truncate">
+                          {conv.name}
+                        </h3>
+                        <span className="text-xs text-gray-400 shrink-0 ml-2">
+                          {conv.time || ""}
                         </span>
-                      ))}
+                      </div>
+                      <p className="text-xs text-gray-500 truncate">
+                        {conv.message || ""}
+                      </p>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
 
-        {/* Right Side - Chat Area */}
-        <div className="flex-1 flex flex-col">
-          {selectedConv && (
-            <div className="p-3 md:p-4 border-b border-gray-200 flex items-center justify-between">
-              <div className="flex items-center space-x-2 md:space-x-3">
-                <button
-                  className="md:hidden p-1 text-gray-500 hover:text-gray-700"
-                  onClick={() => setIsSidebarOpen(true)}
-                >
-                  <Menu className="w-5 h-5" />
-                </button>
-                <div className="relative">
-                  <img
-                    src={selectedConv?.avatar || "https://i.pravatar.cc/150?img=33"}
-                    alt={selectedConv.name}
-                    className="w-8 h-8 md:w-10 md:h-10 rounded-full"
-                  />
-                  {selectedConv.online && (
-                    <div className="absolute bottom-0 right-0 w-2.5 h-2.5 md:w-3 md:h-3 bg-green-500 rounded-full border-2 border-white"></div>
-                  )}
-                </div>
+        {/* ── RIGHT: CHAT AREA ── */}
+        <div className="flex-1 flex flex-col min-w-0 h-full">
+          {/* Chat Header */}
+          <div className="p-3 md:p-4 border-b border-gray-200 flex items-center shrink-0">
+            <button
+              className="md:hidden p-1 text-gray-500 hover:text-gray-700 mr-2"
+              onClick={() => setIsSidebarOpen(true)}
+            >
+              <Menu className="w-5 h-5" />
+            </button>
+
+            {selectedConv ? (
+              <div className="flex items-center gap-3">
+                <Avatar
+                  src={selectedConv.avatar}
+                  name={selectedConv.name}
+                  className="w-9 h-9"
+                />
                 <div>
                   <h2 className="font-semibold text-gray-900 text-sm md:text-base">
                     {selectedConv.name}
                   </h2>
-                  {selectedConv.online && <p className="text-xs text-green-600">Online</p>}
+                  <p className="text-xs text-gray-400">
+                    {selectedConv.date || ""}
+                  </p>
                 </div>
               </div>
-            </div>
-          )}
+            ) : selectedReceiverId ? (
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-full bg-gray-200 flex items-center justify-center shrink-0">
+                  <span className="text-gray-500 text-xs font-bold">NEW</span>
+                </div>
+                <div>
+                  <h2 className="font-semibold text-gray-900 text-sm md:text-base">
+                    New Conversation
+                  </h2>
+                  <p className="text-xs text-[#39B54A]">
+                    Send a message to start
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <p className="text-sm text-gray-400">Select a conversation</p>
+            )}
+          </div>
 
           {/* Messages Area */}
-          <div className="flex-1 overflow-y-auto p-3 md:p-4 lg:p-6 space-y-3 md:space-y-4">
-            {messages.map((message) => (
-              <div
-                key={message.id}
-                className={`flex ${
-                  message.is_sender ? "justify-end" : "justify-start"
-                }`}
-              >
-                <div className="flex items-end space-x-1.5 md:space-x-2 max-w-[85%] md:max-w-md lg:max-w-lg">
-                  {!message.is_sender && (
-                    <Image
-                      src={selectedConv?.avatar || "https://i.pravatar.cc/150?img=33"}
-                      alt="Avatar"
-                      className="w-6 h-6 md:w-8 md:h-8 rounded-full shrink-0"
-                      width={32}
-                      height={32}
-                    />
-                  )}
-                  <div
-                    className={`px-3 md:px-4 py-2 rounded-2xl ${
-                      message.is_sender
-                        ? "bg-indigo-600 text-white"
-                        : "bg-gray-100 text-gray-900"
-                    }`}
-                  >
-                    <p className="text-xs md:text-sm wrap-break-word">{message.message}</p>
-                  </div>
-                  {message.is_sender && (
-                    <Image
-                      src="https://i.pravatar.cc/150?img=33"
-                      alt="Your Avatar"
-                      className="w-6 h-6 md:w-8 md:h-8 rounded-full shrink-0"
-                      width={32}
-                      height={32}
-                    />
-                  )}
+          <div
+            ref={messagesContainerRef}
+            className="flex-1 overflow-y-auto p-3 md:p-4 lg:p-6 space-y-3"
+          >
+            {!selectedReceiverId ? (
+              <div className="flex flex-col items-center justify-center h-full text-gray-400">
+                <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-3">
+                  <Send className="w-6 h-6 text-gray-300" />
                 </div>
+                <p className="text-sm font-medium">No conversation selected</p>
+                <p className="text-xs mt-1">
+                  Choose a conversation or chat a seller
+                </p>
               </div>
-            ))}
+            ) : loadingMessages ? (
+              <div className="flex flex-col gap-4 pt-4">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className={`flex ${i % 2 === 0 ? "justify-start" : "justify-end"} animate-pulse`}
+                  >
+                    <div
+                      className={`h-9 rounded-2xl bg-gray-200 ${i % 2 === 0 ? "w-52" : "w-36"}`}
+                    />
+                  </div>
+                ))}
+              </div>
+            ) : messages.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-full text-gray-400">
+                <p className="text-sm">No messages yet. Say hello! 👋</p>
+              </div>
+            ) : (
+              messages.map((message) => (
+                <div
+                  key={message.id}
+                  className={`flex ${message.is_sender ? "justify-end" : "justify-start"}`}
+                >
+                  <div className="flex items-end gap-2 max-w-[80%]">
+                    {!message.is_sender && (
+                      <Avatar
+                        src={selectedConv?.avatar || ""}
+                        name={selectedConv?.name || "?"}
+                        className="w-7 h-7"
+                      />
+                    )}
+                    <div className="flex flex-col gap-1">
+                      {/* Media - image */}
+                      {message.media_url && message.media_type === "image" && (
+                        <img
+                          src={message.media_url}
+                          alt="media"
+                          className="rounded-xl max-w-xs max-h-60 object-cover"
+                        />
+                      )}
+                      {/* Media - file */}
+                      {message.media_url && message.media_type === "file" && (
+                        <Link
+                          href={message.media_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs underline text-blue-500"
+                        >
+                          📎 Download file
+                        </Link>
+                      )}
+                      {/* Text bubble */}
+                      {message.message && (
+                        <div
+                          className={`px-4 py-2 rounded-2xl ${
+                            message.is_sender
+                              ? "bg-[#39B54A] text-white rounded-br-sm"
+                              : "bg-gray-100 text-gray-900 rounded-bl-sm"
+                          }`}
+                        >
+                          <p className="text-xs md:text-sm break-words">
+                            {message.message}
+                          </p>
+                        </div>
+                      )}
+                      {/* Timestamp */}
+                      <span
+                        className={`text-[10px] text-gray-400 ${
+                          message.is_sender ? "text-right" : "text-left"
+                        }`}
+                      >
+                        {message.time}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
             <div ref={messagesEndRef} />
           </div>
 
           {/* Message Input */}
-          <div className="p-3 md:p-4 border-t border-gray-200">
-            <div className="flex items-center space-x-2 md:space-x-3">
-              <button className="p-1.5 md:p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors shrink-0">
-                <Paperclip className="w-4 h-4 md:w-5 md:h-5" />
+          <div className="p-3 md:p-4 border-t border-gray-200 shrink-0">
+            <div className="flex items-center gap-2">
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileChange}
+                className="hidden"
+                accept="image/*,video/*,.pdf,.doc,.docx"
+              />
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                disabled={!selectedReceiverId}
+                className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                <Paperclip className="w-5 h-5" />
               </button>
-              <div className="flex-1 relative">
-                <input
-                  type="text"
-                  value={messageText}
-                  onChange={(e) => setMessageText(e.target.value)}
-                  placeholder="Type a message"
-                  className="w-full px-3 md:px-4 py-2 md:py-3 bg-gray-100 rounded-full text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
-                />
-              </div>
+
+              <input
+                type="text"
+                value={messageText}
+                onChange={(e) => setMessageText(e.target.value)}
+                placeholder={
+                  selectedReceiverId
+                    ? "Type a message..."
+                    : "Select a conversation first"
+                }
+                disabled={!selectedReceiverId || sendingMessage}
+                className="flex-1 px-4 py-2.5 bg-gray-100 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-[#39B54A] disabled:opacity-50 disabled:cursor-not-allowed"
+                onKeyDown={(e) =>
+                  e.key === "Enter" && !e.shiftKey && handleSendMessage()
+                }
+              />
+
               <button
                 onClick={handleSendMessage}
-                className="p-1.5 md:p-2 text-white bg-indigo-600 hover:bg-indigo-700 rounded-full transition-colors shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
-                disabled={!messageText.trim()}
+                disabled={
+                  !messageText.trim() || !selectedReceiverId || sendingMessage
+                }
+                className="p-2.5 text-white bg-[#39B54A] hover:bg-green-600 rounded-full transition-colors shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <Send className="w-4 h-4 md:w-5 md:h-5" />
+                {sendingMessage ? (
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <Send className="w-5 h-5" />
+                )}
               </button>
             </div>
           </div>

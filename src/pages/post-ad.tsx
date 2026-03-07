@@ -42,7 +42,7 @@ type Plan = {
 
 // Helper type guard to check if pricing is an object (not array)
 const isPricingObject = (
-  pricing: Plan["pricing"]
+  pricing: Plan["pricing"],
 ): pricing is { [duration: string]: number } => {
   return !Array.isArray(pricing);
 };
@@ -130,7 +130,8 @@ export default function NewProductForm() {
 
   // New states for payment flow
   const [showPaymentSuccessModal, setShowPaymentSuccessModal] = useState(false);
-  const [showFreePlanSuccessModal, setShowFreePlanSuccessModal] = useState(false);
+  const [showFreePlanSuccessModal, setShowFreePlanSuccessModal] =
+    useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [createdProductId, setCreatedProductId] = useState<string | null>(null);
 
@@ -175,7 +176,7 @@ export default function NewProductForm() {
 
           // Auto-select Lagos State if available
           const lagosState = statesData.find((state) =>
-            state.name.toLowerCase().includes("lagos")
+            state.name.toLowerCase().includes("lagos"),
           );
           if (lagosState) {
             setFormData((prev) => ({
@@ -206,7 +207,7 @@ export default function NewProductForm() {
       try {
         const citiesData = await locationService.getCities(
           country,
-          formData.state
+          formData.state,
         );
         if (citiesData && citiesData.length > 0) {
           setCities(citiesData);
@@ -220,13 +221,13 @@ export default function NewProductForm() {
           }
         } else {
           toast.error(
-            `No cities found for ${formData.state}. Please select another state.`
+            `No cities found for ${formData.state}. Please select another state.`,
           );
           setCities([]);
         }
       } catch (error) {
         toast.error(
-          `Failed to load cities for ${formData.state}. Please try again.`
+          `Failed to load cities for ${formData.state}. Please try again.`,
         );
         console.error(`Error loading cities for ${formData.state}:`, error);
         setCities([]);
@@ -250,7 +251,7 @@ export default function NewProductForm() {
 
             // Auto-select freemium plan if exists
             const freemiumPlan = fetchedPlans.find(
-              (plan) => plan.title.toLowerCase() === "freemium"
+              (plan) => plan.title.toLowerCase() === "freemium",
             );
             if (freemiumPlan) {
               setSelectedPlan(freemiumPlan.id);
@@ -316,7 +317,7 @@ export default function NewProductForm() {
   const handleDurationSelect = (
     planId: number,
     duration: string,
-    e: React.MouseEvent
+    e: React.MouseEvent,
   ) => {
     e.stopPropagation();
     setSelectedPlan(planId);
@@ -332,18 +333,19 @@ export default function NewProductForm() {
       "description",
       "state",
       "city",
+      "busStop",
     ];
     return (
       requiredFields.every(
-        (field) => formData[field as keyof typeof formData]
+        (field) => formData[field as keyof typeof formData],
       ) &&
       formData.tags.length > 0 &&
       images.length > 0
     );
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = (e?: React.FormEvent) => {
+    e?.preventDefault();
     const newErrors: { [key: string]: string } = {};
 
     if (!formData.title) newErrors.title = "Title field is mandatory";
@@ -353,6 +355,8 @@ export default function NewProductForm() {
       newErrors.description = "Enter a description for this product";
     if (!formData.state) newErrors.state = "Please select a state";
     if (!formData.city) newErrors.city = "Please select a city";
+    if (!formData.busStop)
+      newErrors.busStop = "Please enter the nearest bus stop";
     if (formData.tags.length === 0)
       newErrors.tags = "Must attach at least one tag";
     if (images.length === 0) {
@@ -360,7 +364,7 @@ export default function NewProductForm() {
     } else {
       // Check image sizes
       const oversizedImages = images.filter(
-        (img) => img.size > 5 * 1024 * 1024
+        (img) => img.size > 5 * 1024 * 1024,
       );
       if (oversizedImages.length > 0) {
         newErrors.images = "Some images exceed 5MB limit";
@@ -380,11 +384,11 @@ export default function NewProductForm() {
   const initializePayment = async (
     productId: string,
     amount: number,
-    planTitle: string
+    planTitle: string,
   ) => {
     try {
       const response = await ApiFetcher.post(
-        `/payment/paystack/initialize?type=boost&item_id=${productId}`
+        `/payment/paystack/initialize?type=boost&item_id=${productId}`,
       );
 
       if (!response) {
@@ -478,7 +482,7 @@ export default function NewProductForm() {
           headers: {
             "Content-Type": "multipart/form-data",
           },
-        }
+        },
       );
 
       // Axios response has data property directly
@@ -735,7 +739,7 @@ export default function NewProductForm() {
             </div>
           </div>
           <button
-            onClick={handleSubmit}
+            onClick={() => handleSubmit()}
             disabled={!isFormValid()}
             className={`px-6 py-2 rounded-md font-medium transition-colors ${
               isFormValid()
@@ -1087,29 +1091,37 @@ export default function NewProductForm() {
                     <label className="text-xs text-gray-400 mb-2 block">
                       City
                     </label>
-                    <select
-                      value={formData.city}
-                      onChange={handleCityChange}
-                      disabled={
-                        !formData.state || loadingCities || cities.length === 0
-                      }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#39B54A] appearance-none bg-white disabled:bg-gray-100"
-                    >
-                      <option value="">Select a city</option>
-                      {loadingCities ? (
-                        <option>Loading cities...</option>
-                      ) : formData.state && cities.length > 0 ? (
-                        cities.map((city, index) => (
-                          <option key={`${city}-${index}`} value={city}>
+                    {cities.length > 0 ? (
+                      <select
+                        value={formData.city}
+                        onChange={handleCityChange}
+                        disabled={loadingCities}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#39B54A] appearance-none bg-white disabled:bg-gray-100"
+                      >
+                        <option value="">Select a city</option>
+                        {cities.map((city) => (
+                          <option key={city} value={city}>
                             {city}
                           </option>
-                        ))
-                      ) : formData.state ? (
-                        <option>No cities available for this state</option>
-                      ) : (
-                        <option>Select a state first</option>
-                      )}
-                    </select>
+                        ))}
+                      </select>
+                    ) : (
+                      <input
+                        type="text"
+                        value={formData.city}
+                        onChange={(e) => {
+                          setFormData({ ...formData, city: e.target.value });
+                          setErrors({ ...errors, city: "" });
+                        }}
+                        placeholder={
+                          loadingCities
+                            ? "Loading cities..."
+                            : "Enter your city"
+                        }
+                        disabled={loadingCities}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#39B54A] disabled:bg-gray-100"
+                      />
+                    )}
                     {errors.city && (
                       <p className="text-xs text-red-500 mt-1">{errors.city}</p>
                     )}
@@ -1122,11 +1134,17 @@ export default function NewProductForm() {
                     <input
                       type="text"
                       value={formData.busStop}
-                      onChange={(e) =>
-                        setFormData({ ...formData, busStop: e.target.value })
-                      }
+                      onChange={(e) => {
+                        setFormData({ ...formData, busStop: e.target.value });
+                        setErrors({ ...errors, busStop: "" });
+                      }}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#39B54A]"
                     />
+                    {errors.busStop && (
+                      <p className="text-xs text-red-500 mt-1">
+                        {errors.busStop}
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -1208,8 +1226,8 @@ export default function NewProductForm() {
                               ? "bg-green-100 border-2 border-[#39B54A]"
                               : "bg-white border-2 border-[#39B54A]"
                             : isFreemium
-                            ? "bg-gray-50 border-2 border-transparent hover:border-gray-300"
-                            : "bg-white border border-gray-200 hover:border-gray-300"
+                              ? "bg-gray-50 border-2 border-transparent hover:border-gray-300"
+                              : "bg-white border border-gray-200 hover:border-gray-300"
                         }`}
                       >
                         <div
@@ -1316,7 +1334,7 @@ export default function NewProductForm() {
                         undefined && (
                         <span className="font-bold text-[#39B54A] ml-2">
                           {formatPrice(
-                            selectedPlanData.pricing[selectedDuration]
+                            selectedPlanData.pricing[selectedDuration],
                           )}
                         </span>
                       )}

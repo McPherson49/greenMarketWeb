@@ -90,5 +90,6 @@ export type UIProduct = {
   rating: number;
   tag?: string;
   unit?: string;
+  
 };
 

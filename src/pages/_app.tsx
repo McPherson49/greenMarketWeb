@@ -4,6 +4,8 @@ import { useRouter } from "next/router";
 import Header from "@/components/header/Header";
 import Footer from "@/components/Footer";
 import Image from "next/image";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import {
   ChevronRight,
   Tags,
@@ -410,6 +412,14 @@ export default function App({ Component, pageProps }: AppProps) {
           <MobileBottomNav />
           <Footer />
           <AIChatAssistant />
+
+          <ToastContainer
+            position="top-right"
+            autoClose={3000}
+            hideProgressBar={false}
+            closeOnClick
+            pauseOnHover
+          />
         </>
       )}
     </>

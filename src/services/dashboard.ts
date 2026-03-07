@@ -22,8 +22,12 @@ export const getDashboardStats = async (): Promise<DashboardStats | null> => {
   try {
     const response = await ApiFetcher.get<GetDashboardResponse>(`/dashboard`);
 
-    if (response?.data?.data) {
-      return response.data.data;
+    // Try nested data.data first, fall back to data directly
+    const stats =
+      response?.data?.data ?? (response?.data as unknown as DashboardStats);
+
+    if (stats && typeof stats === "object") {
+      return stats;
     }
 
     toast.error("Failed to load dashboard statistics");
@@ -36,7 +40,9 @@ export const getDashboardStats = async (): Promise<DashboardStats | null> => {
 };
 
 // GET SPECIFIC DASHBOARD METRIC
-export const getDashboardMetric = async (metric: string): Promise<number | string | null> => {
+export const getDashboardMetric = async (
+  metric: string,
+): Promise<number | string | null> => {
   try {
     const response = await ApiFetcher.get<GetDashboardResponse>(`/dashboard`);
 
@@ -149,26 +155,29 @@ export interface UpdateProfileImageResponse {
 }
 
 // UPDATE PROFILE IMAGE
-export const updateProfileImage = async (imageFile: File): Promise<UpdateProfileImageResponse | null> => {
+export const updateProfileImage = async (
+  imageFile: File,
+): Promise<UpdateProfileImageResponse | null> => {
   try {
     const formData = new FormData();
-    formData.append('image', imageFile);
-    formData.append('avatar', imageFile); 
-    formData.append('file', imageFile); 
-  
+    formData.append("image", imageFile);
+    formData.append("avatar", imageFile);
+    formData.append("file", imageFile);
 
     const response = await ApiFetcher.post<UpdateProfileImageResponse>(
-      '/auth/profile',
+      "/auth/profile",
       formData,
       {
         headers: {
-          'Content-Type': 'multipart/form-data',
+          "Content-Type": "multipart/form-data",
         },
-      }
+      },
     );
 
     if (response?.data?.status) {
-      toast.success(response.data.message || "Profile image updated successfully!");
+      toast.success(
+        response.data.message || "Profile image updated successfully!",
+      );
       return response.data;
     }
 
@@ -176,11 +185,12 @@ export const updateProfileImage = async (imageFile: File): Promise<UpdateProfile
     return null;
   } catch (error: any) {
     console.error("Error updating profile image:", error);
-    
+
     // Handle specific error messages
-    const errorMessage = error.response?.data?.message || "Error updating profile image";
+    const errorMessage =
+      error.response?.data?.message || "Error updating profile image";
     toast.error(errorMessage);
-    
+
     return null;
   }
 };

@@ -195,6 +195,7 @@ export default function Header({ onOpenCategories, onSearch }: HeaderProps) {
 
   const checkAuthStatus = () => {
     const token = sessionStorage.getItem("jwt");
+    console.log(token);
     setIsLoggedIn(!!token);
   };
 

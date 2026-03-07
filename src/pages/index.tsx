@@ -105,6 +105,7 @@ export default function IndexPage() {
         image: p.thumbnail || p.images?.[0] || "/placeholder.png",
         vendor: p.business?.name || p.user?.name || "Unknown",
         rating: p.business?.rating ?? 0,
+        tag: p.sub || undefined,
       }));
 
       console.log("Formatted products count:", formattedProducts.length); // Debug log

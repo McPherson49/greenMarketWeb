@@ -58,45 +58,44 @@ class LocationService {
    * @param state - State name
    * @param useCache - Whether to use cached data (default: true)
    */
-  async getCities(country: string, state: string, useCache: boolean = true): Promise<string[]> {
-    try {
-      // Normalize state name — remove " State" suffix (e.g. "Lagos State" → "Lagos")
-      const normalizedState = state.replace(/\s*state$/i, '').trim();
-      const cacheKey = `${country.toLowerCase()}_${normalizedState.toLowerCase()}`;
+async getCities(country: string, state: string, useCache: boolean = true): Promise<string[]> {
+  try {
+    const normalizedState = state.replace(/\s*state$/i, '').trim();
+    const cacheKey = `${country.toLowerCase()}_${normalizedState.toLowerCase()}`;
 
-      if (useCache && this.citiesCache.has(cacheKey)) {
-        console.log(`Returning cached cities for ${normalizedState}, ${country}`);
-        return this.citiesCache.get(cacheKey)!;
-      }
+    if (useCache && this.citiesCache.has(cacheKey)) {
+      return this.citiesCache.get(cacheKey)!;
+    }
 
-      const requestBody: CityRequest = { country, state: normalizedState };
+    // Try primary endpoint
+    let response = await fetch(this.citiesBaseURL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ country, state: normalizedState }),
+    });
 
-      const response = await fetch(this.citiesBaseURL, {
+    // If that fails, try with the original (un-normalized) state name
+    if (!response.ok) {
+      response = await fetch(this.citiesBaseURL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(requestBody),
+        body: JSON.stringify({ country, state }),
       });
-
-      if (!response.ok) {
-        console.warn(`Cities API returned ${response.status} for state: ${normalizedState}`);
-        return [];
-      }
-
-      const data: CitiesResponse = await response.json();
-
-      if (data.error) {
-        console.warn(`Cities API error for ${normalizedState}:`, data.msg);
-        return [];
-      }
-
-      this.citiesCache.set(cacheKey, data.data);
-      return data.data;
-
-    } catch (error) {
-      console.error('Error fetching cities:', error);
-      return [];
     }
+
+    if (!response.ok) return [];
+
+    const data: CitiesResponse = await response.json();
+    if (data.error || !data.data?.length) return [];
+
+    this.citiesCache.set(cacheKey, data.data);
+    return data.data;
+
+  } catch (error) {
+    console.error('Error fetching cities:', error);
+    return [];
   }
+}
 
   /**
    * Search states by name or code

@@ -28,7 +28,7 @@ export default function ProductCard({ product }: { product: Product }) {
         />
 
         {product.tag ? (
-          <span className="absolute left-2 top-2 rounded-full bg-[#39B54A] px-2 py-0.5 text-xs text-white">
+          <span className="absolute left-2 top-2 rounded-full bg-[#E4130C] px-2 py-0.5 text-xs text-white">
             {product.tag}
           </span>
         ) : null}

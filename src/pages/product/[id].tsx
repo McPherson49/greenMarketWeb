@@ -2,7 +2,14 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import Image from "next/image";
-import { Star, ChevronLeft, ChevronRight, X, ChevronLeftCircle, ChevronRightCircle } from "lucide-react";
+import {
+  Star,
+  ChevronLeft,
+  ChevronRight,
+  X,
+  ChevronLeftCircle,
+  ChevronRightCircle,
+} from "lucide-react";
 import { BsChatLeftText } from "react-icons/bs";
 import { FaMoneyBillTransfer } from "react-icons/fa6";
 import Link from "next/link";
@@ -51,19 +58,23 @@ export const dynamic = "force-dynamic";
 // --- Loader Component ---
 const PulseLoader = ({ size = "md" }: { size?: "sm" | "md" | "lg" }) => {
   const sizes = { sm: "w-4 h-4", md: "w-8 h-8", lg: "w-12 h-12" };
-  return <div className={`${sizes[size]} border-4 border-green-200 border-t-green-600 rounded-full animate-spin`}></div>;
+  return (
+    <div
+      className={`${sizes[size]} border-4 border-green-200 border-t-green-600 rounded-full animate-spin`}
+    ></div>
+  );
 };
 
 // --- Image Viewer Component ---
-const ImageViewer = ({ 
-  images, 
-  initialIndex, 
-  isOpen, 
-  onClose 
-}: { 
-  images: string[]; 
-  initialIndex: number; 
-  isOpen: boolean; 
+const ImageViewer = ({
+  images,
+  initialIndex,
+  isOpen,
+  onClose,
+}: {
+  images: string[];
+  initialIndex: number;
+  isOpen: boolean;
   onClose: () => void;
 }) => {
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
@@ -76,23 +87,23 @@ const ImageViewer = ({
 
   const handleKeyDown = (e: KeyboardEvent) => {
     if (!isOpen) return;
-    
-    switch(e.key) {
-      case 'Escape':
+
+    switch (e.key) {
+      case "Escape":
         onClose();
         break;
-      case 'ArrowLeft':
+      case "ArrowLeft":
         goToPrev();
         break;
-      case 'ArrowRight':
+      case "ArrowRight":
         goToNext();
         break;
     }
   };
 
   useEffect(() => {
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
   }, [isOpen, currentIndex]);
 
   const goToPrev = () => {
@@ -160,10 +171,10 @@ const ImageViewer = ({
             <button
               key={index}
               onClick={() => setCurrentIndex(index)}
-              className={`relative w-16 h-16 rounded-lg overflow-hidden shrink-0 border-2 transition-all ${
-                currentIndex === index 
-                  ? "border-white scale-110" 
-                  : "border-transparent hover:border-gray-400"
+              className={`relative w-16 h-16 rounded-lg overflow-hidden shrink-0 border border-gray-300 transition-all ${
+                currentIndex === index
+                  ? "border-white scale-110"
+                  : "border-transparent hover:border-gray-300"
               }`}
               aria-label={`View image ${index + 1}`}
             >
@@ -186,7 +197,7 @@ const ImageViewer = ({
 const Pagination = ({
   currentPage,
   totalPages,
-  onPageChange
+  onPageChange,
 }: {
   currentPage: number;
   totalPages: number;
@@ -216,7 +227,10 @@ const Pagination = ({
 
       {startPage > 1 && (
         <>
-          <button onClick={() => onPageChange(1)} className="px-3 py-2 rounded-md border border-gray-300 text-sm font-medium hover:bg-gray-50">
+          <button
+            onClick={() => onPageChange(1)}
+            className="px-3 py-2 rounded-md border border-gray-300 text-sm font-medium hover:bg-gray-50"
+          >
             1
           </button>
           {startPage > 2 && <span className="px-2">...</span>}
@@ -227,8 +241,11 @@ const Pagination = ({
         <button
           key={page}
           onClick={() => onPageChange(page)}
-          className={`px-3 py-2 rounded-md border text-sm font-medium ${currentPage === page ? "bg-green-600 text-white border-green-600" : "border-gray-300 hover:bg-gray-50"
-            }`}
+          className={`px-3 py-2 rounded-md border text-sm font-medium ${
+            currentPage === page
+              ? "bg-green-600 text-white border-green-600"
+              : "border-gray-300 hover:bg-gray-50"
+          }`}
         >
           {page}
         </button>
@@ -237,7 +254,10 @@ const Pagination = ({
       {endPage < totalPages && (
         <>
           {endPage < totalPages - 1 && <span className="px-2">...</span>}
-          <button onClick={() => onPageChange(totalPages)} className="px-3 py-2 rounded-md border border-gray-300 text-sm font-medium hover:bg-gray-50">
+          <button
+            onClick={() => onPageChange(totalPages)}
+            className="px-3 py-2 rounded-md border border-gray-300 text-sm font-medium hover:bg-gray-50"
+          >
             {totalPages}
           </button>
         </>
@@ -255,8 +275,11 @@ const Pagination = ({
 };
 
 // --- Helper Functions ---
-const transformToSimilarProductsResponse = (data: any): SimilarProductsResponse => {
-  if (!data) return { current_page: 1, data: [], last_page: 1, per_page: 10, total: 0 };
+const transformToSimilarProductsResponse = (
+  data: any,
+): SimilarProductsResponse => {
+  if (!data)
+    return { current_page: 1, data: [], last_page: 1, per_page: 10, total: 0 };
   return {
     current_page: data.current_page || 1,
     data: Array.isArray(data.data) ? data.data : [],
@@ -265,11 +288,12 @@ const transformToSimilarProductsResponse = (data: any): SimilarProductsResponse 
     total: data.total || 0,
     from: data.from,
     to: data.to,
-    path: data.path
+    path: data.path,
   };
 };
 
-const stripHtml = (html: string) => (html ? html.replace(/<[^>]*>?/gm, "") : "");
+const stripHtml = (html: string) =>
+  html ? html.replace(/<[^>]*>?/gm, "") : "";
 const getWordLimitedText = (text: string, limit = 50) => {
   const words = text.split(" ");
   return words.length <= limit ? text : words.slice(0, limit).join(" ");
@@ -286,13 +310,14 @@ export default function ProductDetails() {
   const [category, setCategory] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [productDetails, setProductDetails] = useState<any | null>(null);
-  const [similarProducts, setSimilarProducts] = useState<SimilarProductsResponse>({
-    current_page: 1,
-    data: [],
-    last_page: 1,
-    per_page: 10,
-    total: 0
-  });
+  const [similarProducts, setSimilarProducts] =
+    useState<SimilarProductsResponse>({
+      current_page: 1,
+      data: [],
+      last_page: 1,
+      per_page: 10,
+      total: 0,
+    });
   const [loadingSimilar, setLoadingSimilar] = useState(false);
   const [currentSimilarPage, setCurrentSimilarPage] = useState(1);
   const [showFullDescription, setShowFullDescription] = useState(false);
@@ -333,12 +358,21 @@ export default function ProductDetails() {
     const fetchSimilarProducts = async () => {
       setLoadingSimilar(true);
       try {
-        const similarData = await getSimilarProducts(Number(id), currentSimilarPage);
+        const similarData = await getSimilarProducts(
+          Number(id),
+          currentSimilarPage,
+        );
         const transformedData = transformToSimilarProductsResponse(similarData);
         setSimilarProducts(transformedData);
       } catch (error) {
         console.error("Error loading similar products:", error);
-        setSimilarProducts({ current_page: 1, data: [], last_page: 1, per_page: 10, total: 0 });
+        setSimilarProducts({
+          current_page: 1,
+          data: [],
+          last_page: 1,
+          per_page: 10,
+          total: 0,
+        });
       } finally {
         setLoadingSimilar(false);
       }
@@ -352,18 +386,19 @@ export default function ProductDetails() {
   const openImageViewer = (index: number) => {
     setSelectedImageIndex(index);
     setImageViewerOpen(true);
-    document.body.style.overflow = 'hidden'; // Prevent scrolling
+    document.body.style.overflow = "hidden"; // Prevent scrolling
   };
 
   const closeImageViewer = () => {
     setImageViewerOpen(false);
-    document.body.style.overflow = 'unset'; // Re-enable scrolling
+    document.body.style.overflow = "unset"; // Re-enable scrolling
   };
 
   if (loading || !productDetails) return <ProductDetailsSkeleton />;
 
   // Get valid images
-  const validImages = productDetails?.images?.filter((img: any) => typeof img === "string") || [];
+  const validImages =
+    productDetails?.images?.filter((img: any) => typeof img === "string") || [];
 
   // --- Escrow Handlers ---
   const handleRequestEscrow = () => setShowEscrowModal(true);
@@ -375,18 +410,24 @@ export default function ProductDetails() {
       await ApiFetcher.post(`/offers/${productDetails.id}`, {
         amount: productDetails.price,
         description: escrowDescription,
-        quantity
+        quantity,
       });
 
       setShowEscrowModal(false);
       setEscrowDescription("");
 
-      toast.success("Escrow request sent successfully!", { autoClose: 2000, position: "top-right" });
+      toast.success("Escrow request sent successfully!", {
+        autoClose: 2000,
+        position: "top-right",
+      });
 
       setTimeout(() => router.push("/profile?tab=escrow"), 2000);
     } catch (error) {
       console.error("Escrow request failed:", error);
-      toast.error("Failed to submit escrow request", { autoClose: 3000, position: "top-right" });
+      toast.error("Failed to submit escrow request", {
+        autoClose: 3000,
+        position: "top-right",
+      });
     } finally {
       setEscrowLoading(false);
     }
@@ -409,8 +450,8 @@ export default function ProductDetails() {
         {/* LEFT - Product Images */}
         <div>
           {validImages[0] && (
-            <div 
-              className="relative aspect-square rounded-xl overflow-hidden border cursor-zoom-in group"
+            <div
+              className="relative aspect-square rounded-xl overflow-hidden border border-gray-300 cursor-zoom-in group"
               onClick={() => openImageViewer(0)}
             >
               <Image
@@ -431,7 +472,7 @@ export default function ProductDetails() {
             {validImages.map((img: string, i: number) => (
               <div
                 key={i}
-                className="relative w-20 h-20 rounded-md overflow-hidden cursor-pointer border hover:border-green-500 transition group"
+                className="relative w-20 h-20 rounded-md overflow-hidden cursor-pointer border border-gray-300 hover:border-green-500 transition group"
                 onClick={() => openImageViewer(i)}
               >
                 <Image
@@ -448,26 +489,39 @@ export default function ProductDetails() {
 
         {/* MIDDLE - Product Info */}
         <div className="flex flex-col justify-start space-y-4">
-          <span className="text-sm text-pink-500 font-medium bg-pink-100 px-3 py-1 rounded-full w-fit">{productDetails.sub || "Product"}</span>
+          <span className="text-sm text-pink-500 font-medium bg-pink-100 px-3 py-1 rounded-full w-fit">
+            {productDetails.sub || "Freemium"}
+          </span>
           <h1 className="text-3xl font-semibold">{productDetails.title}</h1>
           <div className="flex items-center gap-2 text-amber-500">
             <Star className="w-4 h-4 fill-current" />
-            <span className="font-medium">{productDetails.business?.rating || "0.0"}</span>
-            <span className="text-gray-400 text-sm">({productDetails.reviews?.length || 0})</span>
+            <span className="font-medium">
+              {productDetails.business?.rating || "0.0"}
+            </span>
+            <span className="text-gray-400 text-sm">
+              ({productDetails.reviews?.length || 0})
+            </span>
           </div>
-          <p className="text-3xl text-green-600 font-bold">₦{productDetails.price || "0"}</p>
+          <p className="text-3xl text-green-600 font-bold">
+            ₦{productDetails.price || "0"}
+          </p>
 
           {/* --- Description Show More / Less --- */}
           {(() => {
             const plainText = stripHtml(productDetails.description || "");
             const words = plainText.split(" ");
             const shouldTruncate = words.length > 50;
-            const displayedText = showFullDescription ? plainText : getWordLimitedText(plainText, 50);
+            const displayedText = showFullDescription
+              ? plainText
+              : getWordLimitedText(plainText, 50);
             return (
               <div className="text-gray-600 leading-relaxed">
                 <p>{displayedText}</p>
                 {shouldTruncate && (
-                  <button onClick={() => setShowFullDescription(!showFullDescription)} className="mt-2 text-green-600 text-sm font-medium hover:underline">
+                  <button
+                    onClick={() => setShowFullDescription(!showFullDescription)}
+                    className="mt-2 text-green-600 text-sm font-medium hover:underline"
+                  >
                     {showFullDescription ? "Show less" : "Show more"}
                   </button>
                 )}
@@ -477,21 +531,35 @@ export default function ProductDetails() {
 
           {/* Quantity + Buttons */}
           <div className="flex flex-wrap items-center gap-3 pt-4">
-            <Link href={"/message"} className="rounded-md bg-green-600 px-4 py-2 text-white hover:bg-green-700 flex items-center gap-2 text-sm">
+            <Link
+              href={`/message?chat=${productDetails.user?.id}`}
+              className="rounded-md bg-green-600 px-4 py-2 text-white hover:bg-green-700 flex items-center gap-2 text-sm"
+            >
               <BsChatLeftText size={18} /> Chat Seller
             </Link>
 
-            <button onClick={handleRequestEscrow} className="rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 flex items-center gap-2 text-sm">
+            <button
+              onClick={handleRequestEscrow}
+              className="rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 flex items-center gap-2 text-sm"
+            >
               <FaMoneyBillTransfer size={18} /> Request Escrow
             </button>
           </div>
 
           {/* Store Info */}
           <div className="mt-6 bg-gray-50 border border-gray-200 rounded-lg p-4">
-            <h3 className="font-semibold text-base mb-3 text-gray-800">Store Info</h3>
+            <h3 className="font-semibold text-base mb-3 text-gray-800">
+              Store Info
+            </h3>
             <div className="space-y-2 text-sm text-gray-700">
-              <div><span className="font-medium">Store Name:</span> {productDetails.business?.name || "N/A"}</div>
-              <div><span className="font-medium">Location:</span> {productDetails.address || "N/A"}</div>
+              <div>
+                <span className="font-medium">Store Name:</span>{" "}
+                {productDetails.business?.name || "N/A"}
+              </div>
+              <div>
+                <span className="font-medium">Location:</span>{" "}
+                {productDetails.address || "N/A"}
+              </div>
               <div className="flex items-center gap-2">
                 <span className="font-medium">Contact Phone:</span>
                 <div className="flex items-center gap-1">
@@ -507,41 +575,86 @@ export default function ProductDetails() {
                   <button
                     onClick={() => setShowPhoneNumber(!showPhoneNumber)}
                     className="ml-2 p-1 rounded-md hover:bg-gray-200 transition-colors"
-                    aria-label={showPhoneNumber ? "Hide phone number" : "Show phone number"}
+                    aria-label={
+                      showPhoneNumber
+                        ? "Hide phone number"
+                        : "Show phone number"
+                    }
                   >
                     {showPhoneNumber ? (
-                      <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L6.59 6.59m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                      <svg
+                        className="w-4 h-4 text-gray-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L6.59 6.59m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"
+                        />
                       </svg>
                     ) : (
-                      <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                      <svg
+                        className="w-4 h-4 text-gray-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                        />
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                        />
                       </svg>
                     )}
                   </button>
                 </div>
               </div>
-              <div><span className="font-medium">Contact Email:</span> {productDetails.user?.email || "N/A"}</div>
+              <div>
+                <span className="font-medium">Contact Email:</span>{" "}
+                {productDetails.user?.email || "N/A"}
+              </div>
               <div>
                 <span className="font-medium">Tags:</span>
-                <span className="ml-1">{productDetails?.tags?.map((tag: string, i: number) => (
-                  <span key={i} className="inline-block bg-green-100 text-green-700 px-2 py-0.5 rounded-full text-xs mr-1">{tag}</span>
-                )) || "No tags available"}</span>
+                <span className="ml-1">
+                  {productDetails?.tags?.map((tag: string, i: number) => (
+                    <span
+                      key={i}
+                      className="inline-block bg-green-100 text-green-700 px-2 py-0.5 rounded-full text-xs mr-1"
+                    >
+                      {tag}
+                    </span>
+                  )) || "No tags available"}
+                </span>
               </div>
             </div>
           </div>
         </div>
 
         {/* RIGHT - Categories */}
-        <div className="bg-white shadow-sm border border-neutral-200 rounded-xl p-4 h-fit">
-          <h2 className="text-base font-semibold mb-3 border-b border-[#39B54A] w-1/2 pb-2">Categories</h2>
+        <div className="bg-white border border-neutral-200 rounded-xl p-4 h-fit">
+          <h2 className="text-base font-semibold mb-3 border-b border-[#39B54A] w-1/2 pb-2">
+            Categories
+          </h2>
           <div className="space-y-2 text-sm max-h-90 overflow-y-auto scrollbar-hide">
             {category.map((cat) => (
-              <div key={cat.id} className="flex items-center justify-between bg-gray-50 px-3 py-2 rounded-md hover:bg-gray-100 transition cursor-pointer">
-                <span className="text-gray-700">{cat.name}</span>
-                <span className="bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded-full">{cat.products_count}</span>
-              </div>
+              <Link key={cat.id} href={`/shop?category=${cat.id}`}>
+                <div className="flex items-center justify-between bg-gray-50 px-3 py-2 rounded-md hover:bg-gray-100 transition cursor-pointer">
+                  <span className="text-gray-700">{cat.name}</span>
+                  <span className="bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded-full">
+                    {cat.products_count}
+                  </span>
+                </div>
+              </Link>
             ))}
           </div>
         </div>
@@ -554,8 +667,11 @@ export default function ProductDetails() {
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`px-5 py-3 text-sm font-medium capitalize whitespace-nowrap ${activeTab === tab ? "text-[#39B54A] border-b-2 border-[#39B54A]" : "text-gray-500 hover:text-gray-700"
-                }`}
+              className={`px-5 py-3 text-sm font-medium capitalize whitespace-nowrap ${
+                activeTab === tab
+                  ? "text-[#39B54A] border-b-2 border-[#39B54A]"
+                  : "text-gray-500 hover:text-gray-700"
+              }`}
             >
               {tab}
             </button>
@@ -566,7 +682,9 @@ export default function ProductDetails() {
           {activeTab === "description" && (
             <>
               <div>
-                <h3 className="font-semibold mb-2 text-red-600">WARNING AND SAFETY TIPS:</h3>
+                <h3 className="font-semibold mb-2 text-red-600">
+                  WARNING AND SAFETY TIPS:
+                </h3>
                 <ul className="list-disc ml-6 space-y-1 text-gray-700">
                   <li>Avoid purchasing unverified goods</li>
                   <li>Meet safely in public for delivery</li>
@@ -577,8 +695,12 @@ export default function ProductDetails() {
               </div>
             </>
           )}
-          {activeTab === "additional info" && <p>Additional information about product packaging and care.</p>}
-          {activeTab === "reviews" && <p>No reviews yet. Be the first to leave one!</p>}
+          {activeTab === "additional info" && (
+            <p>Additional information about product packaging and care.</p>
+          )}
+          {activeTab === "reviews" && (
+            <p>No reviews yet. Be the first to leave one!</p>
+          )}
         </div>
       </div>
 
@@ -593,7 +715,11 @@ export default function ProductDetails() {
           <>
             <div className="grid lg:grid-cols-4 md:grid-cols-3 sm:grid-cols-2 gap-6">
               {similarProducts.data.map((item) => (
-                <Link key={item.id} href={`/product/${item.id}`} className="bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition">
+                <Link
+                  key={item.id}
+                  href={`/product/${item.id}`}
+                  className="bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition"
+                >
                   <div className="relative w-full h-48">
                     {typeof item.images?.[0] === "string" && (
                       <Image
@@ -605,8 +731,12 @@ export default function ProductDetails() {
                     )}
                   </div>
                   <div className="p-3">
-                    <h3 className="font-medium text-gray-800 truncate">{item.title}</h3>
-                    <p className="text-green-600 font-semibold">₦{item.price}</p>
+                    <h3 className="font-medium text-gray-800 truncate">
+                      {item.title}
+                    </h3>
+                    <p className="text-green-600 font-semibold">
+                      ₦{item.price}
+                    </p>
                   </div>
                 </Link>
               ))}
@@ -618,7 +748,9 @@ export default function ProductDetails() {
             />
           </>
         ) : (
-          <p className="text-center text-gray-500 py-8">No similar products found</p>
+          <p className="text-center text-gray-500 py-8">
+            No similar products found
+          </p>
         )}
       </div>
       {/* --- Escrow Modal --- */}
@@ -631,9 +763,10 @@ export default function ProductDetails() {
             className="bg-white rounded-2xl w-full max-w-md p-6 shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <h2 className="text-lg font-semibold mb-4 text-gray-800">Request Escrow</h2>
+            <h2 className="text-lg font-semibold mb-4 text-gray-800">
+              Request Escrow
+            </h2>
             <div className="space-y-4 text-sm">
-
               {/* Amount Input */}
               <div>
                 <label className="block mb-1 font-medium">Amount</label>
@@ -643,9 +776,15 @@ export default function ProductDetails() {
                     type="text"
                     value={productDetails.price?.toLocaleString() || ""}
                     onChange={(e) => {
-                      const numericValue = e.target.value.replace(/[^0-9]/g, "");
+                      const numericValue = e.target.value.replace(
+                        /[^0-9]/g,
+                        "",
+                      );
                       const newValue = numericValue.replace(/^0+/, "") || "";
-                      setProductDetails({ ...productDetails, price: newValue ? Number(newValue) : undefined });
+                      setProductDetails({
+                        ...productDetails,
+                        price: newValue ? Number(newValue) : undefined,
+                      });
                     }}
                     className="w-full border rounded-md px-7 py-2 focus:ring-2 focus:ring-green-500 outline-none"
                     placeholder="Enter amount"
