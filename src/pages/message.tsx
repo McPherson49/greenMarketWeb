@@ -352,7 +352,7 @@ const MessagingApp: React.FC = () => {
                 </div>
               </div>
             ) : (
-              <p className="text-sm text-gray-400">Select a conversation</p>
+              <p className="text-sm text-gray-400">Select a conversation </p>
             )}
           </div>
 
