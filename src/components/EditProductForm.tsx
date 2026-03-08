@@ -1,4 +1,4 @@
-'use client';
+"use client";
 import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/router";
 import { getCategories } from "@/services/category";
@@ -6,7 +6,10 @@ import { getPlans } from "@/services/plan";
 import locationService from "@/services/country";
 import ApiFetcher from "@/utils/apis";
 import { toast } from "react-toastify";
-import { PaymentSuccessModal, FreePlanSuccessModal } from "../pages/paymentModal";
+import {
+  PaymentSuccessModal,
+  FreePlanSuccessModal,
+} from "../pages/paymentModal";
 import { X } from "lucide-react";
 
 type Category = {
@@ -103,7 +106,7 @@ type Props = {
 
 // Helper type guard
 const isPricingObject = (
-  pricing: Plan["pricing"]
+  pricing: Plan["pricing"],
 ): pricing is { [duration: string]: number } => {
   return !Array.isArray(pricing);
 };
@@ -140,7 +143,8 @@ export default function EditProductForm({ productId }: Props) {
 
   // States for payment flow
   const [showPaymentSuccessModal, setShowPaymentSuccessModal] = useState(false);
-  const [showFreePlanSuccessModal, setShowFreePlanSuccessModal] = useState(false);
+  const [showFreePlanSuccessModal, setShowFreePlanSuccessModal] =
+    useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [updatedProductId, setUpdatedProductId] = useState<string | null>(null);
 
@@ -160,7 +164,6 @@ export default function EditProductForm({ productId }: Props) {
 
   // Handle client-side rendering
 
-
   // Fetch product details on mount
   useEffect(() => {
     async function fetchProductDetails() {
@@ -173,13 +176,13 @@ export default function EditProductForm({ productId }: Props) {
 
         if (productData.status && productData.data) {
           const product = productData.data;
-          
+
           // Set form data
           setFormData({
             title: product.title,
             category: product.category_id.toString(),
             price: product.price.toString(),
-            description: product.description.replace(/<[^>]*>/g, ''), // Remove HTML tags
+            description: product.description.replace(/<[^>]*>/g, ""), // Remove HTML tags
             state: product.state,
             city: product.local || "",
             busStop: product.nearest,
@@ -192,7 +195,7 @@ export default function EditProductForm({ productId }: Props) {
               product.images.map((url, index) => ({
                 url,
                 id: `existing_${index}`,
-              }))
+              })),
             );
           }
 
@@ -201,7 +204,7 @@ export default function EditProductForm({ productId }: Props) {
             setSelectedPlan(product.plan_id);
           }
 
-          toast.success("Product loaded successfully");
+          console.log("Product loaded successfully");
         } else {
           toast.error("Failed to load product details");
           router.back();
@@ -209,7 +212,7 @@ export default function EditProductForm({ productId }: Props) {
       } catch (error: any) {
         console.error("Error loading product:", error);
         toast.error(
-          error.response?.data?.message || "Failed to load product details"
+          error.response?.data?.message || "Failed to load product details",
         );
         router.back();
       } finally {
@@ -264,39 +267,39 @@ export default function EditProductForm({ productId }: Props) {
   }, [country]);
 
   // Fetch cities when state changes
-useEffect(() => {
-  async function fetchCitiesForState() {
-    if (!formData.state) return;
+  useEffect(() => {
+    async function fetchCitiesForState() {
+      if (!formData.state) return;
 
-    setLoadingCities(true);
-    try {
-      const citiesData = await locationService.getCities(
-        country,
-        formData.state
-      );
-      if (citiesData && citiesData.length > 0) {
-        setCities(citiesData);
-      } else {
+      setLoadingCities(true);
+      try {
+        const citiesData = await locationService.getCities(
+          country,
+          formData.state,
+        );
+        if (citiesData && citiesData.length > 0) {
+          setCities(citiesData);
+        } else {
+          setCities([]);
+        }
+      } catch (error) {
+        // ✅ Don't crash — just set empty cities and let user pick manually
+        console.warn(`Could not load cities for "${formData.state}":`, error);
         setCities([]);
+      } finally {
+        setLoadingCities(false);
       }
-    } catch (error) {
-      // ✅ Don't crash — just set empty cities and let user pick manually
-      console.warn(`Could not load cities for "${formData.state}":`, error);
-      setCities([]);
-    } finally {
-      setLoadingCities(false);
     }
-  }
 
-  fetchCitiesForState();
-}, [formData.state, country]);
+    fetchCitiesForState();
+  }, [formData.state, country]);
 
   // Auto-select Lagos and first city when states/cities load (only for new products, not editing)
   useEffect(() => {
     // Only auto-select if we're not loading product data and no state is set
     if (!productLoading && states.length > 0 && !formData.state) {
       const lagosState = states.find((state) =>
-        state.name.toLowerCase().includes("lagos")
+        state.name.toLowerCase().includes("lagos"),
       );
       if (lagosState) {
         setFormData((prev) => ({
@@ -309,7 +312,12 @@ useEffect(() => {
 
   useEffect(() => {
     // Only auto-select if we're not loading product data and no city is set
-    if (!productLoading && cities.length > 0 && !formData.city && formData.state) {
+    if (
+      !productLoading &&
+      cities.length > 0 &&
+      !formData.city &&
+      formData.state
+    ) {
       setFormData((prev) => ({
         ...prev,
         city: cities[0],
@@ -330,7 +338,7 @@ useEffect(() => {
             // Auto-select freemium plan if exists and no plan is selected
             if (!selectedPlan) {
               const freemiumPlan = fetchedPlans.find(
-                (plan) => plan.title.toLowerCase() === "freemium"
+                (plan) => plan.title.toLowerCase() === "freemium",
               );
               if (freemiumPlan) {
                 setSelectedPlan(freemiumPlan.id);
@@ -395,7 +403,7 @@ useEffect(() => {
   const handleDurationSelect = (
     planId: number,
     duration: string,
-    e: React.MouseEvent
+    e: React.MouseEvent,
   ) => {
     e.stopPropagation();
     setSelectedPlan(planId);
@@ -414,7 +422,7 @@ useEffect(() => {
     ];
     return (
       requiredFields.every(
-        (field) => formData[field as keyof typeof formData]
+        (field) => formData[field as keyof typeof formData],
       ) &&
       formData.tags.length > 0 &&
       (images.length > 0 || existingImages.length > 0)
@@ -439,7 +447,7 @@ useEffect(() => {
     } else {
       // Check new image sizes
       const oversizedImages = images.filter(
-        (img) => img.size > 2 * 1024 * 1024
+        (img) => img.size > 2 * 1024 * 1024,
       );
       if (oversizedImages.length > 0) {
         newErrors.images = "Some images exceed 2MB limit";
@@ -458,11 +466,11 @@ useEffect(() => {
   const initializePayment = async (
     productId: string,
     amount: number,
-    planTitle: string
+    planTitle: string,
   ) => {
     try {
       const response = await ApiFetcher.post(
-        `/payment/paystack/initialize?type=boost&item_id=${productId}`
+        `/payment/paystack/initialize?type=boost&item_id=${productId}`,
       );
 
       if (!response) {
@@ -488,29 +496,30 @@ useEffect(() => {
   };
 
   // Main function to handle product update
- const handleUpdateProduct = async () => {
-  if (!selectedPlan) {
-    toast.error("Please select a plan");
-    return;
-  }
+  const handleUpdateProduct = async () => {
+    if (!selectedPlan) {
+      toast.error("Please select a plan");
+      return;
+    }
 
-  setIsSubmitting(true);
+    setIsSubmitting(true);
 
-  try {
-    const selectedPlanData = plans.find((plan) => plan.id === selectedPlan);
-    const isFreemium = selectedPlanData && Array.isArray(selectedPlanData.pricing);
+    try {
+      const selectedPlanData = plans.find((plan) => plan.id === selectedPlan);
+      const isFreemium =
+        selectedPlanData && Array.isArray(selectedPlanData.pricing);
 
-    const apiFormData = new FormData();
+      const apiFormData = new FormData();
 
-    apiFormData.append("_method", "PUT"); // ✅ Add this — Laravel needs method spoofing
-    apiFormData.append("category_id", formData.category);
-    apiFormData.append("title", formData.title);
-    apiFormData.append("description", formData.description);
-    apiFormData.append("state", formData.state);
-    apiFormData.append("local", formData.city);
-    apiFormData.append("price", formData.price);
-    apiFormData.append("nearest", formData.busStop || "N/A"); // ✅ Never send empty string
-    apiFormData.append("use_escrow", "1");
+      apiFormData.append("_method", "PUT"); // ✅ Add this — Laravel needs method spoofing
+      apiFormData.append("category_id", formData.category);
+      apiFormData.append("title", formData.title);
+      apiFormData.append("description", formData.description);
+      apiFormData.append("state", formData.state);
+      apiFormData.append("local", formData.city);
+      apiFormData.append("price", formData.price);
+      apiFormData.append("nearest", formData.busStop || "N/A"); // ✅ Never send empty string
+      apiFormData.append("use_escrow", "1");
 
       // Add plan information (same as post-ad)
       if (selectedPlanData) {
@@ -520,7 +529,10 @@ useEffect(() => {
           if (isPricingObject(selectedPlanData.pricing)) {
             const planPrice = selectedPlanData.pricing[selectedDuration];
             apiFormData.append("plan[price]", planPrice.toString());
-            apiFormData.append("plan[span]", selectedDuration);
+            apiFormData.append(
+              "plan[span]",
+              parseInt(selectedDuration).toString(),
+            );
           } else {
             toast.error("Invalid pricing structure for this plan.");
             setIsSubmitting(false);
@@ -532,37 +544,37 @@ useEffect(() => {
         }
       }
 
-    images.forEach((img, index) => {
-      apiFormData.append(`images[${index}]`, img.file);
-    });
+      images.forEach((img, index) => {
+        apiFormData.append(`images[${index}]`, img.file);
+      });
 
-    imagesToDelete.forEach((imgUrl, index) => {
-      apiFormData.append(`images_to_delete[${index}]`, imgUrl);
-    });
+      imagesToDelete.forEach((imgUrl, index) => {
+        apiFormData.append(`images_to_delete[${index}]`, imgUrl);
+      });
 
-    formData.tags.forEach((tag, index) => {
-      apiFormData.append(`tags[${index}]`, tag);
-    });
+      formData.tags.forEach((tag, index) => {
+        apiFormData.append(`tags[${index}]`, tag);
+      });
 
-    // ✅ Log everything being sent
-    console.log("=== FormData being sent ===");
-    for (const [key, value] of apiFormData.entries()) {
-      console.log(`${key}:`, value);
-    }
+      // ✅ Log everything being sent
+      console.log("=== FormData being sent ===");
+      for (const [key, value] of apiFormData.entries()) {
+        console.log(`${key}:`, value);
+      }
 
-    const updateProductResponse = await ApiFetcher.post(
-      `/products/${productId}`,
-      apiFormData,
-      { headers: { "Content-Type": "multipart/form-data" } }
-    );
+      const updateProductResponse = await ApiFetcher.post(
+        `/products/${productId}`,
+        apiFormData,
+        { headers: { "Content-Type": "multipart/form-data" } },
+      );
 
-    const productData: ProductResponse = updateProductResponse.data;
+      const productData: ProductResponse = updateProductResponse.data;
 
-    if (!productData.status || !productData.data) {
-      throw new Error("Failed to update product");
-    }
-    const updatedProdId = productData.data.id.toString();
-    setUpdatedProductId(updatedProdId);
+      if (!productData.status || !productData.data) {
+        throw new Error("Failed to update product");
+      }
+      const updatedProdId = productData.data.id.toString();
+      setUpdatedProductId(updatedProdId);
 
       // Step 2: Handle based on plan type (same as post-ad)
       if (isFreemium) {
@@ -577,7 +589,11 @@ useEffect(() => {
         ) {
           const planPrice = selectedPlanData.pricing[selectedDuration];
           setShowPromoteModal(false);
-          await initializePayment(updatedProdId, planPrice, selectedPlanData.title);
+          await initializePayment(
+            updatedProdId,
+            planPrice,
+            selectedPlanData.title,
+          );
         } else {
           toast.error("Unable to process payment for this plan.");
         }
@@ -689,7 +705,7 @@ useEffect(() => {
   const removeImage = (id: string) => {
     // Check if it's a new image
     const isNewImage = id.startsWith("image_");
-    
+
     if (isNewImage) {
       const imageToRemove = images.find((img) => img.id === id);
       if (imageToRemove) {
@@ -966,7 +982,7 @@ useEffect(() => {
                           </div>
                         </div>
                       ))}
-                      
+
                       {/* New Images */}
                       {images.map((img, index) => (
                         <div key={img.id} className="relative group">
@@ -1018,7 +1034,10 @@ useEffect(() => {
                       : "border-gray-300 hover:border-[#39B54A] bg-gray-50"
                   }`}
                   onClick={() => {
-                    if (images.length + existingImages.length < 5 && fileInputRef.current) {
+                    if (
+                      images.length + existingImages.length < 5 &&
+                      fileInputRef.current
+                    ) {
                       fileInputRef.current.click();
                     }
                   }}
@@ -1288,8 +1307,8 @@ useEffect(() => {
                               ? "bg-green-100 border-2 border-[#39B54A]"
                               : "bg-white border-2 border-[#39B54A]"
                             : isFreemium
-                            ? "bg-gray-50 border-2 border-transparent hover:border-gray-300"
-                            : "bg-white border border-gray-200 hover:border-gray-300"
+                              ? "bg-gray-50 border-2 border-transparent hover:border-gray-300"
+                              : "bg-white border border-gray-200 hover:border-gray-300"
                         }`}
                       >
                         <div
@@ -1393,7 +1412,7 @@ useEffect(() => {
                         undefined && (
                         <span className="font-bold text-[#39B54A] ml-2">
                           {formatPrice(
-                            selectedPlanData.pricing[selectedDuration]
+                            selectedPlanData.pricing[selectedDuration],
                           )}
                         </span>
                       )}
