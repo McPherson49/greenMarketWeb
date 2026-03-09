@@ -1,65 +1,113 @@
 import React from "react";
-import { Plus, Calendar } from "lucide-react";
+import { Calendar, MapPin, Users, ArrowRight, Video } from "lucide-react";
+import Link from "next/link";
 import { Event } from "../../types/community";
 
 interface EventsTabProps {
   events: Event[];
-  onCreateEvent: () => void;
 }
 
-const EventsTab: React.FC<EventsTabProps> = ({ events, onCreateEvent }) => {
+const EventsTab: React.FC<EventsTabProps> = ({ events }) => {
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div>
         <h2 className="text-2xl font-bold text-gray-900">Upcoming Events</h2>
-        <button
-          onClick={onCreateEvent}
-          className="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-lg flex items-center gap-3 font-semibold shadow-md transition-colors"
-        >
-          <Plus className="w-5 h-5" />
-          Create Event
-        </button>
+        <p className="text-sm text-gray-500 mt-1">{events.length} events coming up</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {events.map((event) => (
-          <div key={event.id} className="bg-white rounded-lg shadow-sm overflow-hidden">
-            <div className="h-48 relative">
+          <div
+            key={event.id}
+            className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow group"
+          >
+            {/* Cover Image */}
+            <div className="h-44 relative overflow-hidden">
               <img
                 src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=200&fit=crop"
                 alt={event.name}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
               />
+              {/* Online badge */}
+              {event.isOnline && (
+                <span className="absolute top-3 left-3 bg-green-500 text-white text-xs font-medium px-2.5 py-1 rounded-full flex items-center gap-1">
+                  <Video className="w-3 h-3" /> Online
+                </span>
+              )}
             </div>
+
             <div className="p-4">
-              <div className="flex items-start justify-between mb-2">
-                <div className="flex items-center space-x-2 flex-1 min-w-0">
-                  <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center text-lg shrink-0">
-                    {event.icon}
-                  </div>
-                  <h3 className="text-lg font-semibold text-gray-900 truncate">{event.name}</h3>
+              {/* Title row */}
+              <div className="flex items-start gap-3 mb-3">
+                <div className="w-9 h-9 bg-green-100 rounded-full flex items-center justify-center text-lg shrink-0">
+                  {event.icon}
                 </div>
+                <h3 className="text-base font-semibold text-gray-900 leading-snug line-clamp-2">
+                  {event.name}
+                </h3>
+              </div>
+
+              {/* Meta */}
+              <div className="space-y-1.5 mb-3">
+                <p className="text-sm text-gray-500 flex items-center gap-1.5">
+                  <Calendar className="w-3.5 h-3.5 shrink-0" />
+                  {event.date}
+                </p>
+                <p className="text-sm text-gray-500 flex items-center gap-1.5">
+                  <MapPin className="w-3.5 h-3.5 shrink-0" />
+                  <span className="truncate">{event.location}</span>
+                </p>
+                {event.attendees && (
+                  <p className="text-sm text-gray-500 flex items-center gap-1.5">
+                    <Users className="w-3.5 h-3.5 shrink-0" />
+                    {event.attendees.toLocaleString()} attendees
+                  </p>
+                )}
+              </div>
+
+              {/* Description */}
+              <p className="text-sm text-gray-600 line-clamp-2 mb-4">
+                {event.description}
+              </p>
+
+              {/* Actions */}
+              <div className="flex items-center justify-between gap-2 pt-3 border-t border-gray-100">
                 <button
-                  className={`px-4 py-2 rounded-full text-sm font-medium ml-2 ${
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                     event.isJoined
-                      ? "bg-red-500 text-white hover:bg-red-600"
+                      ? "bg-red-50 text-red-600 hover:bg-red-100 border border-red-200"
                       : "bg-green-500 text-white hover:bg-green-600"
                   }`}
                 >
-                  {event.isJoined ? "Leave" : "Join"}
+                  {event.isJoined ? "Leave Event" : "Join Event"}
                 </button>
-              </div>
-              <p className="text-sm text-gray-600 mb-2">{event.date}</p>
-              <p className="text-sm text-gray-500 mb-3 line-clamp-2">{event.location}</p>
-              <p className="text-gray-700 mb-4 line-clamp-3">{event.description}</p>
-              <div className="flex items-center justify-between text-sm text-gray-500">
-                <span>{event.attendees} attendees</span>
-                <Calendar className="w-4 h-4" />
+
+                {/* View Details → links to /community/events/[id] */}
+                <Link
+                  href={`/community/${event.id}`}
+                  className="flex items-center gap-1.5 text-sm font-medium text-green-600 hover:text-green-700 transition-colors"
+                >
+                  View Details
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
               </div>
             </div>
           </div>
         ))}
       </div>
+
+      {/* View All */}
+      {events.length > 4 && (
+        <div className="text-center pt-2">
+          <Link
+            href="/community/events"
+            className="inline-flex items-center gap-2 px-6 py-3 border border-green-500 text-green-600 rounded-lg font-medium hover:bg-green-50 transition-colors"
+          >
+            View All Events
+            <ArrowRight className="w-4 h-4" />
+          </Link>
+        </div>
+      )}
     </div>
   );
 };

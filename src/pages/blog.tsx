@@ -1,124 +1,104 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Search, SlidersHorizontal } from "lucide-react";
+import { Search, SlidersHorizontal, Loader2 } from "lucide-react";
+import { useRouter } from "next/router";
 import Newsletter from "@/components/newsletter/Newsletter";
+import { getPublishedBlogs } from "@/services/blog";
+import { Blog, PaginatedBlogs, normaliseTags } from "@/types/blog";
 
-interface BlogPost {
-  id: string;
-  category: string;
-  image: string;
-  title: string;
-  excerpt: string;
-  author: string;
-  date: string;
+function formatDate(isoString: string): string {
+  return new Date(isoString).toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
 }
 
-const allBlogPosts: BlogPost[] = [
-  {
-    id: "1",
-    category: "LIVESTOCKS",
-    image: "/assets/blog1.png",
-    title: "Livestock Tips & Best Practices",
-    excerpt:
-      "Blimlävikt treskade i nibel den mobilissbruk dären jyn nöning osk hetreosk i rel ultran. Fåläss",
-    author: "Basäm",
-    date: "3 Nov 2025",
-  },
-  {
-    id: "2",
-    category: "UNCATEGORIZED",
-    image: "/assets/blog2.png",
-    title: "Agro-Business & Entrepreneurship",
-    excerpt:
-      "Blimlävikt treskade i nibel den mobilissbruk dären jyn nöning osk hetreosk i rel ultran. Fåläss",
-    author: "Basam",
-    date: "3 May 2025",
-  },
-  {
-    id: "3",
-    category: "FISHERY",
-    image: "/assets/blog3.png",
-    title: "Success Stories & Fishermen Spotlight",
-    excerpt:
-      "Blimlävikt treskade i nibel den mobilissbruk dären jyn nöning osk hetreosk i rel ultran. Fåläss",
-    author: "Basäm",
-    date: "3 Nov 2025",
-  },
-  {
-    id: "4",
-    category: "FRUITS",
-    image: "/assets/blog4.png",
-    title: "Market Trends & Prices",
-    excerpt:
-      "Blimlävikt treskade i nibel den mobilissbruk dären jyn nöning osk hetreosk i rel ultran. Fåläss",
-    author: "sinan",
-    date: "3 May 2025",
-  },
-  {
-    id: "5",
-    category: "LIVESTOCKS",
-    image: "/assets/blog1.png",
-    title: "Livestock Tips & Best Practices",
-    excerpt:
-      "Blimlävikt treskade i nibel den mobilissbruk dären jyn nöning osk hetreosk i rel ultran. Fåläss",
-    author: "Basäm",
-    date: "3 Nov 2025",
-  },
-  {
-    id: "6",
-    category: "UNCATEGORIZED",
-    image: "/assets/blog2.png",
-    title: "Agro-Business & Entrepreneurship",
-    excerpt:
-      "Blimlävikt treskade i nibel den mobilissbruk dären jyn nöning osk hetreosk i rel ultran. Fåläss",
-    author: "sinan",
-    date: "3 May 2025",
-  },
-];
-
-const categories = [
-  { name: "Agrochemical", count: 6 },
-  { name: "Food", count: 8 },
-  { name: "Farm machinery", count: 4 },
-  { name: "Fish & Aquatic", count: 5 },
-  { name: "Fresh Fruit", count: 7 },
-];
-
-const popularTags = [
-  "Cabbage",
-  "Broccoli",
-  "Smoothie",
-  "Fruit",
-  "Salad",
-  "Appetizer",
-];
-
-const filterOptions = [
-  { label: "Shopping", active: false },
-  { label: "Recipes", active: false },
-  { label: "Kitchen", active: false },
-  { label: "News", active: false },
-  { label: "Food", active: false },
-];
+const FALLBACK_IMAGE = "/assets/blog1.png";
+const filterLabels = ["Shopping", "Recipes", "Kitchen", "News", "Food"];
 
 export default function BlogPage() {
+  const [blogs, setBlogs] = useState<Blog[]>([]);
+  const [pagination, setPagination] = useState<PaginatedBlogs["meta"] | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
+  const [activeTag, setActiveTag] = useState<string | null>(null);
   const [selectedFilter, setSelectedFilter] = useState("Show All");
-  const [selectedSort, setSelectedSort] = useState("Sort: Featured");
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Show banner if redirected from detail page due to 401
+  const { query } = useRouter();
+  const showAuthBanner = query.error === "auth";
+
+  // ── Derived: unique tags ───────────────────────────────────
+  // normaliseTags handles both "a,b,c" string and ["a","b","c"] array
+  const allTags = Array.from(
+    new Set(blogs.flatMap((blog) => normaliseTags(blog.tags)))
+  );
+
+  // ── Derived: category name → count map ────────────────────
+  // blog.category is { id, name } | null — extract .name for the key
+  const categoryMap = blogs.reduce<Record<string, number>>((acc, blog) => {
+    const cat = blog.category?.name ?? "Uncategorized"; // ✅ .name, not the object
+    acc[cat] = (acc[cat] ?? 0) + 1;
+    return acc;
+  }, {});
+
+  const fetchBlogs = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await getPublishedBlogs(currentPage);
+      setBlogs(response.data);
+      setPagination(response.meta);
+    } catch (err) {
+      setError("Failed to load blog posts. Please try again.");
+      console.error(err);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [currentPage]);
+
+  useEffect(() => {
+    fetchBlogs();
+  }, [fetchBlogs]);
+
+  // ── Client-side filter ─────────────────────────────────────
+  const filteredBlogs = blogs.filter((blog) => {
+    const matchesSearch =
+      searchQuery === "" ||
+      blog.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      blog.description?.toLowerCase().includes(searchQuery.toLowerCase());
+
+    // normaliseTags so .includes() works whether tags is string or array
+    const matchesTag =
+      activeTag === null || normaliseTags(blog.tags).includes(activeTag);
+
+    return matchesSearch && matchesTag;
+  });
+
+  const totalPages = pagination?.last_page ?? 1;
+
+  const goToPage = (page: number) => {
+    if (page < 1 || page > totalPages) return;
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const pageNumbers = Array.from({ length: totalPages }, (_, i) => i + 1).filter(
+    (p) => p === 1 || p === totalPages || Math.abs(p - currentPage) <= 1
+  );
 
   return (
-    <div className="min-h-screen ">
-      {/* Hero Section */}
+    <div className="min-h-screen">
+      {/* Hero */}
       <section
         className="relative bg-cover bg-center bg-no-repeat py-16 px-4"
-        style={{
-          backgroundImage: "url('/assets/Footer.png')",
-          width: "100%",
-          height: "100%",
-        }}
+        style={{ backgroundImage: "url('/assets/Footer.png')" }}
       >
         <div className="max-w-7xl mx-auto">
           <div className="mb-8">
@@ -130,47 +110,44 @@ export default function BlogPage() {
               Blog & News
             </h1>
           </div>
-
-          {/* Filter Pills */}
           <div className="flex flex-wrap gap-3">
-            {filterOptions.map((option) => (
+            {filterLabels.map((label) => (
               <button
-                key={option.label}
+                key={label}
+                onClick={() =>
+                  setSelectedFilter(label === selectedFilter ? "Show All" : label)
+                }
                 className={`px-6 py-2 rounded-full border transition-all ${
-                  option.active
+                  selectedFilter === label
                     ? "bg-emerald-600 text-white border-emerald-600"
                     : "bg-white text-gray-700 border-gray-200 hover:border-emerald-600"
                 }`}
               >
-                {option.label}
+                {label}
               </button>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Main Content */}
+      {/* Main */}
       <section className="py-12 px-4">
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center justify-between mb-8">
             <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
               <span className="w-3 h-3 bg-emerald-600 rounded-sm"></span>
               Blog News
+              {pagination && (
+                <span className="text-sm font-normal text-gray-500 ml-2">
+                  ({pagination.total} posts)
+                </span>
+              )}
             </h2>
-
             <div className="flex items-center gap-4">
-              {/* Filter Dropdown */}
-              <div className="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-lg cursor-pointer">
+              <div className="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-lg">
                 <SlidersHorizontal className="w-4 h-4 text-gray-600" />
                 <span className="text-sm text-gray-700">{selectedFilter}</span>
               </div>
-
-              {/* Sort Dropdown */}
-              <div className="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-lg cursor-pointer">
-                <span className="text-sm text-gray-700">{selectedSort}</span>
-              </div>
-
-              {/* Search */}
               <div className="relative hidden md:block">
                 <input
                   type="text"
@@ -185,111 +162,202 @@ export default function BlogPage() {
           </div>
 
           <div className="grid lg:grid-cols-[1fr_320px] gap-8">
-            {/* Blog Posts Grid */}
             <div>
-              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-                {allBlogPosts.map((post) => (
-                  <Link
-                    key={post.id}
-                    href={`/blog/${post.id}`}
-                    className="group"
+              {/* Loading */}
+              {isLoading && (
+                <div className="flex items-center justify-center py-20">
+                  <Loader2 className="w-8 h-8 animate-spin text-emerald-600" />
+                  <span className="ml-3 text-gray-600">Loading posts...</span>
+                </div>
+              )}
+
+              {/* Error */}
+              {error && !isLoading && (
+                <div className="text-center py-20">
+                  <p className="text-red-500 mb-4">{error}</p>
+                  <button
+                    onClick={fetchBlogs}
+                    className="px-6 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700"
                   >
-                    <article className="cursor-pointer">
-                      <div className="relative aspect-[4/3] overflow-hidden rounded-lg mb-4">
-                        <span className="absolute top-3 left-3 z-10 bg-white px-3 py-1 text-xs font-medium uppercase tracking-wide rounded shadow-sm">
-                          {post.category}
-                        </span>
-                        <Image
-                          src={post.image}
-                          alt={post.title}
-                          fill
-                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                          className="object-cover transition-transform duration-300 group-hover:scale-105"
-                        />
-                      </div>
-                      <h3 className="text-lg font-bold text-gray-900 mb-2 group-hover:text-emerald-600 transition-colors line-clamp-2">
-                        {post.title}
-                      </h3>
-                      <p className="text-sm text-gray-600 mb-3 line-clamp-2">
-                        {post.excerpt}
-                      </p>
-                      <div className="flex items-center gap-2 text-sm text-gray-500">
-                        <span className="font-medium">by {post.author}</span>
-                        <span>•</span>
-                        <time>{post.date}</time>
-                      </div>
-                    </article>
-                  </Link>
-                ))}
-              </div>
+                    Retry
+                  </button>
+                </div>
+              )}
+
+              {/* Empty */}
+              {!isLoading && !error && filteredBlogs.length === 0 && (
+                <div className="text-center py-20 text-gray-500">
+                  <p className="text-lg">No blog posts found.</p>
+                  {searchQuery && (
+                    <button
+                      onClick={() => setSearchQuery("")}
+                      className="mt-3 text-emerald-600 underline"
+                    >
+                      Clear search
+                    </button>
+                  )}
+                </div>
+              )}
+
+              {/* Grid */}
+              {!isLoading && !error && filteredBlogs.length > 0 && (
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                  {filteredBlogs.map((post) => (
+                    <Link key={post.id} href={`/blog/${post.id}`} className="group">
+                      <article className="cursor-pointer">
+                        <div className="relative aspect-[4/3] overflow-hidden rounded-lg mb-4">
+                          {/* ✅ category is an object — use .name */}
+                          {post.category?.name && (
+                            <span className="absolute top-3 left-3 z-10 bg-white px-3 py-1 text-xs font-medium uppercase tracking-wide rounded shadow-sm">
+                              {post.category.name}
+                            </span>
+                          )}
+                          <Image
+                            src={post.image ?? FALLBACK_IMAGE} // ✅ field is "image" not "featured_image"
+                            alt={post.title}
+                            fill
+                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                            className="object-cover transition-transform duration-300 group-hover:scale-105"
+                          />
+                        </div>
+                        <h3 className="text-lg font-bold text-gray-900 mb-2 group-hover:text-emerald-600 transition-colors line-clamp-2">
+                          {post.title}
+                        </h3>
+                        <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+                          {post.description}
+                        </p>
+                        <div className="flex items-center gap-2 text-sm text-gray-500">
+                          {post.author?.avatar && (
+                            <img
+                              src={post.author.avatar}
+                              alt={post.author.name}
+                              className="w-5 h-5 rounded-full object-cover"
+                            />
+                          )}
+                          <span className="font-medium">by {post.author?.name}</span>
+                          <span>•</span>
+                          <time>{formatDate(post.created_at)}</time>
+                        </div>
+                        <div className="mt-4">
+                          <span className="inline-flex items-center gap-1 text-sm font-medium text-emerald-600 group-hover:gap-2 transition-all">
+                            Read More →
+                          </span>
+                        </div>
+                      </article>
+                    </Link>
+                  ))}
+                </div>
+              )}
 
               {/* Pagination */}
-              <div className="flex items-center justify-center gap-2">
-                <button className="px-3 py-2 border border-gray-200 rounded-lg hover:bg-gray-50">
-                  ‹
-                </button>
-                <button className="px-4 py-2 bg-emerald-600 text-white rounded-lg">
-                  1
-                </button>
-                <button className="px-4 py-2 border border-gray-200 rounded-lg hover:bg-gray-50">
-                  2
-                </button>
-                <button className="px-4 py-2 border border-gray-200 rounded-lg hover:bg-gray-50">
-                  3
-                </button>
-                <button className="px-3 py-2 border border-gray-200 rounded-lg hover:bg-gray-50">
-                  ›
-                </button>
-              </div>
+              {!isLoading && totalPages > 1 && (
+                <div className="flex items-center justify-center gap-2">
+                  <button
+                    onClick={() => goToPage(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    className="px-3 py-2 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    ‹
+                  </button>
+                  {pageNumbers.map((page, i) => {
+                    const prev = pageNumbers[i - 1];
+                    const showEllipsis = prev !== undefined && page - prev > 1;
+                    return (
+                      <span key={page} className="flex items-center gap-2">
+                        {showEllipsis && (
+                          <span className="px-2 text-gray-400">...</span>
+                        )}
+                        <button
+                          onClick={() => goToPage(page)}
+                          className={`px-4 py-2 rounded-lg transition-colors ${
+                            currentPage === page
+                              ? "bg-emerald-600 text-white"
+                              : "border border-gray-200 hover:bg-gray-50"
+                          }`}
+                        >
+                          {page}
+                        </button>
+                      </span>
+                    );
+                  })}
+                  <button
+                    onClick={() => goToPage(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                    className="px-3 py-2 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    ›
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Sidebar */}
             <aside className="space-y-6">
-              {/* Category Widget */}
+              {/* Categories */}
               <div className="bg-white border border-gray-200 rounded-xl p-6">
-                <h3 className="text-lg font-bold text-gray-900 mb-4">
-                  Category
-                </h3>
-                <div className="space-y-3">
-                  {categories.map((category) => (
-                    <div
-                      key={category.name}
-                      className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-emerald-50 cursor-pointer transition-colors"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
-                          <span className="text-emerald-600 text-sm">🌿</span>
+                <h3 className="text-lg font-bold text-gray-900 mb-4">Category</h3>
+                {isLoading ? (
+                  <div className="space-y-2">
+                    {[...Array(4)].map((_, i) => (
+                      <div key={i} className="h-12 bg-gray-100 rounded-lg animate-pulse" />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {Object.entries(categoryMap).map(([name, count]) => (
+                      <div
+                        key={name}
+                        className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-emerald-50 cursor-pointer transition-colors"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
+                            <span className="text-emerald-600 text-sm">🌿</span>
+                          </div>
+                          <span className="text-sm font-medium text-gray-700">{name}</span>
                         </div>
-                        <span className="text-sm font-medium text-gray-700">
-                          {category.name}
-                        </span>
+                        <span className="text-sm text-gray-500">{count}</span>
                       </div>
-                      <span className="text-sm text-gray-500">
-                        {category.count}
-                      </span>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                    {Object.keys(categoryMap).length === 0 && (
+                      <p className="text-sm text-gray-400 text-center py-4">No categories yet</p>
+                    )}
+                  </div>
+                )}
                 <button className="w-full mt-4 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors">
                   View All
                 </button>
               </div>
 
-              {/* Popular Tags */}
+              {/* Tags */}
               <div className="bg-white border border-gray-200 rounded-xl p-6">
-                <h3 className="text-lg font-bold text-gray-900 mb-4">
-                  Popular Tags
-                </h3>
-                <div className="flex flex-wrap gap-2">
-                  {popularTags.map((tag) => (
-                    <button
-                      key={tag}
-                      className="px-4 py-2 bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-100 transition-colors text-sm"
-                    >
-                      {tag}
-                    </button>
-                  ))}
-                </div>
+                <h3 className="text-lg font-bold text-gray-900 mb-4">Popular Tags</h3>
+                {isLoading ? (
+                  <div className="flex flex-wrap gap-2">
+                    {[...Array(5)].map((_, i) => (
+                      <div key={i} className="h-8 w-20 bg-gray-100 rounded-lg animate-pulse" />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex flex-wrap gap-2">
+                    {allTags.length > 0 ? (
+                      allTags.map((tag) => (
+                        <button
+                          key={tag}
+                          onClick={() => setActiveTag(activeTag === tag ? null : tag)}
+                          className={`px-4 py-2 rounded-lg transition-colors text-sm ${
+                            activeTag === tag
+                              ? "bg-emerald-600 text-white"
+                              : "bg-emerald-50 text-emerald-600 hover:bg-emerald-100"
+                          }`}
+                        >
+                          {tag}
+                        </button>
+                      ))
+                    ) : (
+                      <p className="text-sm text-gray-400">No tags found</p>
+                    )}
+                  </div>
+                )}
               </div>
             </aside>
           </div>

@@ -3,7 +3,6 @@
 import React, { useState } from "react";
 import { Plus } from "lucide-react";
 
-// Components
 import LeftSidebar from "../components/community/LeftSidebar";
 import RightSidebar from "../components/community/RightSidebar";
 import CommunityHeader from "../components/community/CommunityHeader";
@@ -12,10 +11,8 @@ import PeopleTab from "../components/community/PeopleTab";
 import AboutTab from "../components/community/AboutTab";
 import EventsTab from "../components/community/EventsTab";
 import SettingsTab from "../components/community/SettingsTab";
-import CreateEventModal from "../components/community/CreateEventModal";
 import CreateCommunityModal from "../components/community/CreateCommunityModal";
 
-// Data & Types
 import {
   communities,
   events,
@@ -23,38 +20,14 @@ import {
   members,
   initialPosts,
 } from "../data/mockData";
-import { NewEvent, NewCommunity } from "../types/community";
-
-const DEFAULT_NEW_EVENT: NewEvent = {
-  title: "",
-  date: "",
-  time: "",
-  location: "",
-  isOnline: false,
-  description: "",
-  image: null,
-  previewImage: null,
-  attendees: null,
-};
+import { NewCommunity } from "../types/community";
 
 const CommunityFeed: React.FC = () => {
-  const [mainSection, setMainSection] = useState<
-    "Community" | "Events" | "Settings"
-  >("Community");
+  const [mainSection, setMainSection] = useState<"Community" | "Events" | "Settings">("Community");
   const [activeTab, setActiveTab] = useState("Feed");
   const [posts] = useState(initialPosts);
 
-  // Modals
-  const [showCreateEvent, setShowCreateEvent] = useState(false);
   const [showCreateCommunity, setShowCreateCommunity] = useState(false);
-  const [newEvent, setNewEvent] = useState<NewEvent>(DEFAULT_NEW_EVENT);
-
-  const handleEventSubmit = () => {
-    alert("Event submitted for approval! Admin will review it soon.");
-    setShowCreateEvent(false);
-    setNewEvent(DEFAULT_NEW_EVENT);
-  };
-
   const handleCommunitySubmit = (community: NewCommunity) => {
     alert(`Community "${community.name}" created successfully! 🎉`);
   };
@@ -94,61 +67,32 @@ const CommunityFeed: React.FC = () => {
       {/* Main Layout */}
       <div className="max-w-7xl mx-auto p-4 sm:p-6">
         <div className="flex flex-col lg:flex-row gap-6">
-          {/* Left Sidebar */}
           <aside className="hidden lg:block w-64 shrink-0">
-            <LeftSidebar
-              mainSection={mainSection}
-              communities={communities}
-              events={events}
-            />
+            <LeftSidebar mainSection={mainSection} communities={communities} events={events} />
           </aside>
 
-          {/* Main Content */}
           <main className="flex-1 w-full lg:max-w-2xl">
             {mainSection === "Community" && (
               <>
-                <CommunityHeader
-                  activeTab={activeTab}
-                  onTabChange={setActiveTab}
-                />
+                <CommunityHeader activeTab={activeTab} onTabChange={setActiveTab} />
                 {activeTab === "Feed" && <FeedTab posts={posts} />}
                 {activeTab === "People" && <PeopleTab members={members} />}
                 {activeTab === "About" && <AboutTab />}
               </>
             )}
             {mainSection === "Events" && (
-              <EventsTab
-                events={events}
-                onCreateEvent={() => setShowCreateEvent(true)}
-              />
+              <EventsTab events={events} />
             )}
             {mainSection === "Settings" && <SettingsTab members={members} />}
           </main>
 
-          {/* Right Sidebar */}
           <aside className="hidden lg:block w-72 shrink-0">
-            <RightSidebar
-              mainSection={mainSection}
-              trendingTopics={trendingTopics}
-              events={events}
-            />
+            <RightSidebar mainSection={mainSection} trendingTopics={trendingTopics} events={events} />
           </aside>
         </div>
       </div>
 
       {/* Modals */}
-      {showCreateEvent && (
-        <CreateEventModal
-          newEvent={newEvent}
-          onChange={setNewEvent}
-          onClose={() => {
-            setShowCreateEvent(false);
-            setNewEvent(DEFAULT_NEW_EVENT);
-          }}
-          onSubmit={handleEventSubmit}
-        />
-      )}
-
       {showCreateCommunity && (
         <CreateCommunityModal
           onClose={() => setShowCreateCommunity(false)}

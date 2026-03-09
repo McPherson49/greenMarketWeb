@@ -40,11 +40,15 @@ export interface Event {
   id: string;
   name: string;
   date: string;
+  time?: string;
   location: string;
   icon: string;
   description?: string;
   attendees?: number;
   isJoined?: boolean;
+  isOnline?: boolean;
+  meetingLink?: string;
+  registrationLink?: string;
 }
 
 export interface TrendingTopic {
@@ -73,6 +77,8 @@ export interface NewEvent {
   image: File | null;
   previewImage: string | null;
   attendees: number | null;
+  meetingLink: string;       
+  registrationLink: string;  
 }
 
 export interface NewCommunity {
