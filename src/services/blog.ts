@@ -53,7 +53,7 @@ export async function getBlogs(params?: {
 // GET /blogs  — public listing (token attached automatically if logged in)
 // Falls back gracefully — once backend makes this public, works for everyone
 export async function getPublishedBlogs(page = 1): Promise<PaginatedBlogs> {
-  const { data } = await ApiFetcher.get<RawApiResponse>("/blogs", {
+  const { data } = await ApiFetcher.get<RawApiResponse>("/blogs/", {
     params: { page },
   });
   return normalise(data);

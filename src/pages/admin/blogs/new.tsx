@@ -5,24 +5,39 @@ import Image from 'next/image';
 import { useRouter } from 'next/router';
 import { Save, X, Image as ImageIcon, Loader2, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
-import ApiFetcher from '@/utils/apis'; 
+import ApiFetcher from '@/utils/apis';
 
+// ─────────────────────────────────────────────────────────────
+// API fields (from Postman docs + confirmed live response):
+//
+// REQUIRED:  title, description, status
+// OPTIONAL:  category_id, section_title, subtitle,
+//            section_description, image (file)
+//
+// NOTE: "description" is the main blog content (long form).
+//       "section_description" is an optional extra section body.
+//       There is no separate "content" field.
+// ─────────────────────────────────────────────────────────────
 interface BlogForm {
   title: string;
-  content: string;
-  description: string;  // ← API requires this field name
-  tags: string;
+  description: string;        // main content — required
   status: 'published' | 'draft';
-  featured_image: File | null;
+  section_title: string;      // optional
+  subtitle: string;           // optional
+  section_description: string; // optional
+  tags: string;
+  image: File | null;
 }
 
 const EMPTY_FORM: BlogForm = {
   title: '',
-  content: '',
   description: '',
-  tags: '',
   status: 'draft',
-  featured_image: null,
+  section_title: '',
+  subtitle: '',
+  section_description: '',
+  tags: '',
+  image: null,
 };
 
 export default function NewBlogPost() {
@@ -36,20 +51,25 @@ export default function NewBlogPost() {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    setFormData((prev) => ({ ...prev, featured_image: file }));
+    if (file.size > 2 * 1024 * 1024) {
+      setServerError('Image must be smaller than 2MB. Please compress or resize it and try again.');
+      e.target.value = '';
+      return;
+    }
+    setServerError(null);
+    setFormData((prev) => ({ ...prev, image: file }));
     setPreviewImage(URL.createObjectURL(file));
   };
 
   const removeImage = () => {
-    setFormData((prev) => ({ ...prev, featured_image: null }));
+    setFormData((prev) => ({ ...prev, image: null }));
     setPreviewImage(null);
   };
 
   const validate = (): boolean => {
     const newErrors: Partial<Record<keyof BlogForm, string>> = {};
     if (!formData.title.trim())       newErrors.title       = 'Title is required';
-    if (!formData.content.trim())     newErrors.content     = 'Content is required';
-    if (!formData.description.trim()) newErrors.description = 'Description is required';
+    if (!formData.description.trim()) newErrors.description = 'Content is required';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -63,31 +83,65 @@ export default function NewBlogPost() {
 
     try {
       const body = new FormData();
+
+      // ── Required fields ──────────────────────────────────
       body.append('title',       formData.title.trim());
-      body.append('content',     formData.content.trim());
       body.append('description', formData.description.trim());
       body.append('status',      formData.status);
 
-      // Tags: send as plain comma-separated string exactly as Postman docs show
-      // e.g. "farming,agriculture,modern"
+      // ── Optional fields — only append if filled ──────────
+      if (formData.section_title.trim())
+        body.append('section_title', formData.section_title.trim());
+
+      if (formData.subtitle.trim())
+        body.append('subtitle', formData.subtitle.trim());
+
+      if (formData.section_description.trim())
+        body.append('section_description', formData.section_description.trim());
+
       if (formData.tags.trim()) {
         const tagList = formData.tags.split(',').map((t) => t.trim()).filter(Boolean).join(',');
         body.append('tags', tagList);
       }
 
-      // Only append image if one was selected — server may crash on empty file field
-      if (formData.featured_image instanceof File) {
-        body.append('featured_image', formData.featured_image);
+      // ── Image — only append if a file was selected ───────
+      // Never append an empty file field — server crashes on it
+      if (formData.image instanceof File) {
+        body.append('image', formData.image);
       }
 
-      await ApiFetcher.post('/blogs', body, {
-        // No Content-Type — axios sets multipart/form-data + boundary automatically
-      });
+      // ── Use native fetch for multipart/FormData with file uploads ──
+      // Axios can corrupt the FormData boundary in some browsers when
+      // files are included, causing the server to reject the image as
+      // invalid. Native fetch handles FormData file uploads correctly.
+      const token = `Bearer ${sessionStorage.getItem('jwt') ?? ''}`;
+
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/blogs`,
+        {
+          method: 'POST',
+          headers: {
+            Accept: 'application/json',
+            Authorization: token,
+            // NO Content-Type — browser sets multipart/form-data + boundary automatically
+          },
+          body,
+        }
+      );
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        const allErrors = (data?.errors && typeof data.errors === 'object')
+          ? Object.entries(data.errors as Record<string, string[]>)
+              .map(([field, msgs]) => `• ${field}: ${msgs[0]}`)
+              .join('\n')
+          : (data?.message as string) ?? `Server error ${res.status}`;
+        throw new Error(allErrors);
+      }
 
       router.push('/admin/blogs');
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Something went wrong';
-      setServerError(message);
+      setServerError(err instanceof Error ? err.message : 'Something went wrong');
     } finally {
       setIsSaving(false);
     }
@@ -121,26 +175,21 @@ export default function NewBlogPost() {
             className="flex items-center gap-3 bg-green-500 hover:bg-green-600 disabled:opacity-60 text-white px-8 py-3 rounded-lg font-semibold transition-colors shadow-md"
           >
             {isSaving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
-            {isSaving ? 'Publishing...' : 'Publish Post'}
+            {isSaving ? 'Saving...' : 'Save Post'}
           </button>
         </div>
 
-        {/* Server error — shows all API validation errors */}
+        {/* Server error */}
         {serverError && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-5 py-4 rounded-xl text-sm whitespace-pre-line">
-            <p className="font-semibold mb-2">Could not save:</p>
+            <p className="font-semibold mb-1">Could not save:</p>
             <p>{serverError}</p>
-            {serverError.includes('500') && (
-              <p className="mt-3 text-xs text-red-500 border-t border-red-200 pt-2">
-                Tip: Try submitting without an image first to rule out an upload issue.
-              </p>
-            )}
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="grid lg:grid-cols-3 gap-8">
 
-          {/* Left Column */}
+          {/* ── Left Column ──────────────────────────────────── */}
           <div className="lg:col-span-2 space-y-8">
 
             {/* Title */}
@@ -158,18 +207,35 @@ export default function NewBlogPost() {
               {errors.title && <p className="text-red-500 text-sm mt-2">{errors.title}</p>}
             </div>
 
-            {/* Description */}
+            {/* Subtitle (optional) */}
             <div className="bg-white rounded-2xl border border-gray-200 p-8 shadow-sm">
-              <label className="block text-lg font-semibold text-gray-900 mb-4">
-                Description <span className="text-red-500">*</span>
+              <label className="block text-lg font-semibold text-gray-900 mb-1">
+                Subtitle <span className="text-gray-400 text-sm font-normal">(optional)</span>
               </label>
-              <p className="text-sm text-gray-500 mb-3">A short summary shown on the blog listing page.</p>
+              <p className="text-sm text-gray-500 mb-3">A short tagline shown under the title.</p>
+              <input
+                type="text"
+                value={formData.subtitle}
+                onChange={set('subtitle')}
+                placeholder="e.g. A brief overview of modern techniques"
+                className="w-full px-5 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500"
+              />
+            </div>
+
+            {/* Main Content / Description — REQUIRED */}
+            <div className="bg-white rounded-2xl border border-gray-200 p-8 shadow-sm">
+              <label className="block text-lg font-semibold text-gray-900 mb-1">
+                Content <span className="text-red-500">*</span>
+              </label>
+              <p className="text-sm text-gray-500 mb-3">
+                The main body of the blog post. This is the <code className="bg-gray-100 px-1 rounded">description</code> field sent to the API.
+              </p>
               <textarea
                 value={formData.description}
                 onChange={set('description')}
-                rows={3}
-                placeholder="Brief description of the post..."
-                className="w-full px-5 py-4 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 resize-none"
+                rows={16}
+                placeholder="Write your blog post content here..."
+                className="w-full px-5 py-4 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 resize-none leading-relaxed"
               />
               {errors.description && <p className="text-red-500 text-sm mt-2">{errors.description}</p>}
             </div>
@@ -186,7 +252,7 @@ export default function NewBlogPost() {
                     <button type="button" onClick={removeImage} className="absolute top-3 right-3 bg-white hover:bg-gray-100 p-2.5 rounded-full shadow-lg">
                       <X className="w-5 h-5 text-red-600" />
                     </button>
-                    <p className="text-xs text-gray-500 mt-3">{formData.featured_image?.name}</p>
+                    <p className="text-xs text-gray-500 mt-3">{formData.image?.name}</p>
                   </div>
                 ) : (
                   <label className="cursor-pointer block">
@@ -194,30 +260,46 @@ export default function NewBlogPost() {
                     <div className="space-y-3">
                       <ImageIcon className="w-14 h-14 mx-auto text-gray-400" />
                       <p className="text-base font-medium text-gray-700">Click to upload an image</p>
-                      <p className="text-sm text-gray-400">PNG, JPG, WEBP up to 10MB</p>
+                      <p className="text-sm text-gray-400">PNG, JPG, WEBP · Max 2MB</p>
                     </div>
                   </label>
                 )}
               </div>
             </div>
 
-            {/* Content */}
+            {/* Section (optional) */}
             <div className="bg-white rounded-2xl border border-gray-200 p-8 shadow-sm">
-              <label className="block text-lg font-semibold text-gray-900 mb-4">
-                Content <span className="text-red-500">*</span>
-              </label>
-              <textarea
-                value={formData.content}
-                onChange={set('content')}
-                rows={18}
-                placeholder="Write your blog post content here..."
-                className="w-full px-5 py-4 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 resize-none leading-relaxed"
-              />
-              {errors.content && <p className="text-red-500 text-sm mt-2">{errors.content}</p>}
+              <div className="flex items-center gap-2 mb-1">
+                <h3 className="text-lg font-semibold text-gray-900">Extra Section</h3>
+                <span className="text-sm text-gray-400 font-normal">(optional)</span>
+              </div>
+              <p className="text-sm text-gray-500 mb-6">Add a secondary content section with its own title and body.</p>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Section Title</label>
+                  <input
+                    type="text"
+                    value={formData.section_title}
+                    onChange={set('section_title')}
+                    placeholder="e.g. Introduction"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Section Body</label>
+                  <textarea
+                    value={formData.section_description}
+                    onChange={set('section_description')}
+                    rows={6}
+                    placeholder="This section introduces the topic..."
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 resize-none"
+                  />
+                </div>
+              </div>
             </div>
           </div>
 
-          {/* Right Sidebar */}
+          {/* ── Right Sidebar ─────────────────────────────────── */}
           <div className="space-y-6">
 
             {/* Status */}
@@ -244,7 +326,7 @@ export default function NewBlogPost() {
             {/* Tags */}
             <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
               <h3 className="font-semibold text-gray-900 mb-1">Tags</h3>
-              <p className="text-xs text-gray-500 mb-3">Separate with commas: farming, fruits, tips</p>
+              <p className="text-xs text-gray-500 mb-3">Separate with commas</p>
               <input
                 type="text"
                 value={formData.tags}
@@ -259,9 +341,10 @@ export default function NewBlogPost() {
               <h3 className="font-semibold text-green-800 mb-3">Writing Tips</h3>
               <ul className="space-y-2 text-sm text-green-700">
                 <li>• Keep your title under 70 characters</li>
-                <li>• Write a clear, concise description</li>
+                <li>• The Content field is the main blog body</li>
                 <li>• Use a high-quality featured image</li>
                 <li>• Add relevant tags to improve discovery</li>
+                <li>• Use Extra Section for supplementary info</li>
               </ul>
             </div>
           </div>

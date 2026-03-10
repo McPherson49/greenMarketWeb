@@ -265,7 +265,7 @@ export default function EventDetailPage() {
                   {relatedEvents.map((e: Event) => (
                     <Link
                       key={e.id}
-                      href={`/community/events/${e.id}`}
+                      href={`/community/${e.id}`}
                       className="flex items-start gap-3 group"
                     >
                       <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center text-xl shrink-0">

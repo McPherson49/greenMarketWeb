@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Search, SlidersHorizontal, Loader2 } from "lucide-react";
-import { useRouter } from "next/router";
 import Newsletter from "@/components/newsletter/Newsletter";
 import { getPublishedBlogs } from "@/services/blog";
 import { Blog, PaginatedBlogs, normaliseTags } from "@/types/blog";
@@ -18,7 +17,7 @@ function formatDate(isoString: string): string {
 }
 
 const FALLBACK_IMAGE = "/assets/blog1.png";
-const filterLabels = ["Shopping", "Recipes", "Kitchen", "News", "Food"];
+// const filterLabels = ["Shopping", "Recipes", "Kitchen", "News", "Food"];
 
 export default function BlogPage() {
   const [blogs, setBlogs] = useState<Blog[]>([]);
@@ -30,9 +29,6 @@ export default function BlogPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Show banner if redirected from detail page due to 401
-  const { query } = useRouter();
-  const showAuthBanner = query.error === "auth";
 
   // ── Derived: unique tags ───────────────────────────────────
   // normaliseTags handles both "a,b,c" string and ["a","b","c"] array
@@ -97,7 +93,7 @@ export default function BlogPage() {
     <div className="min-h-screen">
       {/* Hero */}
       <section
-        className="relative bg-cover bg-center bg-no-repeat py-16 px-4"
+        className="relative bg-cover bg-center bg-no-repeat py-2 md:py-8 px-4"
         style={{ backgroundImage: "url('/assets/Footer.png')" }}
       >
         <div className="max-w-7xl mx-auto">
@@ -110,7 +106,7 @@ export default function BlogPage() {
               Blog & News
             </h1>
           </div>
-          <div className="flex flex-wrap gap-3">
+          {/* <div className="flex flex-wrap gap-3">
             {filterLabels.map((label) => (
               <button
                 key={label}
@@ -126,7 +122,7 @@ export default function BlogPage() {
                 {label}
               </button>
             ))}
-          </div>
+          </div> */}
         </div>
       </section>
 
@@ -143,7 +139,7 @@ export default function BlogPage() {
                 </span>
               )}
             </h2>
-            <div className="flex items-center gap-4">
+            {/* <div className="flex items-center gap-4">
               <div className="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-lg">
                 <SlidersHorizontal className="w-4 h-4 text-gray-600" />
                 <span className="text-sm text-gray-700">{selectedFilter}</span>
@@ -158,10 +154,10 @@ export default function BlogPage() {
                 />
                 <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
               </div>
-            </div>
+            </div> */}
           </div>
 
-          <div className="grid lg:grid-cols-[1fr_320px] gap-8">
+          <div className="grid">
             <div>
               {/* Loading */}
               {isLoading && (
@@ -201,10 +197,10 @@ export default function BlogPage() {
 
               {/* Grid */}
               {!isLoading && !error && filteredBlogs.length > 0 && (
-                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8 ">
                   {filteredBlogs.map((post) => (
                     <Link key={post.id} href={`/blog/${post.id}`} className="group">
-                      <article className="cursor-pointer">
+                      <article className="cursor-pointer border border-gray-200 rounded-lg p-4 hover:shadow-lg transition-shadow h-full flex flex-col">
                         <div className="relative aspect-[4/3] overflow-hidden rounded-lg mb-4">
                           {/* ✅ category is an object — use .name */}
                           {post.category?.name && (
@@ -292,8 +288,7 @@ export default function BlogPage() {
             </div>
 
             {/* Sidebar */}
-            <aside className="space-y-6">
-              {/* Categories */}
+            {/* <aside  className="space-y-6">
               <div className="bg-white border border-gray-200 rounded-xl p-6">
                 <h3 className="text-lg font-bold text-gray-900 mb-4">Category</h3>
                 {isLoading ? (
@@ -328,7 +323,6 @@ export default function BlogPage() {
                 </button>
               </div>
 
-              {/* Tags */}
               <div className="bg-white border border-gray-200 rounded-xl p-6">
                 <h3 className="text-lg font-bold text-gray-900 mb-4">Popular Tags</h3>
                 {isLoading ? (
@@ -359,7 +353,7 @@ export default function BlogPage() {
                   </div>
                 )}
               </div>
-            </aside>
+            </aside> */}
           </div>
         </div>
       </section>

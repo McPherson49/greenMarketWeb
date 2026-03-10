@@ -25,13 +25,11 @@ export default function AdminBlogsPage() {
   const [blogToDelete, setBlogToDelete] = useState<number | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // ── Fetch all blogs ────────────────────────────────────────
-  // Uses ApiFetcher — token attached automatically via interceptor
   const fetchBlogs = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
-      const { data } = await ApiFetcher.get('/blogs');
+      const { data } = await ApiFetcher.get('/admin/blogs');
       // API shape: { success, data: { data: [...blogs] } }
       setBlogs(data?.data?.data ?? []);
     } catch (err) {
@@ -56,7 +54,7 @@ export default function AdminBlogsPage() {
     if (!blogToDelete) return;
     setIsDeleting(true);
     try {
-      await ApiFetcher.delete(`/blogs/${blogToDelete}`);
+      await ApiFetcher.delete(`admin/blogs/${blogToDelete}`);
       setBlogs((prev) => prev.filter((b) => b.id !== blogToDelete));
       setDeleteModalOpen(false);
       setBlogToDelete(null);
@@ -146,7 +144,7 @@ export default function AdminBlogsPage() {
                           <div className="flex items-center gap-4">
                             <div className="relative w-16 h-16 rounded-lg overflow-hidden shrink-0 bg-gray-100">
                               <Image
-                                src={blog.image ?? FALLBACK_IMAGE}  // ✅ "image" not "featured_image"
+                                src={blog.image ?? FALLBACK_IMAGE}
                                 alt={blog.title}
                                 fill
                                 className="object-cover"

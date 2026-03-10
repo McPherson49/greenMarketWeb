@@ -1,4 +1,4 @@
-// NO "use client" — this is a server-side rendered page
+// NO "use client" — server-side rendered
 import Image from "next/image";
 import Link from "next/link";
 import { Calendar, User, ArrowLeft, Clock } from "lucide-react";
@@ -13,8 +13,8 @@ function formatDate(isoString: string): string {
   });
 }
 
-function getReadTime(content: string): string {
-  const words = content?.trim().split(/\s+/).length ?? 0;
+function getReadTime(text: string): string {
+  const words = text?.trim().split(/\s+/).length ?? 0;
   const minutes = Math.max(1, Math.ceil(words / 200));
   return `${minutes} min read`;
 }
@@ -22,17 +22,6 @@ function getReadTime(content: string): string {
 const FALLBACK_IMAGE = "/assets/blog1.png";
 const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
-// ─────────────────────────────────────────────────────────────
-// Server-safe fetchers using plain fetch() — NOT ApiFetcher.
-//
-// WHY: getServerSideProps runs in Node.js on the server.
-// ApiFetcher uses axios + localStorage (getAuthToken), but
-// localStorage does not exist in Node.js — it crashes silently
-// and Next.js returns a 404.
-//
-// Plain fetch() works fine in both Node.js and the browser.
-// No token needed here since these are public read endpoints.
-// ─────────────────────────────────────────────────────────────
 async function serverGetBlog(id: string): Promise<Blog> {
   const res = await fetch(`${BASE_URL}/blogs/${id}`, {
     headers: { Accept: "application/json" },
@@ -48,7 +37,6 @@ async function serverGetBlogs(page = 1): Promise<PaginatedBlogs> {
   });
   if (!res.ok) throw new Error(`Failed to fetch blogs: ${res.status}`);
   const json = await res.json();
-  // API shape: { success, data: { data: [...], current_page, last_page, ... } }
   return {
     data: json.data?.data ?? [],
     meta: {
@@ -75,26 +63,18 @@ interface BlogDetailPageProps {
 export const getServerSideProps: GetServerSideProps<BlogDetailPageProps> = async ({ params }) => {
   const id = params?.id as string;
 
-  // Fetch the main blog post — if this fails, show 404
   let blogPost: Blog;
   try {
     blogPost = await serverGetBlog(id);
   } catch (error: unknown) {
     const status = (error as Error).message.match(/\d{3}/)?.[0];
     if (status === "401" || status === "403") {
-      // API not public yet — redirect to blog list with a message
-      return {
-        redirect: {
-          destination: "/blog?error=auth",
-          permanent: false,
-        },
-      };
+      return { redirect: { destination: "/blog?error=auth", permanent: false } };
     }
     console.error("Blog fetch failed:", error);
     return { notFound: true };
   }
 
-  // Fetch sidebar data — non-critical, fail silently
   let trendingPosts: Blog[] = [];
   let allTags: string[] = [];
   try {
@@ -103,25 +83,22 @@ export const getServerSideProps: GetServerSideProps<BlogDetailPageProps> = async
       .filter((b: Blog) => String(b.id) !== id)
       .slice(0, 4);
     allTags = Array.from(
-      new Set<string>(
-        allBlogsResponse.data.flatMap((b: Blog) => normaliseTags(b.tags))
-      )
+      new Set<string>(allBlogsResponse.data.flatMap((b: Blog) => normaliseTags(b.tags)))
     );
   } catch {
-    // Sidebar data unavailable — page still renders without it
+    // sidebar fails silently
   }
 
-  return {
-    props: { blogPost, trendingPosts, allTags },
-  };
+  return { props: { blogPost, trendingPosts, allTags } };
 };
 
-export default function BlogDetailPage({
-  blogPost,
-  trendingPosts,
-  allTags,
-}: BlogDetailPageProps) {
+export default function BlogDetailPage({ blogPost, trendingPosts, allTags }: BlogDetailPageProps) {
   const tags = normaliseTags(blogPost.tags);
+
+  // Use description as the main readable content for read time
+  const readTimeText = blogPost.description
+    ? getReadTime(blogPost.description)
+    : null;
 
   return (
     <div className="min-h-screen bg-white">
@@ -141,7 +118,6 @@ export default function BlogDetailPage({
 
       <div className="py-8 px-4">
         <div className="max-w-7xl mx-auto">
-
           <Link
             href="/blog"
             className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-emerald-600 mb-6 transition-colors"
@@ -150,20 +126,31 @@ export default function BlogDetailPage({
             Back to Blog
           </Link>
 
-          <div className="grid lg:grid-cols-[1fr_340px] gap-8">
+          <div className="grid lg:grid-cols-[1fr_340px] gap-5">
 
-            {/* Article */}
+            {/* ── Article ─────────────────────────────────────── */}
             <article className="max-w-3xl">
+
+              {/* Category badge */}
               {blogPost.category?.name && (
                 <span className="inline-block bg-emerald-100 text-emerald-600 px-4 py-1.5 rounded-full text-xs font-medium mb-4 uppercase">
                   {blogPost.category.name}
                 </span>
               )}
 
-              <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6 leading-tight">
+              {/* Title */}
+              <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3 leading-tight">
                 {blogPost.title}
               </h1>
 
+              {/* Subtitle */}
+              {blogPost.subtitle && (
+                <p className="text-xl text-gray-500 mb-6 leading-relaxed">
+                  {blogPost.subtitle}
+                </p>
+              )}
+
+              {/* Author + date + read time */}
               <div className="flex items-center gap-6 mb-6 pb-6 border-b border-gray-200">
                 <div className="flex items-center gap-2">
                   <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center flex-shrink-0">
@@ -174,10 +161,10 @@ export default function BlogDetailPage({
                   </div>
                   <div>
                     <p className="text-sm font-medium text-gray-900">By {blogPost.author?.name}</p>
-                    {blogPost.content && (
+                    {readTimeText && (
                       <p className="text-xs text-gray-500 flex items-center gap-1">
                         <Clock className="w-3 h-3" />
-                        {getReadTime(blogPost.content)}
+                        {readTimeText}
                       </p>
                     )}
                   </div>
@@ -188,6 +175,7 @@ export default function BlogDetailPage({
                 </div>
               </div>
 
+              {/* Featured image */}
               <div className="relative aspect-[16/10] mb-8 rounded-2xl overflow-hidden">
                 <Image
                   src={blogPost.image ?? FALLBACK_IMAGE}
@@ -198,21 +186,30 @@ export default function BlogDetailPage({
                 />
               </div>
 
+              {/* Main content — description field */}
               {blogPost.description && (
-                <p className="text-lg text-gray-600 mb-6 leading-relaxed border-l-4 border-emerald-400 pl-4 italic">
-                  {blogPost.description}
-                </p>
+                <div className="prose prose-lg max-w-none mb-8 text-gray-700 leading-relaxed">
+                  <p>{blogPost.description}</p>
+                </div>
               )}
 
-              {blogPost.content ? (
-                <div
-                  className="prose prose-lg max-w-none mb-8 text-gray-700 leading-relaxed"
-                  dangerouslySetInnerHTML={{ __html: blogPost.content }}
-                />
-              ) : (
-                <p className="text-gray-400 italic">No content available.</p>
+              {/* Extra section */}
+              {(blogPost.section_title || blogPost.section_description) && (
+                <div className="mt-8 p-6 bg-emerald-50 rounded-2xl border border-emerald-100">
+                  {blogPost.section_title && (
+                    <h2 className="text-xl font-bold text-gray-900 mb-3">
+                      {blogPost.section_title}
+                    </h2>
+                  )}
+                  {blogPost.section_description && (
+                    <p className="text-gray-700 leading-relaxed">
+                      {blogPost.section_description}
+                    </p>
+                  )}
+                </div>
               )}
 
+              {/* Tags */}
               {tags.length > 0 && (
                 <div className="mt-8 pt-8 border-t border-gray-200">
                   <p className="text-sm font-semibold text-gray-700 mb-3">Tags:</p>
@@ -231,7 +228,7 @@ export default function BlogDetailPage({
               )}
             </article>
 
-            {/* Sidebar */}
+            {/* ── Sidebar ──────────────────────────────────────── */}
             <aside className="space-y-6">
               <div className="bg-white border border-gray-200 rounded-xl p-6">
                 <h3 className="text-lg font-bold text-gray-900 mb-4">Trending Now</h3>
