@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Search, SlidersHorizontal, Loader2 } from "lucide-react";
+import { Search, SlidersHorizontal } from "lucide-react";
 import Newsletter from "@/components/newsletter/Newsletter";
 import { getPublishedBlogs } from "@/services/blog";
 import { Blog, PaginatedBlogs, normaliseTags } from "@/types/blog";
@@ -159,11 +159,31 @@ export default function BlogPage() {
 
           <div className="grid">
             <div>
-              {/* Loading */}
+              {/* Loading - Shimmer UI */}
               {isLoading && (
-                <div className="flex items-center justify-center py-20">
-                  <Loader2 className="w-8 h-8 animate-spin text-emerald-600" />
-                  <span className="ml-3 text-gray-600">Loading posts...</span>
+                <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                  {[...Array(8)].map((_, index) => (
+                    <div key={index} className="border border-gray-200 rounded-lg p-4 h-full flex flex-col">
+                      <div className="relative aspect-4/3 overflow-hidden rounded-lg mb-4">
+                        <div className="absolute top-3 left-3 z-10 w-16 h-6 bg-gray-200 rounded animate-pulse"></div>
+                        <div className="w-full h-full bg-gray-200 animate-pulse"></div>
+                      </div>
+                      <div className="space-y-3 flex-1">
+                        <div className="h-6 bg-gray-200 rounded animate-pulse"></div>
+                        <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+                        <div className="h-4 bg-gray-200 rounded w-3/4 animate-pulse"></div>
+                        <div className="flex items-center gap-2 pt-2">
+                          <div className="w-5 h-5 bg-gray-200 rounded-full animate-pulse"></div>
+                          <div className="h-4 bg-gray-200 rounded w-20 animate-pulse"></div>
+                          <div className="h-4 bg-gray-200 rounded w-4 animate-pulse"></div>
+                          <div className="h-4 bg-gray-200 rounded w-16 animate-pulse"></div>
+                        </div>
+                        <div className="pt-2">
+                          <div className="h-4 bg-gray-200 rounded w-20 animate-pulse"></div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               )}
 
@@ -201,7 +221,7 @@ export default function BlogPage() {
                   {filteredBlogs.map((post) => (
                     <Link key={post.id} href={`/blog/${post.id}`} className="group">
                       <article className="cursor-pointer border border-gray-200 rounded-lg p-4 hover:shadow-lg transition-shadow h-full flex flex-col">
-                        <div className="relative aspect-[4/3] overflow-hidden rounded-lg mb-4">
+                        <div className="relative aspect-4/3 overflow-hidden rounded-lg mb-4">
                           {/* ✅ category is an object — use .name */}
                           {post.category?.name && (
                             <span className="absolute top-3 left-3 z-10 bg-white px-3 py-1 text-xs font-medium uppercase tracking-wide rounded shadow-sm">
