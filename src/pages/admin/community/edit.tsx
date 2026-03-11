@@ -222,7 +222,7 @@ export default function AdminCommunityEditPage() {
               <h3 className="text-sm font-semibold text-gray-900 mb-4">Cover Photo</h3>
               <div className="space-y-3">
                 {coverPreview ? (
-                  <div className="relative w-full rounded-xl overflow-hidden border border-gray-200 aspect-[3/1]">
+                  <div className="relative w-full rounded-xl overflow-hidden border border-gray-200 aspect-3/1">
                     <Image
                       src={coverPreview}
                       alt="Cover preview"
@@ -239,7 +239,7 @@ export default function AdminCommunityEditPage() {
                     </button>
                   </div>
                 ) : (
-                  <div className="w-full aspect-[3/1] bg-gray-50 rounded-xl border-2 border-dashed border-gray-300 flex items-center justify-center">
+                  <div className="w-full aspect-3/1 bg-gray-50 rounded-xl border-2 border-dashed border-gray-300 flex items-center justify-center">
                     <p className="text-xs text-gray-400">No cover image</p>
                   </div>
                 )}

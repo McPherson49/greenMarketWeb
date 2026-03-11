@@ -23,7 +23,7 @@ const CreateEventModal: React.FC<CreateEventModalProps> = ({
     newEvent.description;
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 px-4 backdrop-blur overflow-y-auto">
+    <div className="fixed inset-0 z-9999 flex items-center justify-center bg-black/50 px-4 backdrop-blur overflow-y-auto">
       <div className="bg-white mt-20 rounded-2xl shadow-2xl max-w-2xl w-full my-8 max-h-screen overflow-y-auto">
 
         {/* Header */}
@@ -182,7 +182,7 @@ const CreateEventModal: React.FC<CreateEventModalProps> = ({
             </label>
             <div className="space-y-3">
               {newEvent.previewImage ? (
-                <div className="relative rounded-xl overflow-hidden shadow-md border border-gray-200 aspect-[8/4]">
+                <div className="relative rounded-xl overflow-hidden shadow-md border border-gray-200 aspect-8/4">
                   <Image src={newEvent.previewImage} alt="Event preview" fill className="object-cover" unoptimized />
                   <button
                     type="button"
@@ -193,7 +193,7 @@ const CreateEventModal: React.FC<CreateEventModalProps> = ({
                   </button>
                 </div>
               ) : (
-                <div className="aspect-[8/4] bg-gray-50 rounded-xl border-2 border-dashed border-gray-300 flex items-center justify-center">
+                <div className="aspect-8/4 bg-gray-50 rounded-xl border-2 border-dashed border-gray-300 flex items-center justify-center">
                   <p className="text-gray-400 text-sm">No image selected</p>
                 </div>
               )}

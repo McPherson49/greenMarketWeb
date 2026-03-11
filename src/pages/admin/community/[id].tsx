@@ -175,7 +175,7 @@ export default function AdminCommunityViewPage() {
 
       {/* ── Cover + community card ───────────────────────────────────────── */}
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-        <div className="h-40 bg-gradient-to-r from-green-400 to-emerald-500 relative">
+        <div className="h-40 bg-linear-to-r from-green-400 to-emerald-500 relative">
           {community.coverImage && (
             <img src={community.coverImage} alt="Cover" className="w-full h-full object-cover" />
           )}

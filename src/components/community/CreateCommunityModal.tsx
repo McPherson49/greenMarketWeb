@@ -272,7 +272,7 @@ const CreateCommunityModal: React.FC<CreateCommunityModalProps> = ({
                 Cover Image
               </label>
               {form.coverPreview ? (
-                <div className="relative w-full rounded-xl overflow-hidden border border-gray-200 shadow-sm aspect-[3/1]">
+                <div className="relative w-full rounded-xl overflow-hidden border border-gray-200 shadow-sm aspect-3/1">
                   <Image
                     src={form.coverPreview}
                     alt="Cover preview"
@@ -289,7 +289,7 @@ const CreateCommunityModal: React.FC<CreateCommunityModalProps> = ({
                 </div>
               ) : (
                 <label className="cursor-pointer block">
-                  <div className="w-full aspect-[3/1] bg-gray-50 rounded-xl border-2 border-dashed border-gray-300 hover:border-green-400 hover:bg-green-50/30 transition-colors flex flex-col items-center justify-center gap-3">
+                  <div className="w-full aspect-3/1 bg-gray-50 rounded-xl border-2 border-dashed border-gray-300 hover:border-green-400 hover:bg-green-50/30 transition-colors flex flex-col items-center justify-center gap-3">
                     <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
                       <Upload className="w-5 h-5 text-gray-400" />
                     </div>
@@ -312,7 +312,7 @@ const CreateCommunityModal: React.FC<CreateCommunityModalProps> = ({
             <div>
               <label className="block text-sm font-semibold text-gray-900 mb-2">Preview</label>
               <div className="border border-gray-200 rounded-xl overflow-hidden shadow-sm">
-                <div className="h-20 bg-gradient-to-r from-green-400 to-emerald-500 relative">
+                <div className="h-20 bg-linear-to-r from-green-400 to-emerald-500 relative">
                   {form.coverPreview && (
                     <Image src={form.coverPreview} alt="" fill className="object-cover" unoptimized />
                   )}
