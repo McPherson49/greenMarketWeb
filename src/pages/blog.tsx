@@ -7,6 +7,7 @@ import { Search, SlidersHorizontal } from "lucide-react";
 import Newsletter from "@/components/newsletter/Newsletter";
 import { getPublishedBlogs } from "@/services/blog";
 import { Blog, PaginatedBlogs, normaliseTags } from "@/types/blog";
+import BlogGrid from "@/components/blog/BlogGrid";
 
 function formatDate(isoString: string): string {
   return new Date(isoString).toLocaleDateString("en-GB", {
@@ -216,54 +217,7 @@ export default function BlogPage() {
               )}
 
               {/* Grid */}
-              {!isLoading && !error && filteredBlogs.length > 0 && (
-                <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8 ">
-                  {filteredBlogs.map((post) => (
-                    <Link key={post.id} href={`/blog/${post.id}`} className="group">
-                      <article className="cursor-pointer border border-gray-200 rounded-lg p-4 hover:shadow-lg transition-shadow h-full flex flex-col">
-                        <div className="relative aspect-4/3 overflow-hidden rounded-lg mb-4">
-                          {/* ✅ category is an object — use .name */}
-                          {post.category?.name && (
-                            <span className="absolute top-3 left-3 z-10 bg-white px-3 py-1 text-xs font-medium uppercase tracking-wide rounded shadow-sm">
-                              {post.category.name}
-                            </span>
-                          )}
-                          <Image
-                            src={post.image_url ?? FALLBACK_IMAGE}
-                            alt={post.title}
-                            fill
-                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                            className="object-cover transition-transform duration-300 group-hover:scale-105"
-                          />
-                        </div>
-                        <h3 className="text-lg font-bold text-gray-900 mb-2 group-hover:text-emerald-600 transition-colors line-clamp-2">
-                          {post.title}
-                        </h3>
-                        <p className="text-sm text-gray-600 mb-3 line-clamp-2">
-                          {post.description}
-                        </p>
-                        <div className="flex items-center gap-2 text-sm text-gray-500">
-                          {post.author?.avatar && (
-                            <img
-                              src={post.author.avatar}
-                              alt={post.author.name}
-                              className="w-5 h-5 rounded-full object-cover"
-                            />
-                          )}
-                          <span className="font-medium">by {post.author?.name}</span>
-                          <span>•</span>
-                          <time>{formatDate(post.created_at)}</time>
-                        </div>
-                        <div className="mt-4">
-                          <span className="inline-flex items-center gap-1 text-sm font-medium text-emerald-600 group-hover:gap-2 transition-all">
-                            Read More →
-                          </span>
-                        </div>
-                      </article>
-                    </Link>
-                  ))}
-                </div>
-              )}
+            <BlogGrid blogs={filteredBlogs} isLoading={isLoading} skeletonCount={8} />
 
               {/* Pagination */}
               {!isLoading && totalPages > 1 && (
@@ -306,74 +260,6 @@ export default function BlogPage() {
                 </div>
               )}
             </div>
-
-            {/* Sidebar */}
-            {/* <aside  className="space-y-6">
-              <div className="bg-white border border-gray-200 rounded-xl p-6">
-                <h3 className="text-lg font-bold text-gray-900 mb-4">Category</h3>
-                {isLoading ? (
-                  <div className="space-y-2">
-                    {[...Array(4)].map((_, i) => (
-                      <div key={i} className="h-12 bg-gray-100 rounded-lg animate-pulse" />
-                    ))}
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {Object.entries(categoryMap).map(([name, count]) => (
-                      <div
-                        key={name}
-                        className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-emerald-50 cursor-pointer transition-colors"
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
-                            <span className="text-emerald-600 text-sm">🌿</span>
-                          </div>
-                          <span className="text-sm font-medium text-gray-700">{name}</span>
-                        </div>
-                        <span className="text-sm text-gray-500">{count}</span>
-                      </div>
-                    ))}
-                    {Object.keys(categoryMap).length === 0 && (
-                      <p className="text-sm text-gray-400 text-center py-4">No categories yet</p>
-                    )}
-                  </div>
-                )}
-                <button className="w-full mt-4 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors">
-                  View All
-                </button>
-              </div>
-
-              <div className="bg-white border border-gray-200 rounded-xl p-6">
-                <h3 className="text-lg font-bold text-gray-900 mb-4">Popular Tags</h3>
-                {isLoading ? (
-                  <div className="flex flex-wrap gap-2">
-                    {[...Array(5)].map((_, i) => (
-                      <div key={i} className="h-8 w-20 bg-gray-100 rounded-lg animate-pulse" />
-                    ))}
-                  </div>
-                ) : (
-                  <div className="flex flex-wrap gap-2">
-                    {allTags.length > 0 ? (
-                      allTags.map((tag) => (
-                        <button
-                          key={tag}
-                          onClick={() => setActiveTag(activeTag === tag ? null : tag)}
-                          className={`px-4 py-2 rounded-lg transition-colors text-sm ${
-                            activeTag === tag
-                              ? "bg-emerald-600 text-white"
-                              : "bg-emerald-50 text-emerald-600 hover:bg-emerald-100"
-                          }`}
-                        >
-                          {tag}
-                        </button>
-                      ))
-                    ) : (
-                      <p className="text-sm text-gray-400">No tags found</p>
-                    )}
-                  </div>
-                )}
-              </div>
-            </aside> */}
           </div>
         </div>
       </section>
