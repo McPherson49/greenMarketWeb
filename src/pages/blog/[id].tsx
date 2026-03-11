@@ -178,7 +178,7 @@ export default function BlogDetailPage({ blogPost, trendingPosts, allTags }: Blo
               {/* Featured image */}
               <div className="relative aspect-[16/10] mb-8 rounded-2xl overflow-hidden">
                 <Image
-                  src={blogPost.image ?? FALLBACK_IMAGE}
+                  src={blogPost.image_url ?? FALLBACK_IMAGE}
                   alt={blogPost.title}
                   fill
                   sizes="(max-width: 1200px) 100vw, 800px"
@@ -240,7 +240,7 @@ export default function BlogDetailPage({ blogPost, trendingPosts, allTags }: Blo
                       <Link key={post.id} href={`/blog/${post.id}`} className="flex gap-3 group">
                         <div className="relative w-20 h-20 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100">
                           <Image
-                            src={post.image ?? FALLBACK_IMAGE}
+                            src={post.image_url ?? FALLBACK_IMAGE}
                             alt={post.title}
                             fill
                             sizes="80px"
@@ -261,7 +261,7 @@ export default function BlogDetailPage({ blogPost, trendingPosts, allTags }: Blo
                 )}
               </div>
 
-              <div className="bg-white border border-gray-200 rounded-xl p-6">
+              {/* <div className="bg-white border border-gray-200 rounded-xl p-6">
                 <h3 className="text-lg font-bold text-gray-900 mb-4">Popular Tags</h3>
                 {allTags.length === 0 ? (
                   <p className="text-sm text-gray-400">No tags found.</p>
@@ -278,7 +278,7 @@ export default function BlogDetailPage({ blogPost, trendingPosts, allTags }: Blo
                     ))}
                   </div>
                 )}
-              </div>
+              </div> */}
             </aside>
           </div>
         </div>

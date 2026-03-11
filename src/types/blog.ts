@@ -17,7 +17,7 @@ export interface Blog {
   id: number;
   title: string;
   description: string;
-  image: string | null;
+  image_url: string | null;
   category_id: number | null;
   author_id: number;
   status: "published" | "draft";

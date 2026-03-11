@@ -209,7 +209,7 @@ export default function BlogPage() {
                             </span>
                           )}
                           <Image
-                            src={post.image ?? FALLBACK_IMAGE} // ✅ field is "image" not "featured_image"
+                            src={post.image_url ?? FALLBACK_IMAGE}
                             alt={post.title}
                             fill
                             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"

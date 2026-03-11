@@ -144,7 +144,7 @@ export default function AdminBlogsPage() {
                           <div className="flex items-center gap-4">
                             <div className="relative w-16 h-16 rounded-lg overflow-hidden shrink-0 bg-gray-100">
                               <Image
-                                src={blog.image ?? FALLBACK_IMAGE}
+                                src={blog.image_url ?? FALLBACK_IMAGE}
                                 alt={blog.title}
                                 fill
                                 className="object-cover"
