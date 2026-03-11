@@ -460,7 +460,8 @@ export default function EditBlogPost() {
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-none text-sm"
               />
             </div> */}
-
+            
+            
             {/* Tips */}
             <div className="bg-green-50 border border-green-200 rounded-2xl p-6">
               <h3 className="font-semibold text-green-800 mb-3">
