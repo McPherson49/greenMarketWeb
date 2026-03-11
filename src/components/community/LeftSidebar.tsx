@@ -88,27 +88,6 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({ mainSection, communities, eve
     );
   }
 
-  // Settings
-  return (
-    <div className="bg-white rounded-lg shadow-sm p-4">
-      <h3 className="font-semibold text-gray-900 mb-3">Quick Actions</h3>
-      <div className="space-y-2">
-        {[
-          { label: "Profile Settings" },
-          { label: "Privacy & Safety" },
-          { label: "Notifications" },
-          { label: "Account" },
-        ].map(({ label }) => (
-          <button
-            key={label}
-            className="w-full flex items-center space-x-2 text-left text-sm text-gray-700 hover:bg-gray-50 p-2 rounded"
-          >
-            <span>{label}</span>
-          </button>
-        ))}
-      </div>
-    </div>
-  );
 };
 
 export default LeftSidebar;
