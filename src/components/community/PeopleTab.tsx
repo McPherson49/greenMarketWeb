@@ -39,9 +39,6 @@ const PeopleTab: React.FC<PeopleTabProps> = ({ members }) => {
                 <p className="text-sm text-gray-500">Joined {member.joined}</p>
               </div>
             </div>
-            <button className="w-full sm:w-auto px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50">
-              View Profile
-            </button>
           </div>
         ))}
       </div>

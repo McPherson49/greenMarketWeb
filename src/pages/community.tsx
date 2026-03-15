@@ -86,9 +86,9 @@ const CommunityFeed: React.FC = () => {
             {mainSection === "Settings" && <SettingsTab members={members} />}
           </main>
 
-          <aside className="hidden lg:block w-72 shrink-0">
+          {/* <aside className="hidden lg:block w-72 shrink-0">
             <RightSidebar mainSection={mainSection} trendingTopics={trendingTopics} events={events} />
-          </aside>
+          </aside> */}
         </div>
       </div>
 

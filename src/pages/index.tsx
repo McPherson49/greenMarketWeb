@@ -3,7 +3,6 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import Home from "../components/home/Home";
-import BlogSection from "@/components/blog/BlogGrid";
 import Newsletter from "@/components/newsletter/Newsletter";
 import { getCategories } from "@/services/category";
 import { getProducts } from "@/services/products";
@@ -111,7 +110,7 @@ export default function IndexPage() {
         // Check if res.data exists and is an array
         const productsArray = Array.isArray(res.data) ? res.data : [];
 
-        // ✅ CRITICAL FIX: map API → UI product
+        // map API → UI product
         const formattedProducts: UIProduct[] = productsArray.map((p: any) => ({
           id: p.id,
           name: p.title,
@@ -164,45 +163,6 @@ export default function IndexPage() {
     }
   };
 
-  const blogPosts = [
-    {
-      id: "1",
-      category: "LIVESTOCKS",
-      image: "/assets/blog1.png",
-      title: "Livestock Tips & Best Practices",
-      excerpt: "Blimlävikt treskade...",
-      author: "Basäm",
-      date: "3 Nov 2025",
-    },
-    {
-      id: "2",
-      category: "UNCATEGORIZED",
-      image: "/assets/blog2.png",
-      title: "Agro-Business & Entrepreneurship",
-      excerpt: "Blimlävikt treskade...",
-      author: "sinan",
-      date: "3 Nov 2025",
-    },
-    {
-      id: "3",
-      category: "FISHERY",
-      image: "/assets/blog3.png",
-      title: "Success Stories & Fishermen Spotlight",
-      excerpt: "Blimlävikt treskade...",
-      author: "Basäm",
-      date: "3 Nov 2025",
-    },
-    {
-      id: "4",
-      category: "FRUITS",
-      image: "/assets/blog4.png",
-      title: "Market Trends & Prices",
-      excerpt: "Blimlävikt treskade...",
-      author: "sinan",
-      date: "3 Nov 2025",
-    },
-  ];
-
   return (
     <main className="w-full">
       <div className="container mt-3 max-w-7xl mx-auto">
@@ -220,6 +180,7 @@ export default function IndexPage() {
       </div>
 
       <div className="container my-20 max-w-7xl mx-auto">
+        <h1 className="text-2xl font-bold mb-8">OUR BLOG</h1>
         <BlogGrid blogs={blogs} isLoading={isLoading} skeletonCount={4} />
       </div>
 
