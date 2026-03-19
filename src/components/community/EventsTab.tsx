@@ -57,12 +57,7 @@ const EventsTab: React.FC<EventsTabProps> = ({ events }) => {
                   <MapPin className="w-3.5 h-3.5 shrink-0" />
                   <span className="truncate">{event.location}</span>
                 </p>
-                {event.attendees && (
-                  <p className="text-sm text-gray-500 flex items-center gap-1.5">
-                    <Users className="w-3.5 h-3.5 shrink-0" />
-                    {event.attendees.toLocaleString()} attendees
-                  </p>
-                )}
+                
               </div>
 
               {/* Description */}
@@ -72,15 +67,7 @@ const EventsTab: React.FC<EventsTabProps> = ({ events }) => {
 
               {/* Actions */}
               <div className="flex items-center justify-between gap-2 pt-3 border-t border-gray-100">
-                <button
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    event.isJoined
-                      ? "bg-red-50 text-red-600 hover:bg-red-100 border border-red-200"
-                      : "bg-green-500 text-white hover:bg-green-600"
-                  }`}
-                >
-                  {event.isJoined ? "Leave Event" : "Join Event"}
-                </button>
+                
 
                 {/* View Details → links to /community/events/[id] */}
                 <Link

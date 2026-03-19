@@ -69,7 +69,7 @@ export default function EventDetailPage() {
           <span>/</span>
           <Link href="/community" className="hover:text-green-600 transition-colors">Community</Link>
           <span>/</span>
-          <span className="text-gray-900 font-medium truncate max-w-[200px]">{event.name}</span>
+          <span className="text-gray-900 font-medium truncate max-w-50">{event.name}</span>
         </div>
       </div>
 
@@ -90,7 +90,7 @@ export default function EventDetailPage() {
           <div className="space-y-6">
 
             {/* Hero Image */}
-            <div className="relative aspect-[16/7] rounded-2xl overflow-hidden shadow-md">
+            <div className="relative aspect-16/7 rounded-2xl overflow-hidden shadow-md">
               <img
                 src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&h=400&fit=crop"
                 alt={event.name}
@@ -142,15 +142,7 @@ export default function EventDetailPage() {
                     <p className="text-sm font-semibold text-gray-900">{event.location}</p>
                   </div>
                 </div>
-                {event.attendees && (
-                  <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
-                    <Users className="w-5 h-5 text-green-600 shrink-0" />
-                    <div>
-                      <p className="text-xs text-gray-400 font-medium">Attendees</p>
-                      <p className="text-sm font-semibold text-gray-900">{event.attendees.toLocaleString()} registered</p>
-                    </div>
-                  </div>
-                )}
+                
                 {event.time && (
                   <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
                     <Clock className="w-5 h-5 text-green-600 shrink-0" />
@@ -162,17 +154,7 @@ export default function EventDetailPage() {
                 )}
               </div>
 
-              {/* Join / Leave CTA */}
-              <button
-                onClick={() => setIsJoined(!isJoined)}
-                className={`w-full py-3 rounded-xl font-semibold text-base transition-colors ${
-                  isJoined
-                    ? "bg-red-50 text-red-600 hover:bg-red-100 border border-red-200"
-                    : "bg-green-500 hover:bg-green-600 text-white shadow-md"
-                }`}
-              >
-                {isJoined ? "✓ Leave Event" : "Join This Event"}
-              </button>
+              
             </div>
 
             {/* Description */}
