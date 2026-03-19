@@ -230,12 +230,7 @@ export default function EventDetailPage() {
                     <dd className="font-medium text-gray-900">{event.time}</dd>
                   </div>
                 )}
-                {event.attendees && (
-                  <div className="flex justify-between">
-                    <dt className="text-gray-500">Registered</dt>
-                    <dd className="font-medium text-gray-900">{event.attendees.toLocaleString()}</dd>
-                  </div>
-                )}
+                
               </dl>
             </div>
 
