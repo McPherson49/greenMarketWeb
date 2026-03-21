@@ -1,41 +1,188 @@
 "use client";
 
-import React, { useState } from "react";
-import Image from "next/image";
+import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import {
   Calendar,
   MapPin,
-  Users,
   Video,
   Link as LinkIcon,
   ArrowLeft,
   Share2,
   Clock,
   CheckCircle,
+  AlertCircle,
 } from "lucide-react";
-import { events } from "@/data/mockData";
 import { Event } from "@/types/community";
+import { EventIcon } from "@/components/community/EventIcon";
 
-function formatDate(dateStr: string): string {
-  const d = new Date(dateStr);
-  if (isNaN(d.getTime())) return dateStr; // Already formatted string
-  return d.toLocaleDateString("en-GB", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL as string;
+
+const FALLBACK_IMAGE =
+  "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&h=400&fit=crop";
+
+// ── API shape ─────────────────────────────────────────────────────────────
+interface ApiEvent {
+  id: number;
+  event_id: string;
+  title: string;
+  date: string;
+  time?: string;
+  location: string;
+  type: 1 | 2;
+  type_string: string;
+  meeting_link?: string;
+  registration_link?: string;
+  description?: string;
+  image?: string;
 }
 
+// ── Helpers ───────────────────────────────────────────────────────────────
+function formatDate(iso: string): string {
+  try {
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return iso;
+    return d.toLocaleDateString("en-GB", {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
+  } catch {
+    return iso;
+  }
+}
+
+function formatTime(iso: string): string {
+  try {
+    return new Date(iso).toLocaleTimeString("en-US", {
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    });
+  } catch {
+    return iso;
+  }
+}
+
+type MappedEvent = Event & { rawImage?: string };
+
+function mapApiEvent(e: ApiEvent): MappedEvent {
+  return {
+    id: e.event_id ?? String(e.id),
+    name: e.title,
+    date: formatDate(e.date),
+    time: e.time ? formatTime(e.time) : undefined,
+    location: e.location,
+    icon: e.type === 2 ? "online" : "physical",
+    description: e.description,
+    isOnline: e.type === 2,
+    meetingLink: e.meeting_link,
+    registrationLink: e.registration_link,
+    rawImage: e.image,
+  };
+}
+
+// ── Service ───────────────────────────────────────────────────────────────
+async function getEventById(id: string): Promise<MappedEvent> {
+  const url = id.startsWith("GRM")
+    ? `${API_BASE}/events/event-id/${id}`
+    : `${API_BASE}/events/${id}`;
+
+  const res = await fetch(url, { headers: { Accept: "application/json" } });
+  if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+
+  const json = await res.json();
+  const raw: ApiEvent = json.data ?? json;
+  return mapApiEvent(raw);
+}
+
+async function getRelatedEvents(excludeId: string): Promise<MappedEvent[]> {
+  const res = await fetch(`${API_BASE}/events/?per_page=4&page=1`, {
+    headers: { Accept: "application/json" },
+  });
+  if (!res.ok) return [];
+
+  const json = await res.json();
+  const raw: ApiEvent[] = Array.isArray(json) ? json : (json.data ?? []);
+  return raw
+    .filter((e) => (e.event_id ?? String(e.id)) !== excludeId)
+    .slice(0, 3)
+    .map(mapApiEvent);
+}
+
+// ── Skeleton ──────────────────────────────────────────────────────────────
+function DetailSkeleton() {
+  return (
+    <div className="max-w-5xl mx-auto px-4 py-8 animate-pulse">
+      <div className="h-4 w-24 bg-gray-200 rounded mb-6" />
+      <div className="grid lg:grid-cols-[1fr_320px] gap-8">
+        <div className="space-y-6">
+          <div className="aspect-video bg-gray-200 rounded-2xl" />
+          <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-4">
+            <div className="h-8 bg-gray-200 rounded w-3/4" />
+            <div className="grid sm:grid-cols-2 gap-3">
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="h-16 bg-gray-100 rounded-xl" />
+              ))}
+            </div>
+          </div>
+          <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-3">
+            <div className="h-5 bg-gray-200 rounded w-40" />
+            <div className="h-4 bg-gray-200 rounded w-full" />
+            <div className="h-4 bg-gray-200 rounded w-5/6" />
+            <div className="h-4 bg-gray-200 rounded w-4/6" />
+          </div>
+        </div>
+        <aside className="space-y-6">
+          <div className="bg-white rounded-2xl border border-gray-100 p-5 space-y-3">
+            <div className="h-5 bg-gray-200 rounded w-32" />
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="h-4 bg-gray-100 rounded" />
+            ))}
+          </div>
+        </aside>
+      </div>
+    </div>
+  );
+}
+
+// ── Page ──────────────────────────────────────────────────────────────────
 export default function EventDetailPage() {
   const router = useRouter();
-  const { id } = router.query;
+  const params = useParams();
+  const id = params?.id as string;
 
-  const event = events.find((e: Event) => String(e.id) === String(id));
-  const [isJoined, setIsJoined] = useState(event?.isJoined ?? false);
+  const [event, setEvent] = useState<MappedEvent | null>(null);
+  const [relatedEvents, setRelatedEvents] = useState<MappedEvent[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+
+  const fetchEvent = useCallback(async () => {
+    if (!id) return;
+    setIsLoading(true);
+    setError(null);
+    try {
+      const [main, related] = await Promise.all([
+        getEventById(id),
+        getRelatedEvents(id),
+      ]);
+      setEvent(main);
+      setRelatedEvents(related);
+    } catch (err) {
+      setError("Failed to load event. Please try again.");
+      console.error(err);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [id]);
+
+  useEffect(() => {
+    fetchEvent();
+  }, [fetchEvent]);
 
   const handleShare = () => {
     navigator.clipboard.writeText(window.location.href);
@@ -43,21 +190,42 @@ export default function EventDetailPage() {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  if (isLoading) return <DetailSkeleton />;
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <AlertCircle className="w-10 h-10 text-red-400 mx-auto" />
+          <p className="text-gray-600">{error}</p>
+          <div className="flex items-center justify-center gap-4">
+            <button
+              onClick={fetchEvent}
+              className="px-5 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
+            >
+              Retry
+            </button>
+            <Link href="/community" className="text-sm text-green-600 underline">
+              Back to Community
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (!event) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <p className="text-gray-500 text-lg mb-4">Event not found.</p>
-          <Link href="/community" className="text-green-600 underline">
+          <Link href="/community" className="text-green-600 underline text-sm">
             ← Back to Community
           </Link>
         </div>
       </div>
     );
   }
-
-  // Related events (exclude current)
-  const relatedEvents = events.filter((e: Event) => String(e.id) !== String(id)).slice(0, 3);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -69,13 +237,12 @@ export default function EventDetailPage() {
           <span>/</span>
           <Link href="/community" className="hover:text-green-600 transition-colors">Community</Link>
           <span>/</span>
-          <span className="text-gray-900 font-medium truncate max-w-50">{event.name}</span>
+          <span className="text-gray-900 font-medium truncate max-w-[200px]">{event.name}</span>
         </div>
       </div>
 
       <div className="max-w-5xl mx-auto px-4 py-8">
 
-        {/* Back */}
         <button
           onClick={() => router.back()}
           className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-green-600 mb-6 transition-colors"
@@ -86,15 +253,17 @@ export default function EventDetailPage() {
 
         <div className="grid lg:grid-cols-[1fr_320px] gap-8">
 
-          {/* ── Left: Main content ────────────────────────── */}
+          {/* ── Left ─────────────────────────────────────── */}
           <div className="space-y-6">
 
-            {/* Hero Image */}
-            <div className="relative aspect-16/7 rounded-2xl overflow-hidden shadow-md">
+            <div className="relative aspect-video rounded-2xl overflow-hidden shadow-md">
               <img
-                src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&h=400&fit=crop"
+                src={event.rawImage || FALLBACK_IMAGE}
                 alt={event.name}
                 className="w-full h-full object-cover"
+                onError={(e) => {
+                  (e.currentTarget as HTMLImageElement).src = FALLBACK_IMAGE;
+                }}
               />
               {event.isOnline && (
                 <span className="absolute top-4 left-4 bg-green-500 text-white text-sm font-medium px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow">
@@ -107,9 +276,7 @@ export default function EventDetailPage() {
             <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
               <div className="flex items-start justify-between gap-4 mb-4">
                 <div className="flex items-start gap-3">
-                  <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center text-2xl shrink-0">
-                    {event.icon}
-                  </div>
+                  <EventIcon icon={event.icon} size="lg" />
                   <h1 className="text-2xl md:text-3xl font-bold text-gray-900 leading-tight">
                     {event.name}
                   </h1>
@@ -126,13 +293,12 @@ export default function EventDetailPage() {
                 </button>
               </div>
 
-              {/* Meta grid */}
               <div className="grid sm:grid-cols-2 gap-3 mb-6">
                 <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
                   <Calendar className="w-5 h-5 text-green-600 shrink-0" />
                   <div>
                     <p className="text-xs text-gray-400 font-medium">Date</p>
-                    <p className="text-sm font-semibold text-gray-900">{formatDate(event.date)}</p>
+                    <p className="text-sm font-semibold text-gray-900">{event.date}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
@@ -142,7 +308,6 @@ export default function EventDetailPage() {
                     <p className="text-sm font-semibold text-gray-900">{event.location}</p>
                   </div>
                 </div>
-                
                 {event.time && (
                   <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
                     <Clock className="w-5 h-5 text-green-600 shrink-0" />
@@ -153,8 +318,6 @@ export default function EventDetailPage() {
                   </div>
                 )}
               </div>
-
-              
             </div>
 
             {/* Description */}
@@ -210,7 +373,6 @@ export default function EventDetailPage() {
           {/* ── Right: Sidebar ────────────────────────────── */}
           <aside className="space-y-6">
 
-            {/* Quick Info card */}
             <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm">
               <h3 className="font-bold text-gray-900 mb-4">Event Summary</h3>
               <dl className="space-y-3 text-sm">
@@ -230,24 +392,20 @@ export default function EventDetailPage() {
                     <dd className="font-medium text-gray-900">{event.time}</dd>
                   </div>
                 )}
-                
               </dl>
             </div>
 
-            {/* Related Events */}
             {relatedEvents.length > 0 && (
               <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm">
                 <h3 className="font-bold text-gray-900 mb-4">Other Events</h3>
                 <div className="space-y-4">
-                  {relatedEvents.map((e: Event) => (
+                  {relatedEvents.map((e) => (
                     <Link
                       key={e.id}
                       href={`/community/${e.id}`}
                       className="flex items-start gap-3 group"
                     >
-                      <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center text-xl shrink-0">
-                        {e.icon}
-                      </div>
+                      <EventIcon icon={e.icon} size="md" />
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-semibold text-gray-900 group-hover:text-green-600 transition-colors line-clamp-2">
                           {e.name}

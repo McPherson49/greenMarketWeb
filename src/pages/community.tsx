@@ -80,9 +80,7 @@ const CommunityFeed: React.FC = () => {
                 {activeTab === "About" && <AboutTab />}
               </>
             )}
-            {mainSection === "Events" && (
-              <EventsTab events={events} />
-            )}
+            {mainSection === "Events" && <EventsTab />}
             {mainSection === "Settings" && <SettingsTab members={members} />}
           </main>
 

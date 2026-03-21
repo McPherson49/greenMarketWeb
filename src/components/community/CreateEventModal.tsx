@@ -1,6 +1,6 @@
 import React from "react";
 import Image from "next/image";
-import { X, Calendar, MapPin, Users, Upload, Video, Link as LinkIcon } from "lucide-react";
+import { X, Calendar, MapPin, Upload, Video, Link as LinkIcon, Loader2 } from "lucide-react";
 import { NewEvent } from "../../types/community";
 
 interface CreateEventModalProps {
@@ -8,6 +8,7 @@ interface CreateEventModalProps {
   onChange: (event: NewEvent) => void;
   onClose: () => void;
   onSubmit: () => void;
+  isSubmitting?: boolean;
 }
 
 const CreateEventModal: React.FC<CreateEventModalProps> = ({
@@ -15,6 +16,7 @@ const CreateEventModal: React.FC<CreateEventModalProps> = ({
   onChange,
   onClose,
   onSubmit,
+  isSubmitting = false,
 }) => {
   const isValid =
     newEvent.title &&
@@ -29,7 +31,11 @@ const CreateEventModal: React.FC<CreateEventModalProps> = ({
         {/* Header */}
         <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between rounded-t-2xl z-10">
           <h2 className="text-2xl font-bold text-gray-900">Create New Event</h2>
-          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+          <button
+            onClick={onClose}
+            disabled={isSubmitting}
+            className="p-2 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50"
+          >
             <X className="w-6 h-6 text-gray-500" />
           </button>
         </div>
@@ -110,7 +116,7 @@ const CreateEventModal: React.FC<CreateEventModalProps> = ({
             </div>
           </div>
 
-          {/* Meeting Link — disabled until isOnline is checked */}
+          {/* Meeting Link */}
           <div>
             <label className="flex items-center gap-1.5 text-sm font-semibold text-gray-900 mb-1">
               <Video className={`w-4 h-4 ${newEvent.isOnline ? "text-green-600" : "text-gray-300"}`} />
@@ -136,13 +142,13 @@ const CreateEventModal: React.FC<CreateEventModalProps> = ({
             />
             {newEvent.isOnline && (
               <p className="text-xs text-green-600 mt-1.5 flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-green-500 inline-block"></span>
+                <span className="w-1.5 h-1.5 rounded-full bg-green-500 inline-block" />
                 Shared with attendees after registration.
               </p>
             )}
           </div>
 
-          {/* Registration Link — always available */}
+          {/* Registration Link */}
           <div>
             <label className="flex items-center gap-1.5 text-sm font-semibold text-gray-900 mb-1">
               <LinkIcon className="w-4 h-4 text-blue-500" />
@@ -182,8 +188,14 @@ const CreateEventModal: React.FC<CreateEventModalProps> = ({
             </label>
             <div className="space-y-3">
               {newEvent.previewImage ? (
-                <div className="relative rounded-xl overflow-hidden shadow-md border border-gray-200 aspect-8/4">
-                  <Image src={newEvent.previewImage} alt="Event preview" fill className="object-cover" unoptimized />
+                <div className="relative rounded-xl overflow-hidden shadow-md border border-gray-200 aspect-[8/4]">
+                  <Image
+                    src={newEvent.previewImage}
+                    alt="Event preview"
+                    fill
+                    className="object-cover"
+                    unoptimized
+                  />
                   <button
                     type="button"
                     onClick={() => onChange({ ...newEvent, previewImage: null, image: null })}
@@ -193,7 +205,7 @@ const CreateEventModal: React.FC<CreateEventModalProps> = ({
                   </button>
                 </div>
               ) : (
-                <div className="aspect-8/4 bg-gray-50 rounded-xl border-2 border-dashed border-gray-300 flex items-center justify-center">
+                <div className="aspect-[8/4] bg-gray-50 rounded-xl border-2 border-dashed border-gray-300 flex items-center justify-center">
                   <p className="text-gray-400 text-sm">No image selected</p>
                 </div>
               )}
@@ -205,7 +217,8 @@ const CreateEventModal: React.FC<CreateEventModalProps> = ({
                   accept="image/*"
                   onChange={(e) => {
                     const file = e.target.files?.[0];
-                    if (file) onChange({ ...newEvent, image: file, previewImage: URL.createObjectURL(file) });
+                    if (file)
+                      onChange({ ...newEvent, image: file, previewImage: URL.createObjectURL(file) });
                   }}
                   className="hidden"
                 />
@@ -213,24 +226,27 @@ const CreateEventModal: React.FC<CreateEventModalProps> = ({
               <p className="text-xs text-gray-400">Recommended: 1200×600px · JPG, PNG · Max 5MB</p>
             </div>
           </div>
-
-         
         </div>
 
         {/* Footer */}
         <div className="sticky bottom-0 bg-white border-t border-gray-200 px-6 py-4 flex justify-end gap-3 rounded-b-2xl">
           <button
             onClick={onClose}
-            className="px-6 py-2.5 border border-gray-300 rounded-lg font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+            disabled={isSubmitting}
+            className="px-6 py-2.5 border border-gray-300 rounded-lg font-medium text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50"
           >
             Cancel
           </button>
           <button
             onClick={onSubmit}
-            disabled={!isValid}
-            className="px-8 py-2.5 bg-green-500 hover:bg-green-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-lg font-semibold shadow-md transition-colors"
+            disabled={!isValid || isSubmitting}
+            className="px-8 py-2.5 bg-green-500 hover:bg-green-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-lg font-semibold shadow-md transition-colors inline-flex items-center gap-2"
           >
-            Submit for Approval
+            {isSubmitting ? (
+              <><Loader2 className="w-4 h-4 animate-spin" /> Creating…</>
+            ) : (
+              "Create Event"
+            )}
           </button>
         </div>
       </div>
