@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { ChevronRight, Search, Loader2 } from "lucide-react";
 import { Community, Event } from "../../types/community";
 import { EventIcon } from "./EventIcon";
+import Link from "next/link";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL as string;
 
@@ -70,7 +71,9 @@ function useEvents() {
     }
   }, []);
 
-  useEffect(() => { fetch_(); }, [fetch_]);
+  useEffect(() => {
+    fetch_();
+  }, [fetch_]);
 
   return { events, isLoading };
 }
@@ -99,8 +102,12 @@ function CommunitySidebar({
               {community.icon}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-gray-900 truncate">{community.name}</p>
-              <p className="text-xs text-gray-500">{community.members} members</p>
+              <p className="text-sm font-medium text-gray-900 truncate">
+                {community.name}
+              </p>
+              <p className="text-xs text-gray-500">
+                {community.members} members
+              </p>
             </div>
           </div>
         ))}
@@ -114,14 +121,23 @@ function CommunitySidebar({
         {events.length === 0 ? (
           <p className="text-xs text-gray-400 py-2">No events yet.</p>
         ) : (
-          events.slice(0, 3).map((event) => (
-            <div key={event.id} className="py-3 border-b border-gray-100 last:border-b-0">
+          events.map((event) => (
+            <div
+              key={event.id}
+              className="py-3 border-b border-gray-100 last:border-b-0"
+            >
               <div className="flex items-start space-x-3">
                 <EventIcon icon={event.icon} size="md" />
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900 mb-1 truncate">{event.name}</p>
-                  <p className="text-xs text-gray-500 mb-1">{event.date}</p>
-                  <p className="text-xs text-gray-400 line-clamp-2">{event.location}</p>
+                  <Link href={`/community/${event.id}`}>
+                    <p className="text-sm font-medium text-gray-900 mb-1 truncate">
+                      {event.name}
+                    </p>
+                    <p className="text-xs text-gray-500 mb-1">{event.date}</p>
+                    <p className="text-xs text-gray-400 line-clamp-2">
+                      {event.location}
+                    </p>
+                  </Link>
                 </div>
               </div>
             </div>
@@ -138,20 +154,13 @@ function EventsSidebar() {
   const [query, setQuery] = useState("");
 
   const filtered = events.filter((e) =>
-    e.name.toLowerCase().includes(query.toLowerCase())
+    e.name.toLowerCase().includes(query.toLowerCase()),
   );
 
   return (
     <div className="bg-white rounded-lg shadow-sm p-4">
       <div className="relative mb-4">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-        <input
-          type="text"
-          placeholder="Search events..."
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
-        />
+        <h2 className="text-xl font-bold"> All Events</h2>
       </div>
 
       {isLoading ? (
@@ -165,16 +174,20 @@ function EventsSidebar() {
       ) : (
         <div className="space-y-1">
           {filtered.map((event) => (
-            <div
-              key={event.id}
-              className="flex items-center space-x-3 py-2 px-2 cursor-pointer hover:bg-gray-50 rounded-lg transition-colors"
-            >
-              <EventIcon icon={event.icon} size="sm" />
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900 truncate">{event.name}</p>
-                <p className="text-xs text-gray-500">{event.date}</p>
+            <Link href={`/community/${event.id}`}>
+              <div
+                key={event.id}
+                className="flex items-center space-x-3 py-2 px-2 cursor-pointer hover:bg-gray-50 rounded-lg transition-colors"
+              >
+                <EventIcon icon={event.icon} size="sm" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-gray-900 truncate">
+                    {event.name}
+                  </p>
+                  <p className="text-xs text-gray-500">{event.date}</p>
+                </div>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       )}
@@ -183,7 +196,10 @@ function EventsSidebar() {
 }
 
 // ── Main component ────────────────────────────────────────────────────────
-const LeftSidebar: React.FC<LeftSidebarProps> = ({ mainSection, communities }) => {
+const LeftSidebar: React.FC<LeftSidebarProps> = ({
+  mainSection,
+  communities,
+}) => {
   const { events, isLoading } = useEvents();
 
   if (mainSection === "Community") {

@@ -431,7 +431,7 @@ export default function EditEventPage() {
                 />
               </label>
               <p className="text-xs text-gray-400 text-center">
-                JPG, PNG · Max 5MB · Recommended 1200×600px
+                JPG, PNG · Max 2MB · Recommended 1200×600px
               </p>
             </div>
           </div>
