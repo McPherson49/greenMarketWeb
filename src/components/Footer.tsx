@@ -400,11 +400,23 @@ const Footer = () => {
             </div>
             <div className="flex text-[#39B54A] items-center gap-3 text-lg">
               {[
-                { icon: <FaFacebookF />, href: "http://facebook.com" },
-                { icon: <FaXTwitter />, href: "http://twitter.com" },
-                { icon: <FaInstagram />, href: "http://instagram.com" },
-                { icon: <CiLinkedin />, href: "http://linkedin.com" },
-                { icon: <FaYoutubeSquare />, href: "http://youtube.com" },
+                {
+                  icon: <FaFacebookF />,
+                  href: "https://facebook.com/greenmarket.com.ng",
+                },
+                { icon: <FaXTwitter />, href: "https://x.com/greenmarket_ng" },
+                {
+                  icon: <FaInstagram />,
+                  href: "https://www.instagram.com/greenmarket.com.ng/",
+                },
+                {
+                  icon: <CiLinkedin />,
+                  href: "https://www.linkedin.com/company/greenmarket-com-ng/",
+                },
+                {
+                  icon: <FaYoutubeSquare />,
+                  href: "https://www.youtube.com/channel/UCjh8y0fjkbLE7-6xgDxHrbw",
+                },
               ].map((item, i) => (
                 <Link
                   key={i}
