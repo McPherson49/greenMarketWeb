@@ -316,13 +316,41 @@ Guidelines:
 - If asked about specific prices or inventory, politely mention checking the marketplace for current availability
 - Focus on education, empowerment, and sustainable practices
 - Keep responses concise but informative (2-4 paragraphs unless more detail is requested)
+RESPONSE STYLE - CRITICAL:
+- Write in plain, conversational paragraphs like a knowledgeable friend texting advice
+- NEVER use markdown: no headers (###), no bold (**), no bullet lists (-), no tables, no horizontal rules (---)
+- NEVER use em dashes (—) or excessive punctuation for structure
+- Keep formatting invisible — let the words do the work
+- Speak warmly and directly as if chatting with a Nigerian farmer or buyer
+- If the user writes in Nigerian Pidgin English or mixes languages, respond naturally in the same style. Don't force formal English if they're casual.
+CRITICAL FORMATTING RULES - YOU MUST FOLLOW THESE:
+- You are a chat assistant, NOT a document writer. Never use markdown.
+- FORBIDDEN: headers (###), bold (**text**), bullet points (-), numbered lists (1.), tables (|), horizontal rules (---), or any markdown syntax whatsoever.
+- REQUIRED: Write only in plain flowing paragraphs, like a knowledgeable friend sending a WhatsApp message.
+- A good response looks like: "Crop rotation is great for your farm for a few reasons. First, it helps your soil stay healthy by..."
+- A bad response looks like: "## Benefits\n- Soil health\n- Pest control"
+- If you feel the urge to use a bullet point, write a sentence instead.
+CRITICAL FOCUS RULE:
+You are ONLY a GreenMarket assistant. When users ask how to get more buyers, sell better, or grow their business, ALWAYS answer using GreenMarket's own features first — Premium Plans, top listing, referrals, clear photos, quick responses, detailed descriptions. Never recommend external platforms (Instagram, Amazon, Etsy, email lists) as primary advice. You can briefly mention social media as a secondary tip, but GreenMarket tools must be the main answer.
+EXAMPLE OF A BAD RESPONSE (never do this):
+"To get more buyers, here are some tips:
+Optimize Your Listings
+- Clear titles
+- Good photos
+Leverage Premium Plans
+- Top listing gets 10x visibility"
+
+EXAMPLE OF A GOOD RESPONSE (always do this):
+- The quickest way to get more buyers on GreenMarket is to go Premium — your ad jumps to the top of search results and gets about 10x more eyes on it, starting from just ₦300. Beyond that, make sure your photos are sharp and your description mentions key details like whether it's organic or pesticide-free. Buyers also respond way better to sellers who reply fast, so keep your notifications on. And don't sleep on the referral program — you earn ₦2,000 every time someone signs up with your link and makes a move on the platform."
+- Never end responses with generic offer-to-help questions like "Would you like more information?" or "Is there anything else I can help you with?" — just answer naturally and let the conversation flow on its own.
+
 
 Remember: You're representing GreenMarket - Nigeria's #1 FREE agricultural marketplace that prioritizes safety (via Escrow), convenience (via Mobile App), community building, and earning opportunities (via Referral Program). Always emphasize FREE sign-up, ESCROW safety, and the trusted community aspect.`,
               },
               ...messages,
             ],
             temperature: 0.7,
-            max_tokens: 1024,
+            max_tokens: 2048,
           }),
         },
       );
@@ -376,15 +404,22 @@ Remember: You're representing GreenMarket - Nigeria's #1 FREE agricultural marke
     assistantMessage = assistantMessage
       .replace(/<think>[\s\S]*?<\/think>/gi, "")
       .replace(/<thinking>[\s\S]*?<\/thinking>/gi, "")
-      .replace(
-        /^[\s\S]*?(?=I'm unable to|I'd be|I can|Sure|Hello|Hi|Great|Yes|No|To |Here|Let me|The |You can|GreenMarket)/i,
-        "",
-      )
+      .replace(/^\s*[-*+]\s+/gm, "") // handles "  - item" too
+      .replace(/^\s*\d+\.\s+/gm, "") // handles "  1. item" too
+      .replace(/^#{1,6}\s+/gm, "") // remove ### headings
+      .replace(/\*\*(.*?)\*\*/g, "$1") // remove **bold**
+      .replace(/\*(.*?)\*/g, "$1") // remove *italic*
+      .replace(/^[-*+]\s+/gm, "") // remove bullet points
+      .replace(/^\d+\.\s+/gm, "") // remove numbered lists
+      .replace(/^-{3,}$/gm, "") // remove --- dividers
+      .replace(/\|[^\n]+\|/g, "") // remove table rows
+      .replace(/^\s*[-|]+\s*$/gm, "") // remove table separators
       .replace(/\n{3,}/g, "\n\n")
       .trim();
 
     if (!assistantMessage) {
-      return res.status(500).json({ error: "No content received from model" });
+      assistantMessage =
+        "Sorry, I didn't catch that. Could you rephrase your question? I'm here to help! 🌱";
     }
 
     return res.status(200).json({ message: assistantMessage });

@@ -9,6 +9,17 @@ interface Message {
   timestamp: Date;
 }
 
+const slowMessages = [
+  { text: "Still working on that, one moment... 🌱" },
+  { text: "Consulting the farm almanac... 🌾" },
+  { text: "Almost there, harvesting your answer... 🥕" },
+  { text: "Digging deep for the best advice... 🌍" },
+  { text: "Tending to your question, won't be long... 🌿" },
+  { text: "Checking the fields for you... 🚜" },
+  { text: "Gathering fresh information... 🍅" },
+  { text: "Planting the right answer for you... 🌽" },
+];
+
 const AIChatAssistant: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
@@ -21,6 +32,8 @@ const AIChatAssistant: React.FC = () => {
   ]);
   const [inputMessage, setInputMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isSlowResponse, setIsSlowResponse] = useState(false);
+  const [slowMessageIndex, setSlowMessageIndex] = useState(0);
   const [quickQuestions, setQuickQuestions] = useState<string[]>([]);
   const [buttonPosition, setButtonPosition] = useState<"left" | "right">(
     "right",
@@ -127,6 +140,20 @@ const AIChatAssistant: React.FC = () => {
     };
   }, [isOpen]);
 
+  // Rotate slow messages every 3 seconds once isSlowResponse is true
+  useEffect(() => {
+    if (!isSlowResponse) return;
+
+    // Pick a random starting message
+    setSlowMessageIndex(Math.floor(Math.random() * slowMessages.length));
+
+    const rotateTimer = setInterval(() => {
+      setSlowMessageIndex((prev) => (prev + 1) % slowMessages.length);
+    }, 3000);
+
+    return () => clearInterval(rotateTimer);
+  }, [isSlowResponse]);
+
   // Dragging functionality
   const handleMouseDown = (e: React.MouseEvent) => {
     if (!buttonRef.current) return;
@@ -154,18 +181,15 @@ const AIChatAssistant: React.FC = () => {
     const handleMouseMove = (e: MouseEvent) => {
       if (!isDragging || !buttonRef.current) return;
 
-      // Calculate vertical movement (NOT inverted)
       const deltaY = e.clientY - dragStartPos.current.y;
       const newTop = dragStartPos.current.startTop + deltaY;
 
-      // Constrain within screen bounds (with padding)
       const minTop = 80;
       const maxTop = window.innerHeight - 100;
       const constrainedTop = Math.max(minTop, Math.min(maxTop, newTop));
 
       setButtonTop(constrainedTop);
 
-      // Determine which side based on mouse X position
       const screenMiddle = window.innerWidth / 2;
       if (e.clientX < screenMiddle) {
         setButtonPosition("left");
@@ -179,18 +203,15 @@ const AIChatAssistant: React.FC = () => {
 
       const touch = e.touches[0];
 
-      // Calculate vertical movement (NOT inverted)
       const deltaY = touch.clientY - dragStartPos.current.y;
       const newTop = dragStartPos.current.startTop + deltaY;
 
-      // Constrain within screen bounds (with padding)
       const minTop = 80;
       const maxTop = window.innerHeight - 100;
       const constrainedTop = Math.max(minTop, Math.min(maxTop, newTop));
 
       setButtonTop(constrainedTop);
 
-      // Determine which side based on touch X position
       const screenMiddle = window.innerWidth / 2;
       if (touch.clientX < screenMiddle) {
         setButtonPosition("left");
@@ -230,8 +251,15 @@ const AIChatAssistant: React.FC = () => {
     setMessages((prev) => [...prev, userMessage]);
     setInputMessage("");
     setIsLoading(true);
+    setIsSlowResponse(false);
+
+    let slowTimer: ReturnType<typeof setTimeout> | undefined;
 
     try {
+      slowTimer = setTimeout(() => {
+        setIsSlowResponse(true);
+      }, 5000);
+
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: {
@@ -273,7 +301,9 @@ const AIChatAssistant: React.FC = () => {
       };
       setMessages((prev) => [...prev, errorMessage]);
     } finally {
+      clearTimeout(slowTimer);
       setIsLoading(false);
+      setIsSlowResponse(false);
     }
   };
 
@@ -316,7 +346,7 @@ const AIChatAssistant: React.FC = () => {
           aria-label="Open AI Chat Assistant"
         >
           <div className="relative pointer-events-none">
-           <FaRobot className="text-2xl" />
+            <FaRobot className="text-2xl" />
             {!isDragging && (
               <>
                 <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full animate-ping"></span>
@@ -431,22 +461,40 @@ const AIChatAssistant: React.FC = () => {
             {isLoading && (
               <div className="flex justify-start">
                 <div className="bg-white border border-green-200 rounded-2xl rounded-bl-sm px-4 py-3 shadow-sm">
-                  <div className="flex items-center gap-2">
-                    <div className="flex gap-1">
-                      <span className="w-2 h-2 bg-green-500 rounded-full animate-bounce"></span>
-                      <span
-                        className="w-2 h-2 bg-green-500 rounded-full animate-bounce"
-                        style={{ animationDelay: "0.1s" }}
-                      ></span>
-                      <span
-                        className="w-2 h-2 bg-green-500 rounded-full animate-bounce"
-                        style={{ animationDelay: "0.2s" }}
-                      ></span>
-                    </div>
-                    <span className="text-xs text-gray-500">
-                      AI is thinking...
+                  <div className="flex items-center gap-2 mb-1">
+                    <FaLeaf className="text-green-600 text-xs" />
+                    <span className="text-xs font-semibold text-green-600">
+                      GreenMarket AI
                     </span>
                   </div>
+                  {isSlowResponse ? (
+                    <div className="flex items-center gap-2">
+                      <GiPlantRoots className="text-green-500 text-sm animate-pulse" />
+                      <span
+                        key={slowMessageIndex}
+                        className="text-xs text-gray-500 italic animate-fade-in"
+                      >
+                        {slowMessages[slowMessageIndex].text}
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <div className="flex gap-1">
+                        <span className="w-2 h-2 bg-green-500 rounded-full animate-bounce"></span>
+                        <span
+                          className="w-2 h-2 bg-green-500 rounded-full animate-bounce"
+                          style={{ animationDelay: "0.1s" }}
+                        ></span>
+                        <span
+                          className="w-2 h-2 bg-green-500 rounded-full animate-bounce"
+                          style={{ animationDelay: "0.2s" }}
+                        ></span>
+                      </div>
+                      <span className="text-xs text-gray-500">
+                        AI is thinking...
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
             )}

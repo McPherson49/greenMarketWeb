@@ -36,8 +36,8 @@ interface ApiEvent {
   id: number;
   event_id: string;
   title: string;
-  date: string;       // ISO datetime
-  time?: string;      // ISO datetime
+  date: string; // ISO datetime
+  time?: string; // ISO datetime
   location: string;
   type: 1 | 2;
   type_string: string;
@@ -50,8 +50,8 @@ interface ApiEvent {
 // ── Form state shape ──────────────────────────────────────────────────────
 interface FormState {
   title: string;
-  date: string;         // YYYY-MM-DD for <input type="date">
-  time: string;         // HH:MM for <input type="time">
+  date: string; // YYYY-MM-DD for <input type="date">
+  time: string; // HH:MM for <input type="time">
   location: string;
   isOnline: boolean;
   description: string;
@@ -167,7 +167,8 @@ export default function EditEventPage() {
       fd.append("type", form.isOnline ? "2" : "1");
       fd.append("description", form.description);
       if (form.meetingLink) fd.append("meeting_link", form.meetingLink);
-      if (form.registrationLink) fd.append("registration_link", form.registrationLink);
+      if (form.registrationLink)
+        fd.append("registration_link", form.registrationLink);
       // Only send image if a new file was selected — sending null/empty fails validation
       if (form.imageFile instanceof File) fd.append("image", form.imageFile);
 
@@ -239,7 +240,6 @@ export default function EditEventPage() {
   // ── Main render ───────────────────────────────────────────────────────
   return (
     <div className="space-y-8">
-
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
@@ -263,16 +263,16 @@ export default function EditEventPage() {
           ) : saveSuccess ? (
             "✓ Saved!"
           ) : (
-            <><Save className="w-5 h-5" /> Save Changes</>
+            <>
+              <Save className="w-5 h-5" /> Save Changes
+            </>
           )}
         </button>
       </div>
 
       <div className="grid lg:grid-cols-3 gap-8">
-
         {/* ── Main content ─────────────────────────────────────────────── */}
         <div className="lg:col-span-2 space-y-6">
-
           {/* Title */}
           <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
             <label className="block text-sm font-semibold text-gray-700 mb-3">
@@ -293,7 +293,8 @@ export default function EditEventPage() {
             <div className="grid sm:grid-cols-2 gap-5">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-1">
-                  <Calendar className="w-4 h-4" /> Date <span className="text-red-500">*</span>
+                  <Calendar className="w-4 h-4" /> Date{" "}
+                  <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="date"
@@ -318,7 +319,8 @@ export default function EditEventPage() {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-1">
-                <MapPin className="w-4 h-4" /> Location <span className="text-red-500">*</span>
+                <MapPin className="w-4 h-4" /> Location{" "}
+                <span className="text-red-500">*</span>
               </label>
               <div className="flex items-center gap-3">
                 <input
@@ -348,7 +350,8 @@ export default function EditEventPage() {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-1.5">
                 <Video className="w-4 h-4 text-green-600" />
-                Meeting Link {form.isOnline && <span className="text-red-500">*</span>}
+                Meeting Link{" "}
+                {form.isOnline && <span className="text-red-500">*</span>}
               </label>
               <input
                 type="url"
@@ -361,7 +364,8 @@ export default function EditEventPage() {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-1.5">
                 <LinkIcon className="w-4 h-4 text-blue-500" />
-                Registration Link <span className="text-gray-400">(optional)</span>
+                Registration Link{" "}
+                <span className="text-gray-400">(optional)</span>
               </label>
               <input
                 type="url"
@@ -391,7 +395,6 @@ export default function EditEventPage() {
 
         {/* ── Sidebar ───────────────────────────────────────────────────── */}
         <div className="space-y-6">
-
           {/* Image */}
           <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
             <h3 className="font-semibold text-gray-900 mb-4">Event Image</h3>
@@ -435,7 +438,6 @@ export default function EditEventPage() {
               </p>
             </div>
           </div>
-
           {/* Event type summary */}
           <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
             <h3 className="font-semibold text-gray-900 mb-3">Event Type</h3>
@@ -472,11 +474,15 @@ export default function EditEventPage() {
             className="w-full inline-flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 disabled:opacity-60 text-white px-6 py-3 rounded-xl font-semibold transition-colors"
           >
             {isSaving ? (
-              <><Loader2 className="w-5 h-5 animate-spin" /> Saving…</>
+              <>
+                <Loader2 className="w-5 h-5 animate-spin" /> Saving…
+              </>
             ) : saveSuccess ? (
               "✓ Saved!"
             ) : (
-              <><Save className="w-5 h-5" /> Save Changes</>
+              <>
+                <Save className="w-5 h-5" /> Save Changes
+              </>
             )}
           </button>
         </div>
