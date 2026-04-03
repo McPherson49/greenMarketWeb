@@ -653,7 +653,7 @@ const Profile = () => {
               >
                 <span>Chat</span>
               </button>
-              <button
+              {/* <button
                 onClick={() => handleTabChange("referrals")}
                 className={`w-full text-left px-4 py-2.5 rounded-lg transition-colors flex items-center justify-between ${
                   activeTab === "referrals"
@@ -662,7 +662,7 @@ const Profile = () => {
                 }`}
               >
                 <span>Referrals</span>
-              </button>
+              </button> */}
               <button
                 onClick={() => handleTabChange("profile")}
                 className={`w-full text-left px-4 py-2.5 rounded-lg transition-colors ${
