@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Users, Loader2, Lock, Globe } from "lucide-react";
 import { toast } from "react-toastify";
 import { ApiCommunity, joinCommunity, leaveCommunity } from "@/services/community";
@@ -11,12 +11,13 @@ interface CommunityHeaderProps {
   activeTab: string;
   onTabChange: (tab: string) => void;
   token?: string;
-  /** Whether the current user is the creator / has admin role in this community */
   isAdmin?: boolean;
+  /** Authoritative membership flag — resolved from the members API in the parent */
+  isMember?: boolean;
   onMembershipChange?: (isMember: boolean) => void;
 }
 
-const BASE_TABS = ["Feed", "People", "About"];
+const BASE_TABS  = ["Feed", "People", "About"];
 const ADMIN_TABS = [...BASE_TABS, "Settings"];
 
 const FALLBACK_COVER =
@@ -29,14 +30,10 @@ const CommunityHeader: React.FC<CommunityHeaderProps> = ({
   onTabChange,
   token,
   isAdmin = false,
+  isMember = false,
   onMembershipChange,
 }) => {
-  const [joining,  setJoining]  = useState(false);
-  const [isMember, setIsMember] = useState(community?.is_member ?? false);
-
-  useEffect(() => {
-    if (community) setIsMember(community.is_member ?? false);
-  }, [community]);
+  const [joining, setJoining] = useState(false);
 
   const tabs = isAdmin ? ADMIN_TABS : BASE_TABS;
 
@@ -49,20 +46,19 @@ const CommunityHeader: React.FC<CommunityHeaderProps> = ({
     try {
       if (isMember) {
         await leaveCommunity(community.id, token);
-        setIsMember(false);
         onMembershipChange?.(false);
         toast.success("You have left the community");
       } else {
         await joinCommunity(community.id, token);
-        setIsMember(true);
         onMembershipChange?.(true);
         toast.success(`Successfully joined ${community.name}`);
       }
-    } catch (err: any) {
-      const status  = err?.response?.status;
-      const message = err?.response?.data?.message ?? "Action failed";
+    } catch (err: unknown) {
+      const e = err as { response?: { status?: number; data?: { message?: string } } };
+      const status  = e?.response?.status;
+      const message = e?.response?.data?.message ?? "Action failed";
       if (status === 422 && message.toLowerCase().includes("already")) {
-        setIsMember(true);
+        onMembershipChange?.(true);
         toast.info("You are already a member of this community");
       } else if (status === 401) {
         toast.error("Your session has expired. Please sign in again.");
@@ -100,10 +96,9 @@ const CommunityHeader: React.FC<CommunityHeaderProps> = ({
 
   const name         = community.name;
   const membersCount = community.members_count ?? 0;
-  const postsCount   = community.posts_count ?? 0;
+  const postsCount   = community.posts_count   ?? 0;
   const isPrivate    = community.privacy === "private";
   const coverImage   = community.image ?? FALLBACK_COVER;
-  const iconText     = name.charAt(0).toUpperCase();
 
   return (
     <div className="bg-white rounded-lg shadow-sm overflow-hidden mb-6">
@@ -134,7 +129,9 @@ const CommunityHeader: React.FC<CommunityHeaderProps> = ({
                   onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
                 />
               ) : (
-                <span className="text-2xl font-bold text-green-600">{iconText}</span>
+                <span className="text-2xl font-bold text-green-600">
+                  {name.charAt(0).toUpperCase()}
+                </span>
               )}
             </div>
 
@@ -168,8 +165,12 @@ const CommunityHeader: React.FC<CommunityHeaderProps> = ({
             </div>
           </div>
 
-          {/* Join / Leave — only shown when logged in AND not the sole admin
-              (community creator shouldn't be able to leave their own community) */}
+          {/* Action button — driven entirely by props, no internal state */}
+          {token && isAdmin && (
+            <span className="px-4 py-2 rounded-full text-sm font-medium bg-purple-50 text-purple-700 border border-purple-200 flex items-center gap-1.5 w-full sm:w-auto justify-center">
+              <span>👑</span> Admin
+            </span>
+          )}
           {token && !isAdmin && (
             <button
               onClick={handleMembership}
@@ -184,15 +185,10 @@ const CommunityHeader: React.FC<CommunityHeaderProps> = ({
               {isMember ? "Leave Community" : "Join Community"}
             </button>
           )}
-          {token && isAdmin && (
-            <span className="px-4 py-2 rounded-full text-sm font-medium bg-purple-50 text-purple-700 border border-purple-200 flex items-center gap-1.5 w-full sm:w-auto justify-center">
-              <span>👑</span> Admin
-            </span>
-          )}
         </div>
       </div>
 
-      {/* Tabs — Settings only visible to admins */}
+      {/* Tabs */}
       <div className="flex border-t border-b border-gray-200 overflow-x-auto scrollbar-hide">
         {tabs.map((tab) => (
           <button

@@ -14,6 +14,7 @@ export interface UserProfile {
   settings: any | null;
   socials: any | null;
   tags: any | null;
+  avatar_url: any;
   fcm_token: string | null;
   email_verified_at: string | null;
   provider_name: string | null;
@@ -141,9 +142,14 @@ export const getProfileProductCount = async (): Promise<number | null> => {
 };
 
 // UPDATE USER PROFILE
-export const updateProfile = async (profileData: Partial<UserProfile>): Promise<UserProfile | null> => {
+export const updateProfile = async (
+  profileData: Partial<UserProfile>,
+): Promise<UserProfile | null> => {
   try {
-    const response = await ApiFetcher.put<GetProfileResponse>(`/auth/profile`, profileData);
+    const response = await ApiFetcher.put<GetProfileResponse>(
+      `/auth/profile`,
+      profileData,
+    );
 
     if (response?.data?.data) {
       toast.success("Profile updated successfully!");
@@ -160,20 +166,22 @@ export const updateProfile = async (profileData: Partial<UserProfile>): Promise<
 };
 
 // UPDATE PROFILE AVATAR
-export const updateProfileAvatar = async (avatarFile: File): Promise<string | null> => {
+export const updateProfileAvatar = async (
+  avatarFile: File,
+): Promise<string | null> => {
   try {
     const formData = new FormData();
-    formData.append('avatar', avatarFile);
+    formData.append("avatar", avatarFile);
 
-    const response = await ApiFetcher.post<{data: {avatar: string}, message: string, status: boolean}>(
-      `/auth/profile/avatar`, 
-      formData,
-      {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      }
-    );
+    const response = await ApiFetcher.post<{
+      data: { avatar: string };
+      message: string;
+      status: boolean;
+    }>(`/auth/profile/avatar`, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
 
     if (response?.data?.data?.avatar) {
       toast.success("Avatar updated successfully!");

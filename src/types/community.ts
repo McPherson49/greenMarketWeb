@@ -15,6 +15,8 @@ export interface Comment {
   id: string;
   author: string;
   avatar?: string;
+  /** Numeric user ID from the API — used to show edit/delete only to the comment owner */
+  userId?: number;
   timestamp: string;
   content: string;
   reactions?: {
@@ -31,7 +33,7 @@ export interface Community {
   id: string;
   name: string;
   icon: string;
-  members: number | string; // allow both — sidebar passes string like "1.2k"
+  members: number | string;
   posts?: number | string;
   description?: string;
   category?: string;

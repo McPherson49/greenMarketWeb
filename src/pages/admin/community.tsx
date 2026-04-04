@@ -5,9 +5,9 @@ import Link from "next/link";
 import {
   Trash2, Eye, Plus, CheckCircle, XCircle,
   PauseCircle, Calendar, Users, Loader2, AlertCircle,
-  Search, RefreshCw,
+  Search, RefreshCw, Pencil,
 } from "lucide-react";
-import CreateCommunityModal from "@/components/community/CreateCommunityModal";
+import CreateCommunityModal, { CommunityToEdit } from "@/components/community/CreateCommunityModal";
 import ApiFetcher from "@/utils/apis";
 
 
@@ -26,6 +26,7 @@ interface AdminCommunity {
   status: "pending" | "approved" | "rejected" | "suspended";
   privacy: "public" | "private";
   tags?: string[];
+  guidelines?: string;
 }
 
 const STATUS_STYLES: Record<string, string> = {
@@ -89,6 +90,7 @@ export default function AdminCommunityPage() {
   const [statusFilter, setStatusFilter] = useState<string>("");
 
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [editCommunity, setEditCommunity] = useState<CommunityToEdit | null>(null);
 
   const [actionModalOpen, setActionModalOpen] = useState(false);
   const [selectedCommunity, setSelectedCommunity] = useState<AdminCommunity | null>(null);
@@ -129,6 +131,20 @@ export default function AdminCommunityPage() {
     setActionType(type);
     setActionError(null);
     setActionModalOpen(true);
+  };
+
+  const openEdit = (community: AdminCommunity) => {
+    setEditCommunity({
+      id:          community.id,
+      name:        community.name,
+      description: community.description,
+      guidelines:  community.guidelines,
+      privacy:     community.privacy,
+      tags:        community.tags,
+      category:    community.category,
+      icon:        community.icon,
+      image:       community.image,
+    });
   };
 
   const confirmAction = async () => {
@@ -353,13 +369,15 @@ export default function AdminCommunityPage() {
                       {/* Actions */}
                       <td className="py-4 px-6">
                         <div className="flex items-center justify-center gap-1">
-                          <Link
-                            href={`/admin/community/${community.id}`}
+
+                          {/* Edit — always visible */}
+                          <button
+                            onClick={() => openEdit(community)}
                             className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                            title="View"
+                            title="Edit"
                           >
-                            <Eye className="w-4 h-4" />
-                          </Link>
+                            <Pencil className="w-4 h-4" />
+                          </button>
 
                           {community.status === "pending" && (
                             <>
@@ -423,11 +441,23 @@ export default function AdminCommunityPage() {
         )}
       </div>
 
-      {/* Create Modal — no token prop needed, ApiFetcher handles auth */}
+      {/* Create Modal */}
       {showCreateModal && (
         <CreateCommunityModal
           onClose={() => setShowCreateModal(false)}
           onCreated={fetchCommunities}
+        />
+      )}
+
+      {/* Edit Modal */}
+      {editCommunity && (
+        <CreateCommunityModal
+          community={editCommunity}
+          onClose={() => setEditCommunity(null)}
+          onCreated={() => {
+            setEditCommunity(null);
+            fetchCommunities();
+          }}
         />
       )}
 
@@ -451,7 +481,7 @@ export default function AdminCommunityPage() {
             </h3>
             <p className="text-sm text-gray-500 mb-1">
               You are about to <strong>{ACTION_META[actionType].label.toLowerCase()}</strong>{" "}
-              <span className="font-medium text-gray-800">"{selectedCommunity.name}"</span>.
+              <span className="font-medium text-gray-800">\"{selectedCommunity.name}\"</span>.
             </p>
             <p className="text-sm text-gray-400 mb-6">{ACTION_META[actionType].description}</p>
 

@@ -1,39 +1,35 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
-import {
-  X, Upload, Tag, Globe, Lock, Sprout,
-  Fish, Truck, Cpu, HelpCircle, Loader2,
-} from "lucide-react";
-import { GiCow, GiWheat, GiGrain, GiCargoShip, GiMoneyStack } from "react-icons/gi";
+import { X, Upload, Tag, Globe, Lock, Sprout, Loader2 } from "lucide-react";
 import ApiFetcher from "@/utils/apis";
+import { getCategories } from "@/services/category";
+import { Category } from "@/types/category";
 
 // ── Props ──────────────────────────────────────────────────────────────────
+export interface CommunityToEdit {
+  id: number;
+  name: string;
+  description: string;
+  guidelines?: string;
+  privacy: "public" | "private";
+  tags?: string[];
+  category?: { id: number; name: string };
+  icon?: string;
+  image?: string;
+}
+
 interface CreateCommunityModalProps {
   onClose: () => void;
-  /** Called after a successful create — parent should refresh its list */
+  /** Called after a successful create/update — parent should refresh its list */
   onCreated?: () => void;
+  /** Pass an existing community to switch into edit mode */
+  community?: CommunityToEdit;
 }
 
 // ── Category options ───────────────────────────────────────────────────────
-interface CategoryOption {
-  label: string;
-  apiId: number;
-  Icon: React.ComponentType<{ className?: string }>;
-}
-
-const CATEGORY_OPTIONS: CategoryOption[] = [
-  { label: "Livestock & Poultry",     apiId: 1, Icon: GiCow        },
-  { label: "Crop Farming",            apiId: 2, Icon: GiWheat      },
-  { label: "Aquaculture",             apiId: 3, Icon: Fish         },
-  { label: "Agro-processing",         apiId: 4, Icon: GiGrain      },
-  { label: "Export & Trade",          apiId: 5, Icon: GiCargoShip  },
-  { label: "Supply & Logistics",      apiId: 6, Icon: Truck        },
-  { label: "Finance & Investment",    apiId: 7, Icon: GiMoneyStack },
-  { label: "Technology & Innovation", apiId: 8, Icon: Cpu          },
-  { label: "Other",                   apiId: 9, Icon: HelpCircle   },
-];
+// Uses the same Category type & getCategories() service as the rest of the app
 
 // ── Form state ─────────────────────────────────────────────────────────────
 interface FormState {
@@ -68,29 +64,44 @@ const DEFAULT_FORM: FormState = {
 const CreateCommunityModal: React.FC<CreateCommunityModalProps> = ({
   onClose,
   onCreated,
+  community,
 }) => {
-  const [form, setForm] = useState<FormState>(DEFAULT_FORM);
+  const isEditMode = Boolean(community);
+  const [form, setForm] = useState<FormState>(() =>
+    community
+      ? {
+          name:         community.name,
+          description:  community.description,
+          categoryId:   community.category?.id   ?? null,
+          categoryLabel:community.category?.name ?? "",
+          tags:         community.tags            ?? [],
+          guidelines:   community.guidelines      ?? "",
+          privacy:      community.privacy,
+          iconFile:     null,
+          iconPreview:  community.icon  ?? null,
+          coverFile:    null,
+          coverPreview: community.image ?? null,
+        }
+      : DEFAULT_FORM
+  );
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [categoriesLoading, setCategoriesLoading] = useState(true);
+
+  useEffect(() => {
+    getCategories()
+      .then((data) => { if (data) setCategories(data); })
+      .finally(() => setCategoriesLoading(false));
+  }, []);
   const [tagInput, setTagInput] = useState("");
   const [step, setStep] = useState<1 | 2>(1);
-  const [customCategory, setCustomCategory] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   // ── Validation ─────────────────────────────────────────────────────────
-  const isOther = form.categoryLabel === "Other";
-
-  /**
-   * Step-1 is valid when:
-   *   • name >= 3 chars
-   *   • description >= 10 chars
-   *   • a category is selected
-   *   • IF "Other" is chosen, the free-text field is also filled (>= 2 chars)
-   */
   const isStep1Valid =
     form.name.trim().length >= 3 &&
     form.description.trim().length >= 10 &&
-    form.categoryId !== null &&
-    (!isOther || customCategory.trim().length >= 2);
+    form.categoryId !== null;
 
   // ── Tag helpers ────────────────────────────────────────────────────────
   const handleAddTag = () => {
@@ -121,28 +132,37 @@ const CreateCommunityModal: React.FC<CreateCommunityModalProps> = ({
       const fd = new FormData();
       fd.append("name",        form.name.trim());
       fd.append("description", form.description.trim());
-      fd.append("category_id", String(form.categoryId));
-      fd.append("privacy",     form.privacy);
+
+      if (form.categoryId !== null)
+        fd.append("category_id", String(form.categoryId));
+
+      fd.append("privacy", form.privacy);
 
       if (form.guidelines.trim())
         fd.append("guidelines", form.guidelines.trim());
 
-      // API expects tags as a JSON string: "[\"farming\",\"nigeria\"]"
-      if (form.tags.length)
-        fd.append("tags", JSON.stringify(form.tags));
+      form.tags.forEach((tag) => fd.append("tags[]", tag));
 
+      // Only send files if new ones were chosen (edit keeps existing otherwise)
       if (form.iconFile)  fd.append("icon",  form.iconFile);
       if (form.coverFile) fd.append("image", form.coverFile);
 
-      // ApiFetcher auto-attaches the JWT — no manual token needed
-      await ApiFetcher.post("/communities", fd, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+      const axiosOpts = {
+        headers: { "Content-Type": undefined } as any,
+        transformRequest: (data: any) => data,
+      };
+
+      if (isEditMode && community) {
+        // PUT /communities/:id  — Laravel needs _method spoofing for multipart
+        fd.append("_method", "PUT");
+        await ApiFetcher.post(`/communities/${community.id}`, fd, axiosOpts);
+      } else {
+        await ApiFetcher.post("/communities", fd, axiosOpts);
+      }
 
       onCreated?.();
       onClose();
     } catch (err: any) {
-      // Try to extract a human-readable error from the API response
       const apiErrors = err?.response?.data?.errors;
       const firstFieldError = apiErrors
         ? apiErrors[Object.keys(apiErrors)[0]]?.[0]
@@ -151,7 +171,7 @@ const CreateCommunityModal: React.FC<CreateCommunityModalProps> = ({
       setSubmitError(
         firstFieldError ??
         err?.response?.data?.message ??
-        "Failed to create community. Please try again."
+        `Failed to ${isEditMode ? "update" : "create"} community. Please try again.`
       );
     } finally {
       setSubmitting(false);
@@ -166,7 +186,7 @@ const CreateCommunityModal: React.FC<CreateCommunityModalProps> = ({
         {/* ── Header ── */}
         <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between rounded-t-2xl z-10">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">Create a Community</h2>
+            <h2 className="text-2xl font-bold text-gray-900">{isEditMode ? "Edit Community" : "Create a Community"}</h2>
             <p className="text-sm text-gray-500 mt-0.5">Step {step} of 2</p>
           </div>
           <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg">
@@ -212,39 +232,42 @@ const CreateCommunityModal: React.FC<CreateCommunityModalProps> = ({
                 Category <span className="text-red-500">*</span>
               </label>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                {CATEGORY_OPTIONS.map(({ label, apiId, Icon }) => {
-                  const selected = form.categoryLabel === label;
+                {categoriesLoading ? (
+                  <div className="col-span-3 flex items-center justify-center py-6 text-gray-400 gap-2 text-sm">
+                    <Loader2 className="w-4 h-4 animate-spin" /> Loading categories…
+                  </div>
+                ) : categories.map((cat) => {
+                  const selected = form.categoryId === cat.id;
                   return (
                     <button
-                      key={label}
+                      key={cat.id}
                       type="button"
                       onClick={() =>
-                        setForm((f) => ({ ...f, categoryLabel: label, categoryId: apiId }))
+                        setForm((f) => ({ ...f, categoryId: cat.id, categoryLabel: cat.name }))
                       }
                       className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-medium border transition-all text-left ${
                         selected
-                          ? "bg-green-500 text-white border-green-500 shadow-sm"
+                          ? "border-green-500 shadow-sm text-white"
                           : "bg-white text-gray-700 border-gray-200 hover:border-green-400 hover:text-green-600 hover:bg-green-50"
                       }`}
+                      style={selected ? { backgroundColor: cat.color, borderColor: cat.color } : {}}
                     >
-                      <Icon className={`w-4 h-4 shrink-0 ${selected ? "text-white" : "text-green-600"}`} />
-                      <span className="leading-tight">{label}</span>
+                      {cat.icon ? (
+                        <img
+                          src={cat.icon}
+                          alt={cat.name}
+                          className="w-4 h-4 shrink-0 object-contain"
+                          style={selected ? { filter: "brightness(0) invert(1)" } : {}}
+                        />
+                      ) : (
+                        <Sprout className={`w-4 h-4 shrink-0 ${selected ? "text-white" : "text-green-600"}`} />
+                      )}
+                      <span className="leading-tight">{cat.name}</span>
                     </button>
                   );
                 })}
               </div>
 
-              {/* Custom category input (only when "Other" is chosen) */}
-              {isOther && (
-                <input
-                  type="text"
-                  value={customCategory}
-                  onChange={(e) => setCustomCategory(e.target.value)}
-                  placeholder="Describe your category…"
-                  maxLength={50}
-                  className="mt-3 w-full px-4 py-3 border border-green-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 text-sm bg-green-50/30"
-                />
-              )}
             </div>
 
             {/* Description */}
@@ -335,8 +358,6 @@ const CreateCommunityModal: React.FC<CreateCommunityModalProps> = ({
                   ? "Community name must be at least 3 characters."
                   : form.categoryId === null
                   ? "Please select a category."
-                  : isOther && customCategory.trim().length < 2
-                  ? "Please describe your category (at least 2 characters)."
                   : "Description must be at least 10 characters."}
               </p>
             )}
@@ -472,7 +493,7 @@ const CreateCommunityModal: React.FC<CreateCommunityModalProps> = ({
               className="px-8 py-3 bg-green-500 hover:bg-green-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-lg font-semibold shadow-md flex items-center gap-2 transition-colors"
             >
               {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
-              {submitting ? "Creating…" : "Create Community"}
+              {submitting ? (isEditMode ? "Saving…" : "Creating…") : (isEditMode ? "Save Changes" : "Create Community")}
             </button>
           )}
         </div>

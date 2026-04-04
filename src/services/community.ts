@@ -104,7 +104,9 @@ export interface PaginatedResponse<T> {
 async function handleResponse(res: Response): Promise<unknown> {
   if (!res.ok) {
     let errorData: unknown = {};
-    try { errorData = await res.json(); } catch {
+    try {
+      errorData = await res.json();
+    } catch {
       errorData = { message: res.statusText || `HTTP Error ${res.status}` };
     }
     const error = new Error(`HTTP ${res.status}`) as Error & {
@@ -128,11 +130,11 @@ export async function getAllCommunities(params?: {
 }): Promise<unknown> {
   const qs = new URLSearchParams();
   if (params?.category_id) qs.set("category_id", params.category_id);
-  if (params?.search)      qs.set("search",      params.search);
-  if (params?.sort_by)     qs.set("sort_by",     params.sort_by);
-  if (params?.sort_order)  qs.set("sort_order",  params.sort_order);
-  if (params?.per_page)    qs.set("per_page",    String(params.per_page));
-  if (params?.page)        qs.set("page",        String(params.page ?? 1));
+  if (params?.search) qs.set("search", params.search);
+  if (params?.sort_by) qs.set("sort_by", params.sort_by);
+  if (params?.sort_order) qs.set("sort_order", params.sort_order);
+  if (params?.per_page) qs.set("per_page", String(params.per_page));
+  if (params?.page) qs.set("page", String(params.page ?? 1));
 
   const res = await fetch(`${API_BASE}/communities?${qs}`, {
     headers: { Accept: "application/json" },
@@ -142,46 +144,59 @@ export async function getAllCommunities(params?: {
 
 export async function getCommunityById(
   id: number | string,
-  params?: { include_posts?: boolean; sort_posts?: string; posts_per_page?: number },
-  token?: string
+  params?: {
+    include_posts?: boolean;
+    sort_posts?: string;
+    posts_per_page?: number;
+  },
+  token?: string,
 ): Promise<ApiCommunity> {
   const qs = new URLSearchParams();
-  if (params?.include_posts)  qs.set("include_posts",  "true");
-  if (params?.sort_posts)     qs.set("sort_posts",     params.sort_posts);
-  if (params?.posts_per_page) qs.set("posts_per_page", String(params.posts_per_page));
+  if (params?.include_posts) qs.set("include_posts", "true");
+  if (params?.sort_posts) qs.set("sort_posts", params.sort_posts);
+  if (params?.posts_per_page)
+    qs.set("posts_per_page", String(params.posts_per_page));
 
   const res = await fetch(`${API_BASE}/communities/${id}?${qs}`, {
     headers: authHeaders(token),
   });
-  const json = await handleResponse(res) as { data?: ApiCommunity } | ApiCommunity;
+  const json = (await handleResponse(res)) as
+    | { data?: ApiCommunity }
+    | ApiCommunity;
   return (json as { data?: ApiCommunity }).data ?? (json as ApiCommunity);
 }
 
-export async function createCommunity(formData: FormData, token: string): Promise<unknown> {
+export async function createCommunity(
+  formData: FormData,
+  token: string,
+): Promise<unknown> {
   const res = await fetch(`${API_BASE}/communities`, {
     method: "POST",
     headers: { Accept: "application/json", Authorization: `Bearer ${token}` },
     body: formData,
   });
-  const json = await handleResponse(res) as { data?: unknown };
+  const json = (await handleResponse(res)) as { data?: unknown };
   return json.data ?? json;
 }
 
 export async function updateCommunity(
   id: number | string,
   formData: FormData,
-  token: string
+  token: string,
 ): Promise<unknown> {
   const res = await fetch(`${API_BASE}/communities/${id}`, {
     method: "PUT",
     headers: { Accept: "application/json", Authorization: `Bearer ${token}` },
     body: formData,
   });
-  const json = await handleResponse(res) as { data?: unknown };
+  const json = (await handleResponse(res)) as { data?: unknown };
   return json.data ?? json;
 }
 
-export async function deleteCommunity(id: number | string, token: string): Promise<unknown> {
+export async function deleteCommunity(
+  id: number | string,
+  token: string,
+): Promise<unknown> {
   const res = await fetch(`${API_BASE}/communities/${id}`, {
     method: "DELETE",
     headers: authHeaders(token),
@@ -189,7 +204,10 @@ export async function deleteCommunity(id: number | string, token: string): Promi
   return handleResponse(res);
 }
 
-export async function joinCommunity(id: number | string, token: string): Promise<unknown> {
+export async function joinCommunity(
+  id: number | string,
+  token: string,
+): Promise<unknown> {
   const res = await fetch(`${API_BASE}/communities/${id}/join`, {
     method: "POST",
     headers: authHeaders(token),
@@ -197,7 +215,10 @@ export async function joinCommunity(id: number | string, token: string): Promise
   return handleResponse(res);
 }
 
-export async function leaveCommunity(id: number | string, token: string): Promise<unknown> {
+export async function leaveCommunity(
+  id: number | string,
+  token: string,
+): Promise<unknown> {
   const res = await fetch(`${API_BASE}/communities/${id}/leave`, {
     method: "POST",
     headers: authHeaders(token),
@@ -208,11 +229,14 @@ export async function leaveCommunity(id: number | string, token: string): Promis
 export async function getCommunityMembers(
   id: number | string,
   token: string,
-  per_page = 20
+  per_page = 20,
 ): Promise<unknown> {
-  const res = await fetch(`${API_BASE}/communities/${id}/members?per_page=${per_page}`, {
-    headers: authHeaders(token),
-  });
+  const res = await fetch(
+    `${API_BASE}/communities/${id}/members?per_page=${per_page}`,
+    {
+      headers: authHeaders(token),
+    },
+  );
   return handleResponse(res);
 }
 
@@ -220,30 +244,33 @@ export async function getCommunityMembers(
 
 export async function getCommunityPosts(
   communityId: number | string,
-  params?: { sort_by?: string; per_page?: number; page?: number }
+  params?: { sort_by?: string; per_page?: number; page?: number },
 ): Promise<unknown> {
   const qs = new URLSearchParams();
-  if (params?.sort_by)  qs.set("sort_by",  params.sort_by);
+  if (params?.sort_by) qs.set("sort_by", params.sort_by);
   if (params?.per_page) qs.set("per_page", String(params.per_page ?? 15));
-  if (params?.page)     qs.set("page",     String(params.page ?? 1));
+  if (params?.page) qs.set("page", String(params.page ?? 1));
 
-  const res = await fetch(`${API_BASE}/communities/${communityId}/posts?${qs}`, {
-    headers: { Accept: "application/json" },
-  });
+  const res = await fetch(
+    `${API_BASE}/communities/${communityId}/posts?${qs}`,
+    {
+      headers: { Accept: "application/json" },
+    },
+  );
   return handleResponse(res);
 }
 
 export async function createPost(
   communityId: number | string,
   formData: FormData,
-  token: string
+  token: string,
 ): Promise<ApiPost> {
   const res = await fetch(`${API_BASE}/communities/${communityId}/posts`, {
     method: "POST",
     headers: { Accept: "application/json", Authorization: `Bearer ${token}` },
     body: formData,
   });
-  const json = await handleResponse(res) as { data?: ApiPost } | ApiPost;
+  const json = (await handleResponse(res)) as { data?: ApiPost } | ApiPost;
   return (json as { data?: ApiPost }).data ?? (json as ApiPost);
 }
 
@@ -251,38 +278,47 @@ export async function updatePost(
   communityId: number | string,
   postId: number | string,
   body: { content?: string; title?: string; tags?: string[] },
-  token: string
+  token: string,
 ): Promise<ApiPost> {
-  const res = await fetch(`${API_BASE}/communities/${communityId}/posts/${postId}`, {
-    method: "PUT",
-    headers: jsonHeaders(token),
-    body: JSON.stringify(body),
-  });
-  const json = await handleResponse(res) as { data?: ApiPost } | ApiPost;
+  const res = await fetch(
+    `${API_BASE}/communities/${communityId}/posts/${postId}`,
+    {
+      method: "PUT",
+      headers: jsonHeaders(token),
+      body: JSON.stringify(body),
+    },
+  );
+  const json = (await handleResponse(res)) as { data?: ApiPost } | ApiPost;
   return (json as { data?: ApiPost }).data ?? (json as ApiPost);
 }
 
 export async function deletePost(
   communityId: number | string,
   postId: number | string,
-  token: string
+  token: string,
 ): Promise<unknown> {
-  const res = await fetch(`${API_BASE}/communities/${communityId}/posts/${postId}`, {
-    method: "DELETE",
-    headers: authHeaders(token),
-  });
+  const res = await fetch(
+    `${API_BASE}/communities/${communityId}/posts/${postId}`,
+    {
+      method: "DELETE",
+      headers: authHeaders(token),
+    },
+  );
   return handleResponse(res);
 }
 
 export async function likePost(
   communityId: number | string,
   postId: number | string,
-  token: string
+  token: string,
 ): Promise<unknown> {
-  const res = await fetch(`${API_BASE}/communities/${communityId}/posts/${postId}/like`, {
-    method: "POST",
-    headers: authHeaders(token),
-  });
+  const res = await fetch(
+    `${API_BASE}/communities/${communityId}/posts/${postId}/like`,
+    {
+      method: "POST",
+      headers: authHeaders(token),
+    },
+  );
   return handleResponse(res);
 }
 
@@ -291,11 +327,11 @@ export async function likePost(
 export async function getPostComments(
   communityId: number | string,
   postId: number | string,
-  per_page = 20
+  per_page = 20,
 ): Promise<unknown> {
   const res = await fetch(
     `${API_BASE}/communities/${communityId}/posts/${postId}/comments?per_page=${per_page}`,
-    { headers: { Accept: "application/json" } }
+    { headers: { Accept: "application/json" } },
   );
   return handleResponse(res);
 }
@@ -304,13 +340,15 @@ export async function createComment(
   communityId: number | string,
   postId: number | string,
   body: { content: string; parent_id?: number | null },
-  token: string
+  token: string,
 ): Promise<ApiComment> {
   const res = await fetch(
     `${API_BASE}/communities/${communityId}/posts/${postId}/comments`,
-    { method: "POST", headers: jsonHeaders(token), body: JSON.stringify(body) }
+    { method: "POST", headers: jsonHeaders(token), body: JSON.stringify(body) },
   );
-  const json = await handleResponse(res) as { data?: ApiComment } | ApiComment;
+  const json = (await handleResponse(res)) as
+    | { data?: ApiComment }
+    | ApiComment;
   return (json as { data?: ApiComment }).data ?? (json as ApiComment);
 }
 
@@ -319,13 +357,15 @@ export async function replyToComment(
   postId: number | string,
   commentId: number | string,
   body: { content: string },
-  token: string
+  token: string,
 ): Promise<ApiComment> {
   const res = await fetch(
     `${API_BASE}/communities/${communityId}/posts/${postId}/comments/${commentId}/reply`,
-    { method: "POST", headers: jsonHeaders(token), body: JSON.stringify(body) }
+    { method: "POST", headers: jsonHeaders(token), body: JSON.stringify(body) },
   );
-  const json = await handleResponse(res) as { data?: ApiComment } | ApiComment;
+  const json = (await handleResponse(res)) as
+    | { data?: ApiComment }
+    | ApiComment;
   return (json as { data?: ApiComment }).data ?? (json as ApiComment);
 }
 
@@ -333,11 +373,11 @@ export async function deleteComment(
   communityId: number | string,
   postId: number | string,
   commentId: number | string,
-  token: string
+  token: string,
 ): Promise<unknown> {
   const res = await fetch(
     `${API_BASE}/communities/${communityId}/posts/${postId}/comments/${commentId}`,
-    { method: "DELETE", headers: authHeaders(token) }
+    { method: "DELETE", headers: authHeaders(token) },
   );
   return handleResponse(res);
 }
@@ -346,11 +386,28 @@ export async function likeComment(
   communityId: number | string,
   postId: number | string,
   commentId: number | string,
-  token: string
+  token: string,
 ): Promise<unknown> {
   const res = await fetch(
     `${API_BASE}/communities/${communityId}/posts/${postId}/comments/${commentId}/like`,
-    { method: "POST", headers: authHeaders(token) }
+    { method: "POST", headers: authHeaders(token) },
   );
   return handleResponse(res);
+}
+
+export async function updateComment(
+  communityId: number | string,
+  postId: number | string,
+  commentId: number | string,
+  body: { content: string },
+  token: string,
+): Promise<ApiComment> {
+  const res = await fetch(
+    `${API_BASE}/communities/${communityId}/posts/${postId}/comments/${commentId}`,
+    { method: "PUT", headers: jsonHeaders(token), body: JSON.stringify(body) },
+  );
+  const json = (await handleResponse(res)) as
+    | { data?: ApiComment }
+    | ApiComment;
+  return (json as { data?: ApiComment }).data ?? (json as ApiComment);
 }
