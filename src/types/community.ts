@@ -1,3 +1,5 @@
+// types/community.ts
+
 export interface Post {
   id: string;
   author: string;
@@ -29,7 +31,8 @@ export interface Community {
   id: string;
   name: string;
   icon: string;
-  members: number;
+  members: number | string; // allow both — sidebar passes string like "1.2k"
+  posts?: number | string;
   description?: string;
   category?: string;
   isPrivate?: boolean;
@@ -61,7 +64,7 @@ export interface TrendingTopic {
 export interface Member {
   id: string;
   name: string;
-  role: string;
+  role: "Admin" | "Moderator" | "Member" | string;
   avatar: string;
   joined: string;
   email?: string;
@@ -77,8 +80,8 @@ export interface NewEvent {
   image: File | null;
   previewImage: string | null;
   attendees: number | null;
-  meetingLink: string;       
-  registrationLink: string;  
+  meetingLink: string;
+  registrationLink: string;
 }
 
 export interface NewCommunity {
