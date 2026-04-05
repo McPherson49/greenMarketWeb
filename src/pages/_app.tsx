@@ -39,6 +39,7 @@ import { getCategories, CategoryItem } from "@/services/category";
 import MobileBottomNav from "@/components/MobileBottomNav";
 import Head from "next/head";
 import AIChatAssistant from "@/components/AIChatAssistant";
+import { getProfile, UserProfile } from "@/services/profile";
 
 type Category = {
   id: number;
@@ -148,7 +149,7 @@ function CategoryDrawer({
                     <span className="text-sm">{c.name}</span>
                   </span>
                   <span className="flex items-center gap-2">
-                    {/* ✅ show product count badge */}
+                    {/* show product count badge */}
                     {c.products_count > 0 && (
                       <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-medium">
                         {c.products_count}
@@ -170,6 +171,17 @@ function CategoryDrawer({
 function AdminLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [adminUser, setAdminUser] = useState<{ name: string; avatar: string | null; type: string } | null>(null);
+
+  useEffect(() => {
+    getProfile().then((u: UserProfile | null) => {
+      if (u) setAdminUser({
+        name:   u.name,
+        avatar: u.avatar_url ?? u.avatar ?? null,
+        type:   u.type ?? "Admin",
+      });
+    });
+  }, []);
 
   const menuItems = [
     {
@@ -258,7 +270,7 @@ function AdminLayout({ children }: { children: React.ReactNode }) {
         />
       )}
 
-      {/* Sidebar - Fixed on desktop, drawer on mobile */}
+      {/* Sidebar */}
       <aside
         className={`fixed top-0 left-0 z-100 h-screen w-64 bg-white border-r border-gray-200 transform transition-transform duration-300 ease-in-out ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
@@ -285,14 +297,29 @@ function AdminLayout({ children }: { children: React.ReactNode }) {
           {/* User Info */}
           <div className="px-6 py-4 border-b border-gray-200">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
-                <span className="text-green-600 font-semibold text-sm">SA</span>
+              <div className="w-10 h-10 rounded-full bg-green-100 overflow-hidden flex items-center justify-center shrink-0">
+                {adminUser?.avatar ? (
+                  <Image
+                    src={adminUser.avatar}
+                    alt={adminUser.name}
+                    width={40}
+                    height={40}
+                    className="w-full h-full object-cover"
+                    unoptimized
+                  />
+                ) : (
+                  <span className="text-green-600 font-semibold text-sm">
+                    {adminUser?.name ? adminUser.name.charAt(0).toUpperCase() : "A"}
+                  </span>
+                )}
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold text-gray-800 truncate">
-                  Basam Farm
+                  {adminUser?.name ?? "Loading…"}
                 </p>
-                <p className="text-xs text-gray-500 truncate">Super Admin</p>
+                <p className="text-xs text-gray-500 truncate capitalize">
+                  {adminUser?.type ?? "Admin"}
+                </p>
               </div>
             </div>
           </div>
@@ -348,7 +375,7 @@ function AdminLayout({ children }: { children: React.ReactNode }) {
         </div>
       </aside>
 
-      {/* Main Content Area - with left margin on desktop */}
+      {/* Main Content Area */}
       <div className="h-screen flex flex-col ml-0 lg:ml-64 overflow-hidden">
         {/* Top Bar */}
         <header className="shrink-0 sticky top-0 z-30 bg-white border-b border-gray-200 px-4 lg:px-6 py-6">
@@ -390,6 +417,14 @@ export default function App({ Component, pageProps }: AppProps) {
 
   return (
     <>
+      {/* ToastContainer at root level — works on ALL pages including admin */}
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        closeOnClick
+        pauseOnHover
+      />
       <Head>
         <title>Green Market | Best Shop for Farm Product</title>
         <meta
@@ -402,7 +437,6 @@ export default function App({ Component, pageProps }: AppProps) {
           <Component {...pageProps} />
         </AdminLayout>
       ) : noLayout ? (
-        // ← coming-soon and any other layout-free pages render here
         <Component {...pageProps} />
       ) : (
         <>
@@ -412,14 +446,6 @@ export default function App({ Component, pageProps }: AppProps) {
           <MobileBottomNav />
           <Footer />
           <AIChatAssistant />
-
-          <ToastContainer
-            position="top-right"
-            autoClose={3000}
-            hideProgressBar={false}
-            closeOnClick
-            pauseOnHover
-          />
         </>
       )}
     </>

@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import CreateCommunityModal, { CommunityToEdit } from "@/components/community/CreateCommunityModal";
 import ApiFetcher from "@/utils/apis";
+import { toast } from "react-toastify";
 
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -157,6 +158,7 @@ export default function AdminCommunityPage() {
         setCommunities((prev) =>
           prev.map((c) => c.id === selectedCommunity.id ? { ...c, status: "approved" } : c)
         );
+        toast.success(`"${selectedCommunity.name}" has been approved.`);
       } else if (actionType === "reject") {
         await ApiFetcher.post(`/admin/communities/${selectedCommunity.id}/reject`, {
           reason: "Does not meet guidelines.",
@@ -164,6 +166,7 @@ export default function AdminCommunityPage() {
         setCommunities((prev) =>
           prev.map((c) => c.id === selectedCommunity.id ? { ...c, status: "rejected" } : c)
         );
+        toast.info(`"${selectedCommunity.name}" has been rejected.`);
       } else if (actionType === "suspend") {
         await ApiFetcher.post(`/admin/communities/${selectedCommunity.id}/suspend`, {
           reason: "Community violated guidelines.",
@@ -171,13 +174,17 @@ export default function AdminCommunityPage() {
         setCommunities((prev) =>
           prev.map((c) => c.id === selectedCommunity.id ? { ...c, status: "suspended" } : c)
         );
+        toast.warning(`"${selectedCommunity.name}" has been suspended.`);
       } else if (actionType === "delete") {
         await ApiFetcher.delete(`/admin/communities/${selectedCommunity.id}`);
         setCommunities((prev) => prev.filter((c) => c.id !== selectedCommunity.id));
+        toast.success(`"${selectedCommunity.name}" has been deleted.`);
       }
       setActionModalOpen(false);
     } catch (err: any) {
-      setActionError(err?.response?.data?.message ?? "Action failed. Please try again.");
+      const msg = err?.response?.data?.message ?? "Action failed. Please try again.";
+      setActionError(msg);
+      toast.error(msg);
     } finally {
       setActionLoading(false);
     }
@@ -445,7 +452,10 @@ export default function AdminCommunityPage() {
       {showCreateModal && (
         <CreateCommunityModal
           onClose={() => setShowCreateModal(false)}
-          onCreated={fetchCommunities}
+          onCreated={() => {
+            fetchCommunities();
+            toast.success("Community created successfully.");
+          }}
         />
       )}
 
@@ -457,6 +467,7 @@ export default function AdminCommunityPage() {
           onCreated={() => {
             setEditCommunity(null);
             fetchCommunities();
+            toast.success("Community updated successfully.");
           }}
         />
       )}
