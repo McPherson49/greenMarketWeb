@@ -418,13 +418,7 @@ export default function App({ Component, pageProps }: AppProps) {
   return (
     <>
       {/* ToastContainer at root level — works on ALL pages including admin */}
-      <ToastContainer
-        position="top-right"
-        autoClose={3000}
-        hideProgressBar={false}
-        closeOnClick
-        pauseOnHover
-      />
+     
       <Head>
         <title>Green Market | Best Shop for Farm Product</title>
         <meta
@@ -448,6 +442,14 @@ export default function App({ Component, pageProps }: AppProps) {
           <AIChatAssistant />
         </>
       )}
+
+       <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        closeOnClick
+        pauseOnHover
+      />
     </>
   );
 }
