@@ -5,7 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 
 function getTimeLeft() {
-  const TARGET = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000);
+  const TARGET = new Date(Date.now() + 10 * 24 * 60 * 60 * 1000);
   const diff = Math.max(0, TARGET.getTime() - Date.now());
   return {
     days: Math.floor(diff / (1000 * 60 * 60 * 24)),

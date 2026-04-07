@@ -3,7 +3,7 @@
 import { useState, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { GooglePlayButton, AppStoreButton } from "react-mobile-app-button";
+import { GooglePlayButton, AppStoreButton } from "@/components/AppButtons";
 import { CiLinkedin, CiMail } from "react-icons/ci";
 import {
   FaPhoneAlt,

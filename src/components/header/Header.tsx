@@ -24,7 +24,7 @@ const navRoutes = [
   { label: "About", href: "/about" },
   // { label: "shop", href: "/shop" },
   { label: "How Escrow Works", href: "/howEscrowWorks" },
-  { label: "Community", href: "/community" },
+  { label: "Community", href: "/coming-soon" },
   { label: "Blog", href: "/blog" },
   { label: "Contact", href: "/contact" },
 ] as const;
