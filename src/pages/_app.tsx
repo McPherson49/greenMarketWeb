@@ -149,7 +149,6 @@ function CategoryDrawer({
                     <span className="text-sm">{c.name}</span>
                   </span>
                   <span className="flex items-center gap-2">
-                    {/* show product count badge */}
                     {c.products_count > 0 && (
                       <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-medium">
                         {c.products_count}
