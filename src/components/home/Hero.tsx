@@ -5,7 +5,7 @@ import { ChevronRight, Leaf, Users, Smartphone, Gift } from "lucide-react";
 import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
-import { GooglePlayButton, AppStoreButton } from "react-mobile-app-button";
+import { GooglePlayButton, AppStoreButton } from "@/components/AppButtons";
 import { useState, useEffect } from "react";
 
 export default function Hero() {
